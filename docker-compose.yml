@@ -7,6 +7,8 @@ services:
     environment:
       LASER: 1
     tty: true
+    ports:
+      - 80:80
     working_dir: /var/www
     volumes:
       - ${PROJECTS_DIRECTORY}:/var/www:cached
@@ -33,6 +35,8 @@ services:
       - 6379:6379
     environment:
       LASER: 1
+    networks:
+      - laser
 
 volumes:
   dbdata:
