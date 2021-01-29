@@ -79,7 +79,8 @@ function dohelp() {
     echo "  up [-d]            Create and start containers"
     echo "  stop               Stop containers"
     echo "  logs               View output from containers"
-    echo "  ps                 List containers"
+    echo "  ps                 List containers running"
+    echo ""
 }
 
 function dockerhelp() {
