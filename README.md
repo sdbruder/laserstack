@@ -24,7 +24,7 @@ Be as small, simple and fast as possible:
 - do not try to protect you from docker: if you try something that needs the stack up while it's down you will get the raw docker-compose error.
 - simple and single shell script (`laser`) serve as an interface
 - low number of containers: `app`, `db` and `redis`
-- small containers: We use Alpine-based containers to be as small as possible
+- small containers: Almost all containers are Alpine Linux based
 - simple build process, only a single container is built
 - nginx-based http serving, faster than php-based solutions
 - prebuilt public images for related services (database, redis and ngrok)
@@ -34,6 +34,15 @@ Be as small, simple and fast as possible:
 - Currently we only support Laravel projects (because of the nginx config which points to the public subdirectory)
 - dns resolution needs to be manually managed through `/etc/hosts`.
 
+## Versions
+
+Currently it uses the following versions of software:
+- PHP v8.0.1
+- MySQL v8.0.22
+- node v14.15.4
+- npm v6.14.10
+- composer v2.0.9
+- redis v6.0.9
 ## Getting started
 
 Clone Laser Stack in the same directory which you store your Laravel projects (`~/src` for example):
