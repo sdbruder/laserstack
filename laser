@@ -97,8 +97,7 @@ function composer() {
 }
 
 function mysql() {
-    echo "mysql MYSQL_PWD=${DB_PASSWORD} mysql -h mysql -u ${DB_USER} ${DB_DATABASE}" "$@"
-    dc exec app bash -c "mysql MYSQL_PWD=${DB_PASSWORD} mysql -h mysql -u ${DB_USER} ${DB_DATABASE}" "$@"
+    dc exec app bash -c "MYSQL_PWD=${DB_PASSWORD} mysql -h db -u ${DB_USER} ${DB_DATABASE}" "$@"
 }
 
 function node() {
@@ -132,10 +131,8 @@ function dotest() {
 }
 
 function share() {
-    docker run \
-        --init beyondcodegmbh/expose-server share http://host.docker.internal:"$APP_PORT" \
-    --server-port=8080 "$@"
-    # --server-host=laser.site \
+    project=$1 ; shift
+    docker run --rm -it --link laser-stack_app wernight/ngrok ngrok http -host-header="$project.test" :80
 }
 
 function shell() {
