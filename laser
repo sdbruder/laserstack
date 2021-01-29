@@ -3,14 +3,37 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+current_dir=$(pwd)
 # thanks https://stackoverflow.com/questions/3349105/
-sail_dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
-cd "$sail_dir" || exit
+laser_dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+cd "$laser_dir" || exit
 
-# source .env file to get MYSQL info
+# source .env file to get MYSQL info and projects directory
 if [ -f ./.env ]; then
+    # shellcheck disable=SC1091
     source ./.env
+else
+    echo "We didn't found laser .env file."
+    exit 1
 fi
+projects_dir=$(cd "$PROJECTS_DIRECTORY"; pwd)
+
+# thanks https://stackoverflow.com/a/5027832
+function relativepath() {
+    source=$1
+    target=$2
+    common_part=$source
+    back=
+    while [ "${target#$common_part}" = "${target}" ]; do
+        common_part=$(dirname "$common_part")
+        back="../${back}"
+    done
+    echo "${back}${target#$common_part/}"
+}
+
+function whichproject() {
+    relativepath "$projects_dir" "$current_dir"
+}
 
 function nih() {
     echo "Still not implemented"
@@ -41,7 +64,7 @@ function lasercommands() {
     echo "  yarn               Execute yarn"
 }
 
-function help() {
+function dohelp() {
     echo "Manage a local docker stack to run multiple laravel projects."
     echo ""
     echo "Usage:"
@@ -64,7 +87,8 @@ function dockerhelp() {
 }
 
 function artisan() {
-    dc exec app php artisan "$@"
+    project=$1 ; shift
+    dc exec app php "$project/artisan" "$@"
 }
 
 function composer() {
@@ -92,10 +116,10 @@ function php() {
 }
 
 function tinker() {
-    dc exec app bash -c 'mysql MYSQL_PWD=${DB_PASSWORD} mysql -u ${DB_USER} ${DB_DATABASE}' "$@"
+    dc exec app php artisan tinker "$@"
 }
 
-function test() {
+function dotest() {
     dc exec app php artisan test "$@"
 }
 
@@ -103,7 +127,7 @@ function share() {
     docker run \
         --init beyondcodegmbh/expose-server share http://host.docker.internal:"$APP_PORT" \
     --server-port=8080 "$@"
-    # --server-host=laravel-sail.site \
+    # --server-host=laser.site \
 }
 
 function shell() {
@@ -120,46 +144,57 @@ set -e
 
 case "$subcommand" in
     help)
-        help
+        dohelp
         ;;
     dockerhelp)
         dockerhelp
         ;;
     artisan)
-        artisan "$@"
+        project=$(whichproject)
+        artisan "$project" "$@"
         ;;
     composer)
-        composer "$@"
+        project=$(whichproject)
+        composer "$project" "$@"
         ;;
     mysql)
         mysql "$@"
         ;;
     node)
-        node "$@"
+        project=$(whichproject)
+        node "$project" "$@"
         ;;
     npm)
-        npm "$@"
+        project=$(whichproject)
+        npm "$project" "$@"
         ;;
     npx)
-        npx "$@"
+        project=$(whichproject)
+        npx "$project" "$@"
         ;;
     php)
-        php "$@"
+        project=$(whichproject)
+        php "$project" "$@"
         ;;
     tinker)
-        tinker "$@"
+        project=$(whichproject)
+        tinker "$project" "$@"
         ;;
     test)
-        test "$@"
+        project=$(whichproject)
+        dotest "$project" "$@"
         ;;
     share)
-        share "$@"
+        project=$(whichproject)
+        share "$project" "$@"
         ;;
     shell)
-        shell "$@"
+        project=$(whichproject)
+        shell "$project" "$@"
         ;;
     yarn)
-        yarn "$@"
+        project=$(whichproject)
+        yarn "$project" "$@"
         ;;
     *)
         dc "$subcommand" "$@" || lasercommands
