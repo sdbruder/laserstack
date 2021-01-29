@@ -40,6 +40,8 @@ COPY php.ini          /etc/php8/conf.d/laser.ini
 COPY nginx-site.conf  /etc/nginx/conf.d/
 COPY supervisord.conf /etc/supervisord.conf
 
+ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so
+
 EXPOSE 80
 
 ENTRYPOINT ["supervisord", "--nodaemon", "--configuration", "/etc/supervisord.conf"]
