@@ -40,9 +40,9 @@ Clone Laser Stack in the same directory which you store your Laravel projects (`
 ```
 git clone https://github.com/sdbruder/laserstack.git
 ```
-Copy env-example to .env:
+Copy env.example to .env:
 ```
-cp env-example .env
+cp env.example .env
 ```
 Setup an alias or add laserstack directory to your path:
 ```
