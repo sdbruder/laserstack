@@ -4,6 +4,9 @@ services:
     build:
       context: ./docker/app
       dockerfile: Dockerfile
+    cap_add:
+      - SYS_ADMIN
+    image: laserstack/app
     hostname: laser
     environment:
       LASER: 1
