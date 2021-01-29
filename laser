@@ -13,7 +13,7 @@ if [ -f ./.env ]; then
     # shellcheck disable=SC1091
     source ./.env
 else
-    echo "We didn't found laser .env file."
+    echo "laser .env file not found."
     exit 1
 fi
 projects_dir=$(cd "$PROJECTS_DIRECTORY"; pwd)
@@ -88,39 +88,47 @@ function dockerhelp() {
 
 function artisan() {
     project=$1 ; shift
-    dc exec app php "$project/artisan" "$@"
+    dc exec --workdir "/var/www/$project" app php artisan "$@"
 }
 
 function composer() {
-    dc exec app composer "$@"
+    project=$1 ; shift
+    dc exec --workdir "/var/www/$project" app composer "$@"
 }
 
 function mysql() {
-    dc exec app bash -c "mysql MYSQL_PWD=${DB_PASSWORD} mysql -u ${DB_USER} ${DB_DATABASE}" "$@"
+    echo "mysql MYSQL_PWD=${DB_PASSWORD} mysql -h mysql -u ${DB_USER} ${DB_DATABASE}" "$@"
+    dc exec app bash -c "mysql MYSQL_PWD=${DB_PASSWORD} mysql -h mysql -u ${DB_USER} ${DB_DATABASE}" "$@"
 }
 
 function node() {
-    dc exec app node "$@"
+    project=$1 ; shift
+    dc exec --workdir "/var/www/$project" app node "$@"
 }
 
 function npm() {
-    dc exec app npm "$@"
+    project=$1 ; shift
+    dc exec --workdir "/var/www/$project" app npm "$@"
 }
 
 function npx() {
-    dc exec app npx "$@"
+    project=$1 ; shift
+    dc exec --workdir "/var/www/$project" app npx "$@"
 }
 
 function php() {
-    dc exec app php "$@"
+    project=$1 ; shift
+    dc exec --workdir "/var/www/$project" app php "$@"
 }
 
 function tinker() {
-    dc exec app php artisan tinker "$@"
+    project=$1 ; shift
+    dc exec --workdir "/var/www/$project" app php artisan tinker "$@"
 }
 
 function dotest() {
-    dc exec app php artisan test "$@"
+    project=$1 ; shift
+    dc exec --workdir "/var/www/$project" app php artisan test "$@"
 }
 
 function share() {
@@ -131,11 +139,13 @@ function share() {
 }
 
 function shell() {
-    dc exec app bash "$@"
+    project=$1 ; shift
+    dc exec --workdir "/var/www/$project" app bash "$@"
 }
 
 function yarn() {
-    dc exec app yarn "$@"
+    project=$1 ; shift
+    dc exec --workdir "/var/www/$project" app yarn "$@"
 }
 
 set +e
@@ -149,7 +159,7 @@ case "$subcommand" in
     dockerhelp)
         dockerhelp
         ;;
-    artisan)
+    artisan | art)
         project=$(whichproject)
         artisan "$project" "$@"
         ;;
