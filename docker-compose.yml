@@ -4,6 +4,7 @@ services:
     build:
       context: ./docker/app
       dockerfile: Dockerfile
+    hostname: laser
     environment:
       LASER: 1
     tty: true
