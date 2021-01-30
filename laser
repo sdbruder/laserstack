@@ -33,7 +33,12 @@ function relativepath() {
 }
 
 function whichproject() {
-    relativepath "$projects_dir" "$current_dir"
+    project=$(relativepath "$projects_dir" "$current_dir")
+    if [[ $project = */* ]] ; then
+        echo "WARNING: not on an expected project directory." >&2
+        project=""
+    fi
+    echo "$project"
 }
 
 function nih() {
