@@ -35,7 +35,7 @@ function relativepath() {
 function whichproject() {
     project=$(relativepath "$projects_dir" "$current_dir")
     if [[ $project = */* ]] ; then
-        echo "WARNING: not on an expected project directory." >&2
+        echo "WARNING: expected a subdir of ${projects_dir}. Current dir is ${current_dir}." >&2
         project=""
     fi
     echo "$project"
