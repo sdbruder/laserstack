@@ -19,6 +19,12 @@ else
 fi
 projects_dir=$(cd "$PROJECTS_DIRECTORY"; pwd)
 
+function error_message() {
+    RED='\033[1;31m'
+    NC='\033[0m'     # No Color
+    echo -e "${RED}$1${NC}" >&2
+}
+
 # thanks https://stackoverflow.com/a/5027832
 function relativepath() {
     source=$1
@@ -35,7 +41,7 @@ function relativepath() {
 function whichproject() {
     project=$(relativepath "$projects_dir" "$current_dir")
     if [[ $project = */* ]] ; then
-        echo "WARNING: expected a subdir of ${projects_dir}. Current dir is ${current_dir}." >&2
+        error_message "WARNING: expected a subdir of ${projects_dir}. Current dir is ${current_dir}."
         project=""
     fi
     echo "$project"
