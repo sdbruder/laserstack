@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Typo fix on CHANGELOG itself. duh.
 ### Changed
 - DB_USER environment variable renamed to DB_USERNAME to be consistent with
   default Laravel environment. Breaking change, update your local .env file.
@@ -18,4 +20,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.1] 2021-01-29
 ### Added
-- Iinitial release
+- Initial release
