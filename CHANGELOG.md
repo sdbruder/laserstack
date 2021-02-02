@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- DB_USER environment variable renamed to DB_USERNAME to be consistent with
+  default Laravel environment. Breaking change, update your local .env file.
 
 ## [0.0.2] 2021-01-31
 ### Added

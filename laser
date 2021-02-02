@@ -110,7 +110,7 @@ function composer() {
 }
 
 function mysql() {
-    dc exec app bash -c "MYSQL_PWD=${DB_PASSWORD} mysql -h db -u ${DB_USER} ${DB_DATABASE}" "$@"
+    dc exec app bash -c "MYSQL_PWD=${DB_PASSWORD} mysql -h db -u ${DB_USERNAME} ${DB_DATABASE}" "$@"
 }
 
 function node() {
