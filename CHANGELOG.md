@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - Typo fix on CHANGELOG itself. duh.
+- Typo in Dockerfile, `laser build` is now fixed.
 ### Changed
 - DB_USER environment variable renamed to DB_USERNAME to be consistent with
   default Laravel environment. Breaking change, update your local .env file.
