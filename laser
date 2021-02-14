@@ -155,7 +155,7 @@ function share() {
 
 function shell() {
     project=$1 ; shift
-    dc exec --workdir "/var/www/$project" app bash -c "$@"
+    dc exec --workdir "/var/www/$project" app bash "$@"
 }
 
 function appexec() {
