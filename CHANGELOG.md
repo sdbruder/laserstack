@@ -12,12 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - laser mysql now accepts parameters so you can call `laser mysql yourdatabase`
 
+- fixed supervisor install, now supervisorctl works correctly.
+
 ### Changed
 - DB_USER environment variable renamed to DB_USERNAME to be consistent with
   default Laravel environment. Breaking change, update your local .env file.
 
 - multiple subdomains are now allowed per project supporting multi-tenant 
   Laravel apps.
+
+- sudo now is installed in app
 
 ## [0.0.2] 2021-01-31
 ### Added
