@@ -15,6 +15,7 @@ services:
       - 80:80
     working_dir: /var/www
     volumes:
+      - ./config/nginx:/etc/nginx/conf.d:cached
       - ${PROJECTS_DIRECTORY}:/var/www:cached
     networks:
       - laser

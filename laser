@@ -22,7 +22,7 @@ projects_dir=$(cd "$PROJECTS_DIRECTORY"; pwd)
 function error_message() {
     RED='\033[1;31m'
     NC='\033[0m'     # No Color
-    echo -e "${RED}$1${NC}" >&2
+    echo -e "${RED}ERROR:${NC} $* " >&2
 }
 
 # thanks https://stackoverflow.com/a/5027832
@@ -65,6 +65,7 @@ function lasercommands() {
     echo "  dockerhelp         List docker-compose and laser commands"
     echo "  help               List laser commands"
     echo "  mysql              Execute mysql"
+    echo "  scan               Scan and identify projects to build nginx configs"
     echo "  node               Execute node"
     echo "  npm                Execute npm"
     echo "  npx                Execute npx"
@@ -115,6 +116,38 @@ function mysql() {
         dc exec app bash -c "MYSQL_PWD=${DB_PASSWORD} mysql -h db -u ${DB_USERNAME} ${DB_DATABASE}"
     else
         dc exec app bash -c "MYSQL_PWD=${DB_PASSWORD} mysql -h db -u ${DB_USERNAME} $*"
+    fi
+}
+
+function stackisup() {
+    dc ps -q
+}
+
+function restartnginx() {
+    dc exec app /usr/bin/supervisorctl restart nginx
+}
+
+function restart_nginx_if_up() {
+    isup=$(stackisup)
+    if [ -n "$isup" ]; then
+        echo "Laser Stack is up, restarting nginx."
+        restartnginx
+    fi
+}
+
+function scan() {
+    local changed=0
+    isup=$(stackisup)
+    if [ -n "$isup" ]; then
+        # shellcheck disable=SC1091
+        source libs/sourcedrivers.sh
+        changed=$(drivers::scan_projects "${projects_dir}")
+        if [ "$changed" -eq "1" ]; then
+            echo "Configuration changed."
+            restart_nginx_if_up
+        fi
+    else
+        error_message "scan needs the stack up."
     fi
 }
 
@@ -189,6 +222,12 @@ case "$subcommand" in
         ;;
     mysql)
         mysql "$@"
+        ;;
+    scan)
+        scan "$@"
+        ;;
+    restartnginx)
+        restartnginx "$@"
         ;;
     node)
         project=$(whichproject)
