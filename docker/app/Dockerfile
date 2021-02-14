@@ -13,7 +13,7 @@ RUN \
 		php8 php8-fpm php8-phar php8-fileinfo php8-tokenizer php8-dom \
 		php8-simplexml php8-xml php8-xmlreader php8-xmlwriter php8-pdo_mysql \
 		php8-mbstring php8-opcache php8-iconv php8-intl php8-gd php8-session \
-		php8-pecl-redis \
+		php8-pecl-redis php8-mysqli php8-mysqlnd \
 	&& ln -s /usr/bin/php8 /usr/local/bin/php \
 	&& rm -f /etc/nginx/conf.d/*
 
