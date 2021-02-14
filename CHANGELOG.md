@@ -7,16 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - Typo fix on CHANGELOG itself. duh.
+
 - Typo in Dockerfile, `laser build` is now fixed.
+
 - laser mysql now accepts parameters so you can call `laser mysql yourdatabase`
+
 ### Changed
 - DB_USER environment variable renamed to DB_USERNAME to be consistent with
   default Laravel environment. Breaking change, update your local .env file.
 
+- multiple subdomains are now allowed per project supporting multi-tenant 
+  Laravel apps.
+
 ## [0.0.2] 2021-01-31
 ### Added
 - GNU libiconv preload to avoid Alpine Linux iconv issues
+
 - Changelog added (following keep a changelog format)
+
 ### Fixed
 - Laser stack now will WARN when called in a directory not hosted
 
