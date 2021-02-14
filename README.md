@@ -31,13 +31,15 @@ Be as small, simple and fast as possible:
 
 ## Limitations
 
-- Currently we only support Laravel projects (because of the nginx config which points to the public subdirectory)
-- dns resolution needs to be manually managed through `/etc/hosts`.
+- Currently we only support only Laravel and Wordpress projects and overridable
+  per project nginx config, those are examples, additional drivers PR's are
+  welcome.
+- DNS resolution needs to be manually managed through `/etc/hosts`.
 
 ## Versions
 
 Currently it uses the following versions of software:
-- PHP v8.0.1
+- PHP v8.0.2
 - MySQL v8.0.22
 - node v14.15.4
 - npm v6.14.10
@@ -75,6 +77,22 @@ To look additional laser commands:
 ```
 laser help
 ```
+
+## Other frameworks support
+
+Out of the box Laser Stack supports multiple Laravel projects. There is
+additional drivers supporting Wordpress and particular nginx configs.
+
+To configure a particular nginx config for a project, create a
+`.laserstack_nginx.conf` file in your project root directory and call
+`laser scan`. Laser Stack will copy it as `YOURPROJECTDIR.conf`. in the app
+your project will be in `/var/www/YOURPROJECTDIR`.
+
+Every time you add or remove a non-Laravel project, you need to call
+`laser scan` to allow Laser Stack to adjust it's nginx config.
+
+Laravel and Wordpress are simple examples of support drivers. Additional drivers
+submitted as pull request are welcomed.
 
 ## DNS resolution
 

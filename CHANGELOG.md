@@ -19,13 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   default Laravel environment. Breaking change, update your local .env file.
 
 ## Added
-- multiple subdomains are now allowed per project supporting multi-tenant 
+- multiple subdomains are now allowed per project supporting multi-tenant
   Laravel apps.
 
 - sudo now is installed in app
 
-- laser shell script now has subcommand appexec which allows you to call any 
+- laser shell script now has subcommand appexec which allows you to call any
   binary in the container
+
+- Added support for wordpress, particular laravel nginx configs and a generic
+  overridable config per project. Check README.md for details.
 
 ## [0.0.2] 2021-01-31
 ### Added
