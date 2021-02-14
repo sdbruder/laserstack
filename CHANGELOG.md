@@ -18,10 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - DB_USER environment variable renamed to DB_USERNAME to be consistent with
   default Laravel environment. Breaking change, update your local .env file.
 
+## Added
 - multiple subdomains are now allowed per project supporting multi-tenant 
   Laravel apps.
 
 - sudo now is installed in app
+
+- laser shell script now has subcommand appexec which allows you to call any 
+  binary in the container
 
 ## [0.0.2] 2021-01-31
 ### Added

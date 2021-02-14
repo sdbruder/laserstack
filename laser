@@ -73,6 +73,7 @@ function lasercommands() {
     echo "  test               Execute php artisan test"
     echo "  share              Share externally your laser stack"
     echo "  shell              Shell in the app container"
+    echo "  appexec            Execute arbitrary commands in the app container"
     echo "  yarn               Execute yarn"
 }
 
@@ -154,7 +155,12 @@ function share() {
 
 function shell() {
     project=$1 ; shift
-    dc exec --workdir "/var/www/$project" app bash "$@"
+    dc exec --workdir "/var/www/$project" app bash -c "$@"
+}
+
+function appexec() {
+    project=$1 ; shift
+    dc exec --workdir "/var/www/$project" app "$@"
 }
 
 function yarn() {
@@ -215,6 +221,10 @@ case "$subcommand" in
     shell)
         project=$(whichproject)
         shell "$project" "$@"
+        ;;
+    appexec)
+        project=$(whichproject)
+        appexec "$project" "$@"
         ;;
     yarn)
         project=$(whichproject)
