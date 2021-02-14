@@ -14,7 +14,7 @@ source libs/multilaravelDriver.sh
 
 
 function drivers::config_hash() {
-    dc exec app sh -c "md5sum /etc/nginx/config.d/* 2>/dev/null | md5sum"
+    dc exec app sh -c "md5sum /etc/nginx/conf.d/* 2>/dev/null | md5sum"
 }
 
 function drivers::config() {
@@ -43,6 +43,8 @@ function drivers::scan_projects() {
     multilaravel::config
 
     hash_pos=$(drivers::config_hash)
+    # echo "hash pre $hash_pre"
+    # echo "hash pos $hash_pos"
     if [ "$hash_pre" == "$hash_pos" ] ; then
         echo 0
     else

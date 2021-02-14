@@ -136,18 +136,26 @@ function restart_nginx_if_up() {
 }
 
 function scan() {
+    fromscratch="${1:-preserve}"
+
     local changed=0
     isup=$(stackisup)
     if [ -n "$isup" ]; then
+        if [ "$fromscratch" == "--fromscratch" ]; then
+            echo "SCAN: starting from scratch"
+            rm -f config/nginx/*
+        fi
         # shellcheck disable=SC1091
         source libs/sourcedrivers.sh
         changed=$(drivers::scan_projects "${projects_dir}")
         if [ "$changed" -eq "1" ]; then
-            echo "Configuration changed."
-            restart_nginx_if_up
+            echo "SCAN: configuration changed"
+            restartnginx
+        else
+            echo "SCAN: no configuration change $changed"
         fi
     else
-        error_message "scan needs the stack up."
+        error_message "SCAN: stack need to be up"
     fi
 }
 
