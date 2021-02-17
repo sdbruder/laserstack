@@ -24,14 +24,15 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     ports:
       - "3306:3306"
+    volumes:
+      - ./config/db:/etc/mysql/conf.d:cached
+      - dbdata:/var/lib/mysql:delegated
     environment:
       LASER: 1
       MYSQL_DATABASE: '${DB_DATABASE}'
       MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD}'
       MYSQL_USER: '${DB_USERNAME}'
       MYSQL_PASSWORD: '${DB_PASSWORD}'
-    volumes:
-      - dbdata:/var/lib/mysql:delegated
     networks:
       - laser
   redis:
