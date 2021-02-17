@@ -76,6 +76,7 @@ function lasercommands() {
     echo "  shell              Shell in the app container"
     echo "  appexec            Execute arbitrary commands in the app container"
     echo "  yarn               Execute yarn"
+    echo "  stats              top-like docker stats"
 }
 
 function dohelp() {
@@ -99,6 +100,10 @@ function dohelp() {
 function dockerhelp() {
     dc help
     lasercommands
+}
+
+function stats() {
+    docker stats
 }
 
 function artisan() {
@@ -220,6 +225,18 @@ case "$subcommand" in
     dockerhelp)
         dockerhelp
         ;;
+    mysql)
+        mysql "$@"
+        ;;
+    scan)
+        scan "$@"
+        ;;
+    stats)
+        stats "$@"
+        ;;
+    restartnginx)
+        restartnginx "$@"
+        ;;
     artisan | art)
         project=$(whichproject)
         artisan "$project" "$@"
@@ -227,15 +244,6 @@ case "$subcommand" in
     composer)
         project=$(whichproject)
         composer "$project" "$@"
-        ;;
-    mysql)
-        mysql "$@"
-        ;;
-    scan)
-        scan "$@"
-        ;;
-    restartnginx)
-        restartnginx "$@"
         ;;
     node)
         project=$(whichproject)
