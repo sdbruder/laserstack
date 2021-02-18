@@ -1,15 +1,19 @@
 version: '3'
 services:
   app:
-    build:
-      context: ./docker/app
-      dockerfile: Dockerfile
+    image: laserstack/app
+    # build:
+    #   context: ./docker/app
+    #   dockerfile: Dockerfile
     cap_add:
       - SYS_ADMIN
-    image: laserstack/app
     hostname: laser
     environment:
       LASER: 1
+      MYSQL_DATABASE: '${DB_DATABASE}'
+      MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD}'
+      MYSQL_USER: '${DB_USERNAME}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
     tty: true
     ports:
       - 80:80

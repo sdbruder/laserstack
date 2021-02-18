@@ -5,8 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-## Added
+### Added
 - stats - top-like docker stats added to laser
+- .my.cnf is now built from environment variables in .bashrc
+
+### Changed
+- app container is now downloaded by default. You can still build yourself if 
+  you want, just uncomment the build part for app container on 
+  docker-compose.yml file.
 
 ## [0.1.0] 2021-02-15
 ### Fixed
