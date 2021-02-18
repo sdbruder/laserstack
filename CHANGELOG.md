@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   you want, just uncomment the build part for app container on 
   docker-compose.yml file.
 
+- Updated dockerfile for app image
+
 ## [0.1.0] 2021-02-15
 ### Fixed
 - Typo fix on CHANGELOG itself. duh.
