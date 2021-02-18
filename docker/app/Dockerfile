@@ -18,14 +18,12 @@ RUN \
 	&& rm -f /etc/nginx/conf.d/*
 
 RUN \
-	curl --location --output /usr/local/bin/phpunit \
-		"https://phar.phpunit.de/phpunit.phar" \
+	curl -sS --location --output /usr/local/bin/phpunit "https://phar.phpunit.de/phpunit.phar" \
 	&& chmod +x /usr/local/bin/phpunit \
-	&& curl --location --output /tmp/composer-setup.php \
-		"https://getcomposer.org/installer" \
-	&& php /tmp/composer-setup.php \
-		--install-dir=/usr/local/bin --filename=composer --quiet \
-	&& rm /tmp/composer-setup.php
+	&& curl -sS --location --output /tmp/composer-setup.php "https://getcomposer.org/installer" \
+	&& php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer --quiet \
+	&& rm /tmp/composer-setup.php \
+	&& /usr/local/bin/composer global require phpunit/phpunit
 
 RUN \
 	echo "source /etc/profile" > ~/.bashrc \
@@ -36,6 +34,7 @@ RUN \
 	&& adduser -D -s /bin/bash -h /var/www -G laser laser \
 	&& passwd -d laser laser
 
+COPY bashrc           /root/.bashrc
 COPY php.ini          /etc/php8/conf.d/laser.ini
 COPY nginx-site.conf  /etc/nginx/conf.d/
 COPY supervisord.conf /etc/supervisord.conf
@@ -44,4 +43,4 @@ ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so
 
 EXPOSE 80
 
-ENTRYPOINT ["supervisord", "--nodaemon", "--configuration", "/etc/supervisord.conf"]
+CMD ["supervisord", "--nodaemon", "--configuration", "/etc/supervisord.conf"]
