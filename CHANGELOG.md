@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - stats - top-like docker stats added to laser
+
 - .my.cnf is now built from environment variables in .bashrc
+
+- supervisord has editable config on config/supervisord/supervisord.conf, 
+  now mounted.
 
 ### Changed
 - app container is now downloaded by default. You can still build yourself if 
