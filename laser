@@ -3,6 +3,20 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+function color_message() {
+    COLOR="\033[1;$1m"
+    NOCOLOR='\033[0m'
+    echo -e "${COLOR} $2: ${NOCOLOR} $3 " >&2
+}
+
+function error_message() {
+    color_message 31 "ERROR:" "$*"
+}
+
+function warning_message() {
+    color_message 33 "WARNING:" "$*"
+}
+
 current_dir=$(pwd)
 # thanks https://stackoverflow.com/questions/3349105/
 laser_dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
@@ -14,16 +28,12 @@ if [ -f ./.env ]; then
     # shellcheck disable=SC1091
     source ./.env
 else
-    echo "laser .env file not found."
-    exit 1
+    warning_message "laser .env file not found, copying .env.example as .env."
+    cp ./env.example ./.env
+    # shellcheck disable=SC1091
+    source ./.env
 fi
 projects_dir=$(cd "$PROJECTS_DIRECTORY"; pwd)
-
-function error_message() {
-    RED='\033[1;31m'
-    NC='\033[0m'     # No Color
-    echo -e "${RED}ERROR:${NC} $* " >&2
-}
 
 # thanks https://stackoverflow.com/a/5027832
 function relativepath() {
