@@ -48,6 +48,13 @@ services:
       LASER: 1
     networks:
       - laser
+  elasticsearch:
+    image: elasticsearch:7.14.2
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      discovery.type: single-node
 
 volumes:
   dbdata:
