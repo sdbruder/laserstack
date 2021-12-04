@@ -5,7 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+- what else do you need?
+## [0.5.0] 2021-12-04
 ### Added
+- php version is now also configurable in `.env`. Current possible values are `php8`, `php81` and `latest` which points to `php8` for now.
+
+- `db`, `redis` and `elasticsearch` now are optional, the only container which is always executed is app (which runs nginx and php-fpm). To control which optional container are used change `OPTS` in `.env` file.
+
+- additional php extensions added, namely, php8-curl, php8-ctype and php8-zip
+
 - stats - top-like docker stats added to laser
 
 - .my.cnf is now built from environment variables in .bashrc
