@@ -6,7 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- what else do you need?
+## [0.5.1] 2021-12-04
+### Fixed
+- README.md update
+
 ## [0.5.0] 2021-12-04
 ### Added
 - php version is now also configurable in `.env`. Current possible values are `php8`, `php81` and `latest` which points to `php8` for now.
