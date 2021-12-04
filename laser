@@ -1,7 +1,7 @@
 #!/bin/bash
 # http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail
-IFS=$'\n\t'
+IFS=$'\n\t '
 
 function color_message() {
     COLOR="\033[1;$1m"
@@ -35,6 +35,9 @@ else
 fi
 projects_dir=$(cd "$PROJECTS_DIRECTORY"; pwd)
 
+dc_opts=$(echo $OPTS | sed 's| |.yml -f opt/|g;s|^|-f opt/|;s|$|.yml|;')
+dc_params="-f docker-compose.yml $dc_opts"
+
 # thanks https://stackoverflow.com/a/5027832
 function relativepath() {
     source=$1
@@ -62,7 +65,7 @@ function nih() {
 }
 
 function dc() {
-    docker-compose "$@"
+    docker-compose $dc_params "$@"
 }
 
 function lasercommands() {

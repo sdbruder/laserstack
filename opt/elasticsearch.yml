@@ -1,0 +1,11 @@
+services:
+  elasticsearch:
+    image: elasticsearch:7.14.2
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      LASER: 1
+      discovery.type: single-node
+    networks:
+      - laser
