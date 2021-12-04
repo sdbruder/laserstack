@@ -39,12 +39,15 @@ Be as small, simple and fast as possible:
 ## Versions
 
 Currently it uses the following versions of software:
-- PHP v8.0.2
-- MySQL v8.0.22
-- node v14.15.4
-- npm v6.14.10
-- composer v2.0.9
+- PHP v8.0.13 and v8.1.0
+- MySQL v8.0.27
+- node v16.13.1
+- npm v8.1.3
+- yarn v1.22.17
+- composer v2.1.14
 - redis v6.0.9
+- elasticsearch v7.14.2
+
 ## Getting started
 
 Clone Laser Stack in the same directory which you store your Laravel projects (`~/src` for example):
