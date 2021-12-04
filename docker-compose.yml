@@ -19,8 +19,8 @@ services:
       - 80:80
     working_dir: /var/www
     volumes:
-      - ./config/supervisord/supervisord.conf:/etc/supervisord.conf:cached
-      - ./config/nginx:/etc/nginx/conf.d:cached
+      - ./config/supervisord.${PHP_VERSION}/supervisord.conf:/etc/supervisord.conf:cached
+      - ./config/nginx:/etc/nginx/http.d:cached
       - ${PROJECTS_DIRECTORY}:/var/www:cached
     networks:
       - laser
