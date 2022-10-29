@@ -27,6 +27,46 @@ services:
       - ./config/php/php-fpm.d:/etc/php81/php-fpm.d:cached
     networks:
       - laser
+  db:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./config/db:/etc/mysql/conf.d:cached
+      - dbdata:/var/lib/mysql:delegated
+    environment:
+      LASER: 1
+      MYSQL_DATABASE: '${DB_DATABASE}'
+      MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD}'
+      MYSQL_USER: '${DB_USERNAME}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
+    networks:
+      - laser
+  redis:
+    image: redis:alpine
+    ports:
+      - 6379:6379
+    environment:
+      LASER: 1
+    networks:
+      - laser
+  elasticsearch:
+    image: elasticsearch:7.14.2
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      LASER: 1
+      discovery.type: single-node
+    networks:
+      - laser
+
+
+volumes:
+  dbdata:
+    driver: local
+
 
 networks:
   laser:

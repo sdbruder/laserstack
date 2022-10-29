@@ -230,7 +230,7 @@ function new() {
     </style>
 </head>
 <body class=\"antialiased\">
-    <div class=\"relative flex items-top justify-center min-h-screen bg-gray-100 dark:bg-gray-900 sm:items-center py-4 sm:pt-0\">            
+    <div class=\"relative flex items-top justify-center min-h-screen bg-gray-100 dark:bg-gray-900 sm:items-center py-4 sm:pt-0\">
         <div class=\"max-w-6xl mx-auto sm:px-6 lg:px-8\">
             <div class=\"mt-8 bg-white dark:bg-gray-800 overflow-hidden shadow sm:rounded-lg\">
                 <div class=\"grid grid-cols-1 md:grid-cols-1\">
@@ -286,11 +286,12 @@ else
 fi
 projects_dir=$(cd "$PROJECTS_DIRECTORY"; pwd)
 
-dc_opts=$(echo $OPTS | sed 's| |.yml -f opt/|g;s|^|-f opt/|;s|$|.yml|;')
-dc_params="-f docker-compose.yml $dc_opts"
+# dc_opts=$(echo $OPTS | sed 's| |.yml -f opt/|g;s|^|-f opt/|;s|$|.yml|;')
+#dc_params="-f docker-compose.yml $dc_opts"
+dc_params="-f docker-compose.yml"
 
 WSL=
-if [[ $(grep -i microsoft /proc/version) ]]; then
+if [[ $(grep -si microsoft /proc/version) ]]; then
     WSL=wsl
     windows_path=` mount | grep drvfs | awk '{ print $3; }'`
 fi
