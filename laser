@@ -23,10 +23,12 @@ function relativepath() {
     target=$2
     common_part=$source
     back=
+    # shellcheck disable=SC2295
     while [ "${target#$common_part}" = "${target}" ]; do
         common_part=$(dirname "$common_part")
         back="../${back}"
     done
+    # shellcheck disable=SC2295
     echo "${back}${target#$common_part/}"
 }
 
@@ -44,6 +46,7 @@ function nih() {
 }
 
 function dc() {
+    #shellcheck disable=SC2086
     docker-compose $dc_params "$@"
 }
 
@@ -208,8 +211,8 @@ function yarn() {
 
 function new() {
     project=$1 ; shift
-    mkdir -p $laser_dir/../$project/public
-    export $project
+    mkdir -p "$laser_dir/../$project/public"
+    export project
     HELLOWORLD="
 <!DOCTYPE html>
 <html lang=\"en\">
@@ -255,9 +258,9 @@ function new() {
 </html>
 "
     # echo "<h1 style=\"font-family: sans-serif; color: #777; margin: 1em; \">hello world from $project</h1>" > $laser_dir/../$project/public/index.php
-    echo "$HELLOWORLD" > $laser_dir/../$project/public/index.php
+    echo "$HELLOWORLD" > "$laser_dir/../$project/public/index.php"
     sudo bash -c "echo -e '\n127.0.0.1 $project.local $project' >> /etc/hosts"
-    cd $laser_dir/../$project
+    cd "$laser_dir/../$project"
     echo "$project created."
     if [[ "$WSL" ]]; then
         echo "WSL detected, manually add \"127.0.0.1 $project.local $project\" to %windir%\\System32\\drivers\\etc\\hosts"
