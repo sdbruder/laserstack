@@ -291,9 +291,11 @@ projects_dir=$(cd "$PROJECTS_DIRECTORY"; pwd)
 dc_params="-f docker-compose.yml"
 
 WSL=
+# shellcheck disable=SC2143
 if [[ $(grep -si microsoft /proc/version) ]]; then
     WSL=wsl
-    windows_path=` mount | grep drvfs | awk '{ print $3; }'`
+    # shellcheck disable=SC2034
+    windows_path=$(mount | grep drvfs | awk '{ print $3; }')
 fi
 
 set +e
