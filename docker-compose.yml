@@ -21,7 +21,8 @@ services:
     volumes:
       - ${PROJECTS_DIRECTORY}:/var/www:cached
       - ./config/supervisord.${PHP_VERSION}/supervisord.conf:/etc/supervisord.conf:cached
-      - ./config/nginx:/etc/nginx/http.d:cached
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:cached
+      - ./config/nginx/http.d:/etc/nginx/http.d:cached
       - ./config/php/php.ini:/etc/php81/php.ini:cached
       - ./config/php/php-fpm.conf:/etc/php81/php-fpm.conf:cached
       - ./config/php/php-fpm.d:/etc/php81/php-fpm.d:cached
