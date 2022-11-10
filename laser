@@ -152,7 +152,7 @@ function scan() {
             echo "SCAN: configuration changed"
             restartnginx
         else
-            echo "SCAN: no configuration change $changed"
+            echo "SCAN: no configuration change"
         fi
     else
         error_message "SCAN: stack need to be up"
