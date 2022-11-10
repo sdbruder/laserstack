@@ -5,6 +5,8 @@ source libs/genericDriver.sh
 # shellcheck disable=SC1091
 source libs/laravelDriver.sh
 # shellcheck disable=SC1091
+source libs/symfonyDriver.sh
+# shellcheck disable=SC1091
 source libs/wordpressDriver.sh
 # shellcheck disable=SC1091
 source libs/multilaravelDriver.sh
@@ -20,7 +22,7 @@ function drivers::config_hash() {
 
 function drivers::config() {
     local project_dir=${1}
-    for driver in generic wordpress laravel ; do
+    for driver in generic wordpress laravel symfony ; do
         driverIdentify="${driver}::identify"
         driverConfig="${driver}::config"
         id=$("$driverIdentify" "$project_dir")
