@@ -52,6 +52,9 @@ services:
       LASER: 1
     networks:
       - laser
+    profiles:
+      - redis
+      - full
   elasticsearch:
     image: elasticsearch:7.14.2
     ports:
@@ -62,6 +65,9 @@ services:
       discovery.type: single-node
     networks:
       - laser
+    profiles:
+      - elasticsearch
+      - full
 
 
 volumes:

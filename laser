@@ -123,6 +123,10 @@ function stackisup() {
     dc ps -q
 }
 
+function restartphp() {
+    dc exec app /usr/bin/supervisorctl restart php-fpm
+}
+
 function restartnginx() {
     dc exec app /usr/bin/supervisorctl restart nginx
 }
@@ -287,11 +291,10 @@ else
     # shellcheck disable=SC1091
     source ./.env
 fi
+
 projects_dir=$(cd "$PROJECTS_DIRECTORY"; pwd)
 
-# dc_opts=$(echo $OPTS | sed 's| |.yml -f opt/|g;s|^|-f opt/|;s|$|.yml|;')
-#dc_params="-f docker-compose.yml $dc_opts"
-dc_params="-f docker-compose.yml"
+dc_params="-f docker-compose.yml --profile $PROFILE"
 
 WSL=
 # shellcheck disable=SC2143
@@ -376,6 +379,6 @@ case "$subcommand" in
         new "$@"
         ;;
     *)
-        dc "$subcommand" "$@" || lasercommands
+        dc "$subcommand" "$@" 
         ;;
 esac
