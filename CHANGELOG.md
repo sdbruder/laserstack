@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- 8.1 configs are fixed
+- laser scan now identifies custom, laravel & symfony (based on the multiProject config) and wordpress.
+
 ## [0.5.2] 2021-12-04
 ### Fixed
 - broken nginx config fixed
