@@ -13,15 +13,15 @@ function multilaravel::config() {
 	# target of Laser Stack. This will be executed every time we do not find
 	# this particular multi-project config.
 
-	if [ ! -f "config/nginx/multiProjectLaravel.conf" ]; then
-		cat > "config/nginx/multiProjectLaravel.conf" <<'CONFIG_END'
+	if [ ! -f "config/nginx/http.d/multiProjectLaravel.conf" ]; then
+		cat > "config/nginx/http.d/multiProjectLaravel.conf" <<'CONFIG_END'
 server {
     listen 80 default_server;
 
     # this allows:
-    # - yourproject.test
-    # - anything.yourproject.test
-    # - othersubdomain.anything.yourproject.test
+    # - yourproject.local
+    # - anything.yourproject.local
+    # - othersubdomain.anything.yourproject.local
     #
     # and all those urls will load:
     # ${PROJECTS_DIRECTORY}/yourproject/public

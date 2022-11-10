@@ -18,14 +18,14 @@ function wordpress::config() {
 	local project_path=${1:-.}
 	local project
 	project=$(basename "$project_path")
-	if [ -f "$project_path/.laserstack_nginx.conf" ]; then
-		cat "$project_path/.laserstack_nginx.conf" > "config/nginx/$project.conf"
+	if [ -f "$project_path/laserstack-nginx.conf" ]; then
+		cat "$project_path/laserstack-nginx.conf" > "config/nginx/http.d/$project.conf"
 	else
-		cat > "config/nginx/$project.conf" << CONFIG_END
+		cat > "config/nginx/http.d/$project.conf" << CONFIG_END
 server {
 	listen 80;
 
-	server_name $project.test *.$project.test;
+	server_name $project.local *.$project.local;
 
 	root /var/www/$project;
 
