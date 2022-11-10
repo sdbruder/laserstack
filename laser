@@ -294,7 +294,10 @@ fi
 
 projects_dir=$(cd "$PROJECTS_DIRECTORY"; pwd)
 
-dc_params="-f docker-compose.yml --profile $PROFILE"
+dc_params="-f docker-compose.yml"
+if [ -n "$PROFILE" ]; then
+    dc_params="$dc_params --profile $PROFILE"
+fi
 
 WSL=
 # shellcheck disable=SC2143
