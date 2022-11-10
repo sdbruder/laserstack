@@ -1,7 +1,4 @@
 #!/bin/bash
-# http://redsymbol.net/articles/unofficial-bash-strict-mode/
-set -euo pipefail
-IFS=$'\n\t'
 
 # shellcheck disable=SC1091
 source libs/genericDriver.sh
@@ -12,6 +9,10 @@ source libs/wordpressDriver.sh
 # shellcheck disable=SC1091
 source libs/multilaravelDriver.sh
 
+
+function echoerr() {
+    echo "$@" 1>&2; 
+}
 
 function drivers::config_hash() {
     dc exec app sh -c "md5sum /etc/nginx/http.d/* 2>/dev/null | md5sum"
@@ -24,6 +25,7 @@ function drivers::config() {
         driverConfig="${driver}::config"
         id=$("$driverIdentify" "$project_dir")
         if [ "$id" == "ok" ] ; then
+            echoerr "SCAN: $project_dir identified as $driver."
             $driverConfig "$project_dir"
             break
         fi
@@ -43,8 +45,6 @@ function drivers::scan_projects() {
     multilaravel::config
 
     hash_pos=$(drivers::config_hash)
-    echo "hash pre $hash_pre"
-    echo "hash pos $hash_pos"
     if [ "$hash_pre" == "$hash_pos" ] ; then
         echo 0
     else
