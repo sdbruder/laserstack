@@ -7,7 +7,7 @@ Sail and multi-project like Valet. Aims to be small and fast. It's opinionated:
 it does not support everything under the sun but it's configurable, you can
 customize the container to suit your needs.
 
-It supports macOS, WSL2 (Windows) and Linux and it needs docker.
+It supports macOS, WSL2, WSLg (Windows) and Linux and it needs docker.
 
 Laser has a shell script around docker-compose as an interface to it, it exposes
 all docker-compose commands and extends it with it's own subcommands.
@@ -23,7 +23,7 @@ Be as small, simple and fast as possible:
 
 - do not try to protect you from docker: if you try something that needs the stack up while it's down you will get the raw docker-compose error.
 - simple and single shell script (`laser`) serve as an interface
-- low number of containers: `app`, `db` and `redis`
+- low number of containers: `app`, `db` and you can configure if you want `redis` and `elasticsearch`.
 - small containers: Almost all containers are Alpine Linux based
 - simple build process, only a single container is built
 - nginx-based http serving, faster than php-based solutions
@@ -39,13 +39,13 @@ Be as small, simple and fast as possible:
 ## Versions
 
 Currently it uses the following versions of software:
-- PHP v8.0.13 and v8.1.0
-- MySQL v8.0.27
-- node v16.13.1
-- npm v8.1.3
-- yarn v1.22.17
-- composer v2.1.14
-- redis v6.0.9
+- PHP v8.1.12 or v8.0.13
+- MySQL v8.0
+- node v16.17.1
+- npm v8.10.0
+- yarn v1.22.19
+- composer v2.4.4
+- redis v7.0.5
 - elasticsearch v7.14.2
 
 ## Getting started
@@ -58,6 +58,12 @@ Copy env.example to .env:
 ```
 cp env.example .env
 ```
+Edit your .env to your liking. By default it's using php 8.1 (8.0 or 8.1) and
+mysql 8.0 (mysql or mariadb).
+
+Define also the usernames and passwords for mysql and which containers you want
+to run defining the `PROFILE` variable.
+
 Setup an alias or add laserstack directory to your path:
 ```
 alias laser=~/src/laserstack/laser
@@ -87,9 +93,9 @@ Out of the box Laser Stack supports multiple Laravel projects. There is
 additional drivers supporting Wordpress and particular nginx configs.
 
 To configure a particular nginx config for a project, create a
-`.laserstack_nginx.conf` file in your project root directory and call
-`laser scan`. Laser Stack will copy it as `YOURPROJECTDIR.conf`. in the app
-your project will be in `/var/www/YOURPROJECTDIR`.
+`laserstack-nginx.conf` file in your project root directory and call
+`laser scan`. Laser Stack will copy it as `YOURPROJECTDIRECTORY.conf`. in the app
+your project will be in `/var/www/YOURPROJECTDIRECTORY`.
 
 Every time you add or remove a non-Laravel project, you need to call
 `laser scan` to allow Laser Stack to adjust it's nginx config.
@@ -99,12 +105,14 @@ submitted as pull request are welcomed.
 
 ## DNS resolution
 
-Add `.test` names in your `/etc/hosts` so Laser Stack can identify which project you are trying to access. For example for `projecta` and `projectb` (directory names):
+Add `.local` names in your `/etc/hosts` so Laser Stack can identify which project
+you are trying to access. For example for `projecta` and `projectb` (directory names):
 ```
-127.0.0.1  projecta.test
-127.0.0.1  projectb.test
+127.0.0.1  projecta.local
+127.0.0.1  projectb.local
 ```
-You can add a dnsmasq config to resolve every `*.test` to 127.0.0.1 automatically, but that's beyond the scope of this introduction.
+You can add a dnsmasq config to resolve every `*.local` to 127.0.0.1
+automatically, but that's beyond the scope of this introduction.
 
 ## License
 

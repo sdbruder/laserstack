@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - 8.1 configs are fixed
 - laser scan now identifies custom, laravel & symfony (based on the multiProject config) and wordpress.
+- laser mysql now uses the root user to allow database management (create, drop, etc)
+- std nginx config fixed to not fail on a cold startup
+- updated env.example
 
 ## [0.5.2] 2021-12-04
 ### Fixed
