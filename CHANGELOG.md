@@ -6,9 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] 2022-11-11
 ### Fixed
 - 8.1 configs are fixed
-- laser scan now identifies custom, laravel & symfony (based on the multiProject config) and wordpress.
+- laser scan now identifies custom, wordpress and laravel & symfony (based on the multiProject config).
 - laser mysql now uses the root user to allow database management (create, drop, etc)
 - std nginx config fixed to not fail on a cold startup
 - updated env.example
@@ -34,12 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - .my.cnf is now built from environment variables in .bashrc
 
-- supervisord has editable config on config/supervisord/supervisord.conf, 
+- supervisord has editable config on config/supervisord/supervisord.conf,
   now mounted.
 
 ### Changed
-- app container is now downloaded by default. You can still build yourself if 
-  you want, just uncomment the build part for app container on 
+- app container is now downloaded by default. You can still build yourself if
+  you want, just uncomment the build part for app container on
   docker-compose.yml file.
 
 - Updated dockerfile for app image
