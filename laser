@@ -113,9 +113,9 @@ function composer() {
 
 function mysql() {
     if [ -z "$*" ] ; then
-        dc exec app bash -c "MYSQL_PWD=${DB_ROOT_PASSWORD} mysql -h db -u root ${DB_DATABASE}"
+        dc exec app bash -c "mysql -h db -u root -p${DB_ROOT_PASSWORD} ${DB_DATABASE}"
     else
-        dc exec app bash -c "MYSQL_PWD=${DB_ROOT_PASSWORD} mysql -h db -u root $*"
+        dc exec app bash -c "mysql -h db -u root -p${DB_ROOT_PASSWORD} $*"
     fi
 }
 
