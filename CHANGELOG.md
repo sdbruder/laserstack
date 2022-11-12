@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] 2022-11-12
+### Added
+- postgresql 15.1 added
+- PROFILES now allow a list of additional containers you want running.
+
 ## [0.6.0] 2022-11-11
 ### Fixed
 - 8.1 configs are fixed

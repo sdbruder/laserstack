@@ -60,6 +60,7 @@ function lasercommands() {
     echo "  dockerhelp         List docker-compose and laser commands"
     echo "  help               List laser commands"
     echo "  mysql              Execute mysql"
+    echo "  psql               Execute psql"
     echo "  scan               Scan and identify projects to build nginx configs"
     echo "  node               Execute node"
     echo "  npm                Execute npm"
@@ -116,6 +117,14 @@ function mysql() {
         dc exec app bash -c "mysql -h db -u root -p${DB_ROOT_PASSWORD} ${DB_DATABASE}"
     else
         dc exec app bash -c "mysql -h db -u root -p${DB_ROOT_PASSWORD} $*"
+    fi
+}
+
+function psql() {
+    if [ -z "$*" ] ; then
+        dc exec app bash -c "PGPASSWORD=${POSTGRES_PASSWORD} psql -h postgres -U ${POSTGRES_USER} ${POSTGRES_DB}"
+    else
+        dc exec app bash -c "PGPASSWORD=${POSTGRES_PASSWORD} psql -h postgres -U ${POSTGRES_USER} $*"
     fi
 }
 
@@ -293,6 +302,9 @@ else
     # shellcheck source=/dev/null
     source ./.env
 fi
+POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-postgres}"
+POSTGRES_USER="${POSTGRES_USER:-postgres}"
+POSTGRES_DB="${POSTGRES_DB:-postgres}"
 
 projects_dir=$(cd "$PROJECTS_DIRECTORY"; pwd)
 
@@ -323,6 +335,9 @@ case "$subcommand" in
         ;;
     mysql)
         mysql "$@"
+        ;;
+    psql)
+        psql "$@"
         ;;
     scan)
         scan "$@"

@@ -31,7 +31,7 @@ Be as small, simple and fast as possible:
 
 ## Limitations
 
-- Currently we only support only Laravel and Wordpress projects and overridable
+- Currently we support Laravel, Symfony, Wordpress and overridable
   per project nginx config, those are examples, additional drivers PR's are
   welcome.
 - DNS resolution needs to be manually managed through `/etc/hosts`.
@@ -40,7 +40,8 @@ Be as small, simple and fast as possible:
 
 Currently it uses the following versions of software:
 - PHP v8.1.12 or v8.0.13
-- MySQL v8.0
+- MySQL v8.0.31
+- PostgreSQL v15.1
 - node v16.17.1
 - npm v8.10.0
 - yarn v1.22.19
@@ -61,13 +62,15 @@ cp env.example .env
 Edit your .env to your liking. By default it's using php 8.1 (8.0 or 8.1) and
 mysql 8.0 (mysql or mariadb).
 
-Define also the usernames and passwords for mysql and which containers you want
-to run defining the `PROFILE` variable.
+Define also the usernames and passwords for mysql por postgresql and which
+containers you want to run defining the `PROFILES` variable.
 
 Setup an alias or add laserstack directory to your path:
 ```
+# alias setup
 alias laser=~/src/laserstack/laser
-# or add ~/src/laserstack/laser to your $PATH
+# or add ~/src/laserstack/laser to your $PATH in your ~/.bashrc or ~/.zshrc:
+export PATH=$PATH:~/src/laserstack
 ```
 Now you can start your dev stack:
 ```
@@ -86,6 +89,20 @@ To look additional laser commands:
 ```
 laser help
 ```
+
+## PROFILES setup
+`PROFILES` define a comma separated list of additional containers you want to run. Available containers:
+
+- mysql
+- postgres
+- redis
+- elasticsearch
+
+### PROFILES Examples
+
+- app and mysql: `PROFILES=mysql`
+- postgres and redis: `PROFILES=postgres,redis`
+- mysql, redis and elastic: `PROFILES=mysql,redis, elasticsearch`
 
 ## Other frameworks support
 
