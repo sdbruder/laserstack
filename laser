@@ -281,21 +281,24 @@ laser_dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "$laser_dir" || exit
 dockerproject=$(basename "$laser_dir")
 
+# shellcheck source=/dev/null
+source ./env.example
 # source .env file to get MYSQL info and projects directory
 if [ -f ./.env ]; then
-    # shellcheck disable=SC1091
+    # shellcheck source=/dev/null
     source ./.env
 else
-    warning_message "laser .env file not found, copying .env.example as .env."
+    warning_message "laser .env file not found, copying env.example as .env."
     cp ./env.example ./.env
-    # shellcheck disable=SC1091
+    # shellcheck source=/dev/null
     source ./.env
 fi
 
 projects_dir=$(cd "$PROJECTS_DIRECTORY"; pwd)
 
 dc_params="-f docker-compose.yml"
-if [ -n "$PROFILE" ]; then
+if [ -n "$PROFILES" ]; then
+    PROFILE="${PROFILES//,/ --profile }"
     dc_params="$dc_params --profile $PROFILE"
 fi
 
@@ -382,6 +385,6 @@ case "$subcommand" in
         new "$@"
         ;;
     *)
-        dc "$subcommand" "$@" 
+        dc "$subcommand" "$@"
         ;;
 esac
