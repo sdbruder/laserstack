@@ -39,7 +39,7 @@ Be as small, simple and fast as possible:
 ## Versions
 
 Currently it uses the following versions of software:
-- PHP v8.1.12 or v8.0.13
+- PHP v8.1.13, v8.0.26 or v7.4.33
 - MySQL v8.0.31
 - PostgreSQL v15.1
 - node v16.17.1
@@ -59,8 +59,8 @@ Copy env.example to .env:
 ```
 cp env.example .env
 ```
-Edit your .env to your liking. By default it's using php 8.1 (8.0 or 8.1) and
-mysql 8.0 (mysql or mariadb).
+Edit your .env to your liking. By default it's using php 8.1 (7.4, 8.0 or 8.1) and
+mysql 8.0 (mysql or postgreSQL).
 
 Define also the usernames and passwords for mysql por postgresql and which
 containers you want to run defining the `PROFILES` variable.
