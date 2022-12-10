@@ -96,13 +96,15 @@ laser help
 - mysql
 - postgres
 - redis
+- memcached
 - elasticsearch
 
 ### PROFILES Examples
 
 - app and mysql: `PROFILES=mysql`
 - postgres and redis: `PROFILES=postgres,redis`
-- mysql, redis and elastic: `PROFILES=mysql,redis, elasticsearch`
+- mysql, redis and elastic: `PROFILES=mysql,redis,elasticsearch`
+- mysql and memcached: `PROFILES=mysql,memcached`
 
 ## Other frameworks support
 

@@ -75,6 +75,16 @@ services:
       - laser
     profiles:
       - redis
+  memcached:
+    image: memcached:alpine
+    ports:
+      - 11211:11211
+    environment:
+      LASER: 1
+    networks:
+      - laser
+    profiles:
+      - memcached
   elasticsearch:
     image: elasticsearch:7.14.2
     ports:
