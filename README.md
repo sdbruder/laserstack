@@ -39,7 +39,8 @@ Be as small, simple and fast as possible:
 ## Versions
 
 Currently it uses the following versions of software:
-- PHP v8.3.3, v8.2.16, v8.1.27, v8.0.30 or v7.4.33
+
+- PHP v8.3, v8.2, v8.1, v8.0 or v7.4
 - MySQL v8.0.36
 - PostgreSQL v15.1
 - node v20.11.1
@@ -52,13 +53,17 @@ Currently it uses the following versions of software:
 ## Getting started
 
 Clone Laser Stack in the same directory which you store your Laravel projects (`~/src` for example):
+
 ```
 git clone https://github.com/sdbruder/laserstack.git
 ```
+
 Copy env.example to .env:
+
 ```
 cp env.example .env
 ```
+
 Edit your .env to your liking. By default it's using php 8.1 (7.4, 8.0, 8.1, 8.2 or 8.3) and
 mysql 8.0 (mysql or postgreSQL).
 
@@ -66,31 +71,41 @@ Define also the usernames and passwords for mysql por postgresql and which
 containers you want to run defining the `PROFILES` variable.
 
 Setup an alias or add laserstack directory to your path:
+
 ```
 # alias setup
 alias laser=~/src/laserstack/laser
 # or add ~/src/laserstack/laser to your $PATH in your ~/.bashrc or ~/.zshrc:
 export PATH=$PATH:~/src/laserstack
 ```
+
 Now you can start your dev stack:
+
 ```
 laser up -d
 ```
+
 And to get a shell in a particular project:
+
 ```
 cd ../myproject
 laser shell
 ```
+
 To stop it:
+
 ```
 laser stop
 ```
+
 To look additional laser commands:
+
 ```
 laser help
 ```
 
 ## PROFILES setup
+
 `PROFILES` define a comma separated list of additional containers you want to run. Available containers:
 
 - mysql
@@ -126,18 +141,19 @@ submitted as pull request are welcomed.
 
 Add `.local` names in your `/etc/hosts` so Laser Stack can identify which project
 you are trying to access. For example for `projecta` and `projectb` (directory names):
+
 ```
 127.0.0.1  projecta.local
 127.0.0.1  projectb.local
 ```
+
 You can add a dnsmasq config to resolve every `*.local` to 127.0.0.1
 automatically, but that's beyond the scope of this introduction.
 
 ## License
 
- Laser Stack is open-sourced software licensed under [BSD license](LICENSE.md).
+Laser Stack is open-sourced software licensed under [BSD license](LICENSE.md).
 
 ## Social network
 
 Follow us on Twitter as @laserstack_sdb: https://twitter.com/laserstack_sdb
-
