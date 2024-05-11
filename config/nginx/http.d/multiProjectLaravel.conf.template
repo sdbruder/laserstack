@@ -9,7 +9,7 @@ server {
     # and all those urls will load:
     # ${PROJECTS_DIRECTORY}/yourproject/public
 
-    server_name "~^([^.]*\.){0,}(?P<project>[^.]+)\.mac$";
+    server_name "~^([^.]*\.){0,}(?P<project>[^.]+)\.__SUFFIX__$";
     root /var/www/$project/public;
 
     index index.php index.html;
