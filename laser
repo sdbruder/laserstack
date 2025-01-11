@@ -4,242 +4,247 @@ set -euo pipefail
 IFS=$'\n\t '
 
 function color_message() {
-	COLOR="\033[1;$1m"
-	NOCOLOR='\033[0m'
-	echo -e "${COLOR}$2:${NOCOLOR} $3 " >&2
+  COLOR="\033[1;$1m"
+  NOCOLOR='\033[0m'
+  echo -e "${COLOR}$2:${NOCOLOR} $3 " >&2
 }
 
 function error_message() {
-	color_message 31 "ERROR" "$*"
+  color_message 31 "ERROR" "$*"
 }
 
 function warning_message() {
-	color_message 33 "WARNING" "$*"
+  color_message 33 "WARNING" "$*"
 }
 
 # thanks https://stackoverflow.com/a/5027832
 function relativepath() {
-	source=$1
-	target=$2
-	common_part=$source
-	back=
-	# shellcheck disable=SC2295
-	while [ "${target#$common_part}" = "${target}" ]; do
-		common_part=$(dirname "$common_part")
-		back="../${back}"
-	done
-	# shellcheck disable=SC2295
-	echo "${back}${target#$common_part/}"
+  source=$1
+  target=$2
+  common_part=$source
+  back=
+  # shellcheck disable=SC2295
+  while [ "${target#$common_part}" = "${target}" ]; do
+    common_part=$(dirname "$common_part")
+    back="../${back}"
+  done
+  # shellcheck disable=SC2295
+  echo "${back}${target#$common_part/}"
 }
 
 function whichproject() {
-	project=$(relativepath "$projects_dir" "$current_dir")
-	if [[ $project = */* ]]; then
-		# warning_message "expected a subdir of ${projects_dir}. Current dir is ${current_dir}."
-		project=""
-	fi
-	echo "$project"
+  project=$(relativepath "$projects_dir" "$current_dir")
+  if [[ $project = */* ]]; then
+    # warning_message "expected a subdir of ${projects_dir}. Current dir is ${current_dir}."
+    project=""
+  fi
+  echo "$project"
 }
 
 function nih() {
-	echo "Still not implemented"
+  echo "Still not implemented"
 }
 
 function dc() {
-	#shellcheck disable=SC2086
-	docker-compose $dc_params "$@"
+  #shellcheck disable=SC2086
+  docker-compose $dc_params "$@"
 }
 
 function lasercommands() {
-	sep="${1:-SEP}"
-	if [ "$sep" != "NOSEP" ]; then
-		echo "  -----------------------------------------------------"
-	fi
-	echo "  artisan            Execute composer commands"
-	echo "  composer           Execute composer"
-	echo "  dockerhelp         List docker-compose and laser commands"
-	echo "  help               List laser commands"
-	echo "  mysql              Execute mysql"
-	echo "  psql               Execute psql"
-	echo "  scan               Scan and identify projects to build nginx configs"
-	echo "  node               Execute node"
-	echo "  npm                Execute npm"
-	echo "  npx                Execute npx"
-	echo "  php                Execute php commands in your app container"
-	echo "  tinker             Execute php artisan tinker"
-	echo "  test               Execute php artisan test"
-	echo "  share              Share externally your laser stack"
-	echo "  shell              Shell in the app container"
-	echo "  appexec            Execute arbitrary commands in the app container"
-	echo "  yarn               Execute yarn"
-	echo "  stats              top-like docker stats"
+  sep="${1:-SEP}"
+  if [ "$sep" != "NOSEP" ]; then
+    echo "  -----------------------------------------------------"
+  fi
+  echo "  artisan            Execute composer commands"
+  echo "  composer           Execute composer"
+  echo "  dockerhelp         List docker-compose and laser commands"
+  echo "  help               List laser commands"
+  echo "  mysql              Execute mysql"
+  echo "  psql               Execute psql"
+  echo "  scan               Scan and identify projects to build nginx configs"
+  echo "  node               Execute node"
+  echo "  npm                Execute npm"
+  echo "  npx                Execute npx"
+  echo "  php                Execute php commands in your app container"
+  echo "  tinker             Execute php artisan tinker"
+  echo "  test               Execute php artisan test"
+  echo "  share              Share externally your laser stack"
+  echo "  shell              Shell in the app container"
+  echo "  appexec            Execute arbitrary commands in the app container"
+  echo "  yarn               Execute yarn"
+  echo "  stats              top-like docker stats"
 }
 
 function dohelp() {
-	echo "Manage a local docker stack to run multiple laravel projects."
-	echo ""
-	echo "Usage:"
-	echo "  laser [COMMAND] [ARGS...]"
-	echo ""
-	echo "Commands:"
-	lasercommands NOSEP
-	echo "  *                  Any other command goes to docker-compose"
-	echo ""
-	echo "Some useful docker-compose commands (dockerhelp to full list)"
-	echo "  up [-d]            Create and start containers"
-	echo "  stop               Stop containers"
-	echo "  logs               View output from containers"
-	echo "  ps                 List containers running"
-	echo ""
+  echo "Manage a local docker stack to run multiple laravel projects."
+  echo ""
+  echo "Usage:"
+  echo "  laser [COMMAND] [ARGS...]"
+  echo ""
+  echo "Commands:"
+  lasercommands NOSEP
+  echo "  *                  Any other command goes to docker-compose"
+  echo ""
+  echo "Some useful docker-compose commands (dockerhelp to full list)"
+  echo "  up [-d]            Create and start containers"
+  echo "  stop               Stop containers"
+  echo "  logs               View output from containers"
+  echo "  ps                 List containers running"
+  echo ""
 }
 
 function dockerhelp() {
-	dc help
-	lasercommands
+  dc help
+  lasercommands
+}
+
+function list() {
+  cd $projects_dir
+  for project in *; do ls $project/public/*.php 2>/dev/null; done | sed "s|/.*$||g;s|^|http://|g;s|$|.$SUFFIX|g"
 }
 
 function stats() {
-	docker stats
+  docker stats
 }
 
 function artisan() {
-	project=$1
-	shift
-	dc exec --workdir "/var/www/$project" app php artisan "$@"
+  project=$1
+  shift
+  dc exec --workdir "/var/www/$project" app php artisan "$@"
 }
 
 function composer() {
-	project=$1
-	shift
-	dc exec --workdir "/var/www/$project" app composer "$@"
+  project=$1
+  shift
+  dc exec --workdir "/var/www/$project" app composer "$@"
 }
 
 function mysql() {
-	if [ -z "$*" ]; then
-		dc exec app bash -c "mysql -h db -u root -p${DB_ROOT_PASSWORD} ${DB_DATABASE}"
-	else
-		dc exec app bash -c "mysql -h db -u root -p${DB_ROOT_PASSWORD} $*"
-	fi
+  if [ -z "$*" ]; then
+    dc exec app bash -c "mysql -h db -u root -p${DB_ROOT_PASSWORD} ${DB_DATABASE}"
+  else
+    dc exec app bash -c "mysql -h db -u root -p${DB_ROOT_PASSWORD} $*"
+  fi
 }
 
 function psql() {
-	if [ -z "$*" ]; then
-		dc exec app bash -c "PGPASSWORD=${POSTGRES_PASSWORD} psql -h postgres -U ${POSTGRES_USER} ${POSTGRES_DB}"
-	else
-		dc exec app bash -c "PGPASSWORD=${POSTGRES_PASSWORD} psql -h postgres -U ${POSTGRES_USER} $*"
-	fi
+  if [ -z "$*" ]; then
+    dc exec app bash -c "PGPASSWORD=${POSTGRES_PASSWORD} psql -h postgres -U ${POSTGRES_USER} ${POSTGRES_DB}"
+  else
+    dc exec app bash -c "PGPASSWORD=${POSTGRES_PASSWORD} psql -h postgres -U ${POSTGRES_USER} $*"
+  fi
 }
 
 function stackisup() {
-	dc ps -q
+  dc ps -q
 }
 
 function restartphp() {
-	dc exec app /usr/bin/supervisorctl restart php-fpm
+  dc exec app /usr/bin/supervisorctl restart php-fpm
 }
 
 function restartnginx() {
-	dc exec app /usr/bin/supervisorctl restart nginx
+  dc exec app /usr/bin/supervisorctl restart nginx
 }
 
 function restart_nginx_if_up() {
-	isup=$(stackisup)
-	if [ -n "$isup" ]; then
-		echo "Laser Stack is up, restarting nginx."
-		restartnginx
-	fi
+  isup=$(stackisup)
+  if [ -n "$isup" ]; then
+    echo "Laser Stack is up, restarting nginx."
+    restartnginx
+  fi
 }
 
 function scan() {
-	fromscratch="${1:-preserve}"
+  fromscratch="${1:-preserve}"
 
-	local changed=0
-	isup=$(stackisup)
-	if [ -n "$isup" ]; then
-		if [ "$fromscratch" == "--fromscratch" ]; then
-			echo "SCAN: starting from scratch"
-			rm -f config/nginx/*
-		fi
-		# shellcheck disable=SC1091
-		source libs/sourcedrivers.sh
-		changed=$(drivers::scan_projects "${projects_dir}")
-		if [ "$changed" -eq "1" ]; then
-			echo "SCAN: configuration changed"
-			restartnginx
-		else
-			echo "SCAN: no configuration change"
-		fi
-	else
-		error_message "SCAN: stack need to be up"
-	fi
+  local changed=0
+  isup=$(stackisup)
+  if [ -n "$isup" ]; then
+    if [ "$fromscratch" == "--fromscratch" ]; then
+      echo "SCAN: starting from scratch"
+      rm -f config/nginx/*
+    fi
+    # shellcheck disable=SC1091
+    source libs/sourcedrivers.sh
+    changed=$(drivers::scan_projects "${projects_dir}")
+    if [ "$changed" -eq "1" ]; then
+      echo "SCAN: configuration changed"
+      restartnginx
+    else
+      echo "SCAN: no configuration change"
+    fi
+  else
+    error_message "SCAN: stack need to be up"
+  fi
 }
 
 function node() {
-	project=$1
-	shift
-	dc exec --workdir "/var/www/$project" app node "$@"
+  project=$1
+  shift
+  dc exec --workdir "/var/www/$project" app node "$@"
 }
 
 function npm() {
-	project=$1
-	shift
-	dc exec --workdir "/var/www/$project" app npm "$@"
+  project=$1
+  shift
+  dc exec --workdir "/var/www/$project" app npm "$@"
 }
 
 function npx() {
-	project=$1
-	shift
-	dc exec --workdir "/var/www/$project" app npx "$@"
+  project=$1
+  shift
+  dc exec --workdir "/var/www/$project" app npx "$@"
 }
 
 function php() {
-	project=$1
-	shift
-	dc exec --workdir "/var/www/$project" app php "$@"
+  project=$1
+  shift
+  dc exec --workdir "/var/www/$project" app php "$@"
 }
 
 function tinker() {
-	project=$1
-	shift
-	dc exec --workdir "/var/www/$project" app php artisan tinker "$@"
+  project=$1
+  shift
+  dc exec --workdir "/var/www/$project" app php artisan tinker "$@"
 }
 
 function dotest() {
-	project=$1
-	shift
-	dc exec --workdir "/var/www/$project" app php artisan test "$@"
+  project=$1
+  shift
+  dc exec --workdir "/var/www/$project" app php artisan test "$@"
 }
 
 function share() {
-	project=$1
-	shift
-	docker run --rm -it --network "${dockerproject}_laser" --link app wernight/ngrok ngrok http -host-header="$project.test" host.docker.internal:80
+  project=$1
+  shift
+  docker run --rm -it --network "${dockerproject}_laser" --link app wernight/ngrok ngrok http -host-header="$project.test" host.docker.internal:80
 }
 
 function shell() {
-	project=$1
-	shift
-	dc exec --workdir "/var/www/$project" app bash "$@"
+  project=$1
+  shift
+  dc exec --workdir "/var/www/$project" app bash "$@"
 }
 
 function appexec() {
-	project=$1
-	shift
-	dc exec --workdir "/var/www/$project" app "$@"
+  project=$1
+  shift
+  dc exec --workdir "/var/www/$project" app "$@"
 }
 
 function yarn() {
-	project=$1
-	shift
-	dc exec --workdir "/var/www/$project" app yarn "$@"
+  project=$1
+  shift
+  dc exec --workdir "/var/www/$project" app yarn "$@"
 }
 
 function new() {
-	project=$1
-	shift
-	mkdir -p "$laser_dir/../$project/public"
-	export project
-	HELLOWORLD="
+  project=$1
+  shift
+  mkdir -p "$laser_dir/../$project/public"
+  export project
+  HELLOWORLD="
 <!DOCTYPE html>
 <html lang=\"en\">
 <head>
@@ -283,15 +288,15 @@ function new() {
 </body>
 </html>
 "
-	# echo "<h1 style=\"font-family: sans-serif; color: #777; margin: 1em; \">hello world from $project</h1>" > $laser_dir/../$project/public/index.php
-	echo "$HELLOWORLD" >"$laser_dir/../$project/public/index.php"
-	sudo bash -c "echo -e '\n127.0.0.1 $project.local $project' >> /etc/hosts"
-	cd "$laser_dir/../$project"
-	echo "$project created."
-	if [[ "$WSL" ]]; then
-		echo "WSL detected, manually add \"127.0.0.1 $project.local $project\" to %windir%\\System32\\drivers\\etc\\hosts"
-	fi
-	open "http://$project.local/"
+  # echo "<h1 style=\"font-family: sans-serif; color: #777; margin: 1em; \">hello world from $project</h1>" > $laser_dir/../$project/public/index.php
+  echo "$HELLOWORLD" >"$laser_dir/../$project/public/index.php"
+  sudo bash -c "echo -e '\n127.0.0.1 $project.local $project' >> /etc/hosts"
+  cd "$laser_dir/../$project"
+  echo "$project created."
+  if [[ "$WSL" ]]; then
+    echo "WSL detected, manually add \"127.0.0.1 $project.local $project\" to %windir%\\System32\\drivers\\etc\\hosts"
+  fi
+  open "http://$project.local/"
 }
 
 # MAIN ----------------------------------------------------------------------
@@ -305,13 +310,13 @@ dockerproject=$(basename "$laser_dir")
 source ./env.example
 # source .env file to get MYSQL info and projects directory
 if [ -f ./.env ]; then
-	# shellcheck source=/dev/null
-	source ./.env
+  # shellcheck source=/dev/null
+  source ./.env
 else
-	warning_message "laser .env file not found, copying env.example as .env."
-	cp ./env.example ./.env
-	# shellcheck source=/dev/null
-	source ./.env
+  warning_message "laser .env file not found, copying env.example as .env."
+  cp ./env.example ./.env
+  # shellcheck source=/dev/null
+  source ./.env
 fi
 POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-postgres}"
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
@@ -319,25 +324,25 @@ POSTGRES_DB="${POSTGRES_DB:-postgres}"
 export PHPV=$(echo $PHP_VERSION | sed 's/\.//g')
 export PHPALPINE=$PHPV
 if [ $PHPV == "74" ]; then
-	export PHPALPINE=7
+  export PHPALPINE=7
 fi
 projects_dir=$(
-	cd "$PROJECTS_DIRECTORY"
-	pwd
+  cd "$PROJECTS_DIRECTORY"
+  pwd
 )
 
 dc_params="-f docker-compose.yml"
 if [ -n "$PROFILES" ]; then
-	PROFILE="${PROFILES//,/ --profile }"
-	dc_params="$dc_params --profile $PROFILE"
+  PROFILE="${PROFILES//,/ --profile }"
+  dc_params="$dc_params --profile $PROFILE"
 fi
 
 WSL=
 # shellcheck disable=SC2143
 if [[ $(grep -si microsoft /proc/version) ]]; then
-	WSL=wsl
-	# shellcheck disable=SC2034
-	windows_path=$(mount | grep drvfs | awk '{ print $3; }')
+  WSL=wsl
+  # shellcheck disable=SC2034
+  windows_path=$(mount | grep drvfs | awk '{ print $3; }')
 fi
 
 set +e
@@ -347,78 +352,81 @@ set -e
 
 case "$subcommand" in
 help)
-	dohelp
-	;;
+  dohelp
+  ;;
+list)
+  list
+  ;;
 dockerhelp)
-	dockerhelp
-	;;
+  dockerhelp
+  ;;
 mysql)
-	mysql "$@"
-	;;
+  mysql "$@"
+  ;;
 psql)
-	psql "$@"
-	;;
+  psql "$@"
+  ;;
 scan)
-	scan "$@"
-	;;
+  scan "$@"
+  ;;
 stats)
-	stats "$@"
-	;;
+  stats "$@"
+  ;;
 restartnginx)
-	restartnginx "$@"
-	;;
+  restartnginx "$@"
+  ;;
 artisan | art)
-	project=$(whichproject)
-	artisan "$project" "$@"
-	;;
+  project=$(whichproject)
+  artisan "$project" "$@"
+  ;;
 composer)
-	project=$(whichproject)
-	composer "$project" "$@"
-	;;
+  project=$(whichproject)
+  composer "$project" "$@"
+  ;;
 node)
-	project=$(whichproject)
-	node "$project" "$@"
-	;;
+  project=$(whichproject)
+  node "$project" "$@"
+  ;;
 npm)
-	project=$(whichproject)
-	npm "$project" "$@"
-	;;
+  project=$(whichproject)
+  npm "$project" "$@"
+  ;;
 npx)
-	project=$(whichproject)
-	npx "$project" "$@"
-	;;
+  project=$(whichproject)
+  npx "$project" "$@"
+  ;;
 php)
-	project=$(whichproject)
-	php "$project" "$@"
-	;;
+  project=$(whichproject)
+  php "$project" "$@"
+  ;;
 tinker)
-	project=$(whichproject)
-	tinker "$project" "$@"
-	;;
+  project=$(whichproject)
+  tinker "$project" "$@"
+  ;;
 test)
-	project=$(whichproject)
-	dotest "$project" "$@"
-	;;
+  project=$(whichproject)
+  dotest "$project" "$@"
+  ;;
 share)
-	project=$(whichproject)
-	share "$project" "$@"
-	;;
+  project=$(whichproject)
+  share "$project" "$@"
+  ;;
 shell)
-	project=$(whichproject)
-	shell "$project" "$@"
-	;;
+  project=$(whichproject)
+  shell "$project" "$@"
+  ;;
 appexec)
-	project=$(whichproject)
-	appexec "$project" "$@"
-	;;
+  project=$(whichproject)
+  appexec "$project" "$@"
+  ;;
 yarn)
-	project=$(whichproject)
-	yarn "$project" "$@"
-	;;
+  project=$(whichproject)
+  yarn "$project" "$@"
+  ;;
 new)
-	new "$@"
-	;;
+  new "$@"
+  ;;
 *)
-	dc "$subcommand" "$@"
-	;;
+  dc "$subcommand" "$@"
+  ;;
 esac
