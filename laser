@@ -50,6 +50,10 @@ function dc() {
   docker-compose $dc_params "$@"
 }
 
+function up() {
+  dc up -d
+}
+
 function lasercommands() {
   sep="${1:-SEP}"
   if [ "$sep" != "NOSEP" ]; then
@@ -356,6 +360,9 @@ help)
   ;;
 list)
   list
+  ;;
+up)
+  up
   ;;
 dockerhelp)
   dockerhelp
