@@ -46,6 +46,23 @@ services:
       - laser
     profiles:
       - mysql
+  mariadb:
+    image: mariadb:10.11
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadata:/var/lib/mysql:delegated
+    environment:
+      LASER: 1
+      MARIADB_DATABASE: "${MARIADB_DATABASE}"
+      MARIADB_USER: "${MARIADB_USER}"
+      MARIADB_PASSWORD: "${MARIADB_PASSWORD}"
+      MARIADB_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
+    networks:
+      - laser
+    profiles:
+      - mariadb
   postgres:
     image: postgres:15.1-alpine
     ports:
@@ -104,7 +121,8 @@ volumes:
     driver: local
   pgdata:
     driver: local
-
+  mariadata:
+    driver: local
 networks:
   laser:
     driver: bridge
