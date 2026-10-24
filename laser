@@ -327,8 +327,15 @@ POSTGRES_USER="${POSTGRES_USER:-postgres}"
 POSTGRES_DB="${POSTGRES_DB:-postgres}"
 export PHPV=$(echo $PHP_VERSION | sed 's/\.//g')
 export PHPALPINE=$PHPV
+# PHPALPINE is the name of the php package of the Alpine release of the image,
+# PHPV is the name of the config directory. Alpine names them php7 for 7.4 and
+# php8 for 8.0. The config directory of 8.0 is config/php8 as well.
 if [ $PHPV == "74" ]; then
   export PHPALPINE=7
+fi
+if [ $PHPV == "80" ]; then
+  export PHPV=8
+  export PHPALPINE=8
 fi
 projects_dir=$(
   cd "$PROJECTS_DIRECTORY"

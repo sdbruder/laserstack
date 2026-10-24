@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- PHP 8.0 now mounts the config directory `/etc/php8` of its image. Before,
+  laserstack mounted `/etc/php80`, a path the image does not use. Thus the
+  php.ini and the php-fpm pool config of laserstack were inert and php-fpm
+  ran as `nobody` instead of `laser`.
 - Supervisord renders the multi-project vhost into `/etc/nginx/sites-enabled`
   inside the container, not into the mounted `config/nginx/http.d`. Before,
   every `laser up` wrote a generated vhost into the config directory of the
