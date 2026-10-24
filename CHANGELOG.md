@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `test/smoke.sh` checks every database profile now, not only the profile of
+  `.env`: `laser mysql` for mysql and mariadb, `laser psql` for postgres, and
+  the PDO path of the app container to the server of the profile under the host
+  name a project uses. `SMOKE_DB_PROFILES` limits the profiles. The test pulls
+  the image of every version it starts, so an old image cannot fail it;
+  `SMOKE_PULL=0` uses the local images.
+
+### Changed
+
+- The entry of 0.8.0 carries the date `2022-11-26` and the content of the tag
+  `v0.8.0` (php 7.4 and 8.2, sqlite). Before, it carried the date `2024-05-11`
+  and the bullets of 0.10.0 and 0.9.0, which have their own entries.
+
+### Fixed
+
+- The images of PHP 7.4 and 8.0 have `pdo_pgsql`. Without that driver a project
+  could not reach the postgres profile from those two images, which the
+  database stage of the smoke test showed. The image of 8.1 and newer had it.
+
 ## [0.11.0] 2026-10-24
 
 ### Added
@@ -108,15 +129,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - the twitter account is in the README
 
-## [0.8.0] 2024-05-11
+## [0.8.0] 2022-11-26
 
 ### Added
 
-- dns suffix now is configurable through .env
-- config fixes
-- fix php user to laser instead of nobody, this fixes files / directories ownership
-- php 8.3 added
-- memcached added
+- php 7.4 and 8.2, with their config
+- sqlite support
 
 ## [0.7.0] 2022-11-12
 
