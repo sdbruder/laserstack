@@ -43,7 +43,8 @@ function drivers::scan_projects() {
     for project in "$projects_dir"/* ; do
         drivers::config "$project"
     done
-    # guarantee that the multi-project laravel config is there
+    # the multi-project vhost comes from multiProjectLaravel.conf.template,
+    # supervisord renders it at every nginx start
     multilaravel::config
 
     hash_pos=$(drivers::config_hash)

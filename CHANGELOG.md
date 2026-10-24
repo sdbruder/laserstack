@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Supervisord renders the multi-project vhost into `/etc/nginx/sites-enabled`
+  inside the container, not into the mounted `config/nginx/http.d`. Before,
+  every `laser up` wrote a generated vhost into the config directory of the
+  host. That file also stayed active and added a second default server.
+- `multilaravel::config` does not write a vhost anymore. It wrote a second
+  default server into the config directory of the host as well.
 - The app image has `/etc/nginx/http.d/nginx-site.conf` with
   `listen 80 default_server`. The compose mount replaces the whole vhost
   directory of the image. Thus the multi-project vhost of laserstack is the
