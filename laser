@@ -123,20 +123,48 @@ function composer() {
   dc exec --workdir "/var/www/$project" app composer "$@"
 }
 
-function mysql() {
-  if [ -z "$*" ]; then
-    dc exec app bash -c "mysql -h db -u root -p${DB_ROOT_PASSWORD} ${DB_DATABASE}"
+function dbhost() {
+  # Host name of the database container. The service of the mysql profile is
+  # "db", the service of the mariadb profile is "mariadb".
+  if [[ ",${PROFILES:-}," == *",mariadb,"* ]]; then
+    echo mariadb
   else
-    dc exec app bash -c "mysql -h db -u root -p${DB_ROOT_PASSWORD} $*"
+    echo db
   fi
 }
 
-function psql() {
-  if [ -z "$*" ]; then
-    dc exec app bash -c "PGPASSWORD=${POSTGRES_PASSWORD} psql -h postgres -U ${POSTGRES_USER} ${POSTGRES_DB}"
+function mysql() {
+  local host pass dbname
+  local args=()
+  host=$(dbhost)
+  if [ "$host" == "mariadb" ]; then
+    pass="${MARIADB_ROOT_PASSWORD:-root}"
+    dbname="${MARIADB_DATABASE:-}"
   else
-    dc exec app bash -c "PGPASSWORD=${POSTGRES_PASSWORD} psql -h postgres -U ${POSTGRES_USER} $*"
+    pass="${DB_ROOT_PASSWORD:-root}"
+    dbname="${DB_DATABASE:-}"
   fi
+  args=(-h "$host" -u root "-p$pass")
+  # the database of the profile, only when the caller gives no argument of its
+  # own, the client takes the first positional argument as the database
+  if [ "$#" -eq 0 ] && [ -n "$dbname" ]; then
+    args+=("$dbname")
+  fi
+  # the arguments go to the client as they are, no shell in between
+  dc exec app mysql "${args[@]}" "$@"
+}
+
+function psql() {
+  local pass user dbname
+  local args=()
+  pass="${POSTGRES_PASSWORD:-postgres}"
+  user="${POSTGRES_USER:-postgres}"
+  dbname="${POSTGRES_DB:-}"
+  args=(-h postgres -U "$user")
+  if [ "$#" -eq 0 ] && [ -n "$dbname" ]; then
+    args+=("$dbname")
+  fi
+  dc exec -e "PGPASSWORD=$pass" app psql "${args[@]}" "$@"
 }
 
 function stackisup() {

@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `laser mysql` uses the database container of the active profile, `mariadb`
+  for the mariadb profile and `db` for the mysql profile. Before, it always
+  used `db` and thus failed with the mariadb profile.
+- `laser mysql` and `laser psql` pass their arguments to the client. Before,
+  they pasted the arguments into a `bash -c` string, so a query with a space
+  or a semicolon failed. `laser psql` sets `PGPASSWORD` with `docker compose
+  exec -e` now.
 - The `mysql` client of the app container connects to `mariadb` again. That
   container has no TLS, and the client of the images of PHP 8.2 and newer
   requires TLS by default: "SSL is required, but the server does not support
