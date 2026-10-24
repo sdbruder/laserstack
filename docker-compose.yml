@@ -22,6 +22,10 @@ services:
       - ${PROJECTS_DIRECTORY}:/var/www:cached
       - ./config/supervisord.${PHP_VERSION}/supervisord.conf:/etc/supervisord.conf:cached
       - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:cached
+      # This mount replaces all vhosts of the image. The image has
+      # /etc/nginx/http.d/nginx-site.conf with "listen 80 default_server".
+      # Therefore the only default server is the multi-project vhost of
+      # laserstack. Supervisord renders it from multiProjectLaravel.conf.template.
       - ./config/nginx/http.d:/etc/nginx/http.d:cached
       - ./config/php${PHPV}/php.ini:/etc/php${PHPALPINE}/php.ini:cached
       - ./config/php${PHPV}/php-fpm.conf:/etc/php${PHPALPINE}/php-fpm.conf:cached

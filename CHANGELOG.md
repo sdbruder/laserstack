@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The app image has `/etc/nginx/http.d/nginx-site.conf` with
+  `listen 80 default_server`. The compose mount replaces the whole vhost
+  directory of the image. Thus the multi-project vhost of laserstack is the
+  only default server.
+- `config/supervisord.8.2` now renders the multi-project vhost from the
+  template, like all other versions. Before, 8.2 did not serve wildcard
+  `*.<SUFFIX>` hosts.
+- A vhost for a single project must not use `default_server` next to the
+  multi-project vhost. Both cannot be the default server.
+
 ## [0.8.0] 2024-05-11
 
 ### Added
