@@ -35,8 +35,6 @@ Be as small, simple and fast as possible:
   per project nginx config, those are examples, additional drivers PR's are
   welcome.
 - DNS resolution needs to be manually managed through `/etc/hosts`.
-- `laser psql` needs a postgres client in the app container. The public app
-  images do not have `psql`.
 
 ## Versions
 
@@ -139,10 +137,15 @@ Projects that use `db` as the database host thus work with both profiles. Do
 not activate the mysql and the mariadb profile at the same time, both use port
 3306.
 
+The postgres container keeps its data in the `pgdata` volume and reads
+`config/postgres/postgresql.conf`. The container of the mysql profile reads
+`config/db`.
+
 ### PROFILES Examples
 
 - app and mysql: `PROFILES=mysql`
 - app and mariadb: `PROFILES=mariadb`
+- app and postgres: `PROFILES=postgres`
 - postgres and redis: `PROFILES=postgres,redis`
 - mysql, redis and elastic: `PROFILES=mysql,redis,elasticsearch`
 - mysql and memcached: `PROFILES=mysql,memcached`
@@ -176,6 +179,21 @@ project you are trying to access. `SUFFIX` comes from `.env` and is `local` in
 
 You can add a dnsmasq config to resolve every `*.local` to 127.0.0.1
 automatically, but that's beyond the scope of this introduction.
+
+## Smoke test
+
+`test/smoke.sh` starts the stack once per PHP version and checks nginx,
+php-fpm, the php.ini of the repository, an http request, the command of the
+active database profile, and that the run writes nothing into
+`config/nginx/http.d`. The http check runs inside the container, so a web
+server on port 80 of the host, like Valet or Herd, does not disturb the test.
+
+```
+test/smoke.sh             # every version
+test/smoke.sh 8.4 8.5     # only these versions
+```
+
+The test stops the stack at the end and leaves `.env` as it was.
 
 ## License
 

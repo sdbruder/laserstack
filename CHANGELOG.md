@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `config/php85` and `config/supervisord.8.5`, the config of the images of
   PHP 8.5.
+- `test/smoke.sh`, a smoke test that starts the stack once per PHP version and
+  checks php-fpm, the php.ini of the repository, an http request and the
+  database command of the active profile.
 
 ### Changed
 
@@ -32,6 +35,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The postgres profile keeps its data. Its volume is at
+  `/var/lib/postgresql/data`, the data path of the postgres image, not at
+  `/var/lib/mysql` of the mysql containers. Before, postgres ignored the
+  volume and lost the database with the container.
+- The postgres container reads `config/postgres/postgresql.conf`, mounted at
+  `/etc/postgresql` and given to the server with
+  `postgres -c config_file=…`. Before, laserstack mounted the directory at
+  `/etc/mysql/conf.d`, a path only the mysql containers read.
+- `laser psql` works. The app images install the postgres client now, which
+  brings `psql` and `pg_dump`. Before, the command failed with "executable
+  file not found in $PATH".
 - The container of the mariadb profile answers to the name `db` too, the name
   of the service of the mysql profile. Projects that use `db` as the database
   host work with both profiles.
