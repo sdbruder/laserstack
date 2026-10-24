@@ -31,6 +31,9 @@ services:
       - ./config/php${PHPV}/php.ini:/etc/php${PHPALPINE}/php.ini:cached
       - ./config/php${PHPV}/php-fpm.conf:/etc/php${PHPALPINE}/php-fpm.conf:cached
       - ./config/php${PHPV}/php-fpm.d:/etc/php${PHPALPINE}/php-fpm.d:cached
+      # The database containers of the stack have no TLS and the client of the
+      # newer images requires TLS by default, see config/my.cnf.
+      - ./config/my.cnf:/etc/my.cnf.d/laserstack.cnf:cached
     networks:
       - laser
   db:

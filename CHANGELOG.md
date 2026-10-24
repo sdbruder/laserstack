@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The `mysql` client of the app container connects to `mariadb` again. That
+  container has no TLS, and the client of the images of PHP 8.2 and newer
+  requires TLS by default: "SSL is required, but the server does not support
+  it". `config/my.cnf` turns TLS off for the client. Before, only an
+  interactive shell had this setting, from the `~/.my.cnf` that
+  `/root/.bashrc` writes.
 - PHP 8.0 now mounts the config directory `/etc/php8` of its image. Before,
   laserstack mounted `/etc/php80`, a path the image does not use. Thus the
   php.ini and the php-fpm pool config of laserstack were inert and php-fpm
