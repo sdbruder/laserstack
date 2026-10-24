@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `config/php85` and `config/supervisord.8.5`, the config of the images of
+  PHP 8.5.
+
+### Changed
+
+- `.gitignore` ignores only `.env` and the vhosts that laserstack and
+  `laser scan` write into `config/nginx/http.d`. Before, it ignored the whole
+  `config` directory while many files of it were tracked, so a new config file
+  needed `git add -f`.
+- The README lists the versions of the app images, the `mariadb` profile, the
+  configurable suffix and the missing postgres client of the app images.
+
+### Removed
+
+- The legacy configs `config/php`, `config/supervisord.php8`,
+  `config/supervisord.php81` and `config/supervisord.latest`. `PHP_VERSION`
+  takes the numeric values of the public images.
+
 ### Fixed
 
 - The container of the mariadb profile answers to the name `db` too, the name

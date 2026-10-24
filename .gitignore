@@ -1,2 +1,7 @@
-config/
 .env
+
+# The nginx program of the stack writes the multi-project vhost into /etc/nginx
+# of the container, laser scan writes one vhost per project here. app.conf is a
+# local override. Everything else under config/ belongs to the repository.
+config/nginx/http.d/*
+!config/nginx/http.d/multiProjectLaravel.conf.template

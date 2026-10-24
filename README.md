@@ -35,20 +35,37 @@ Be as small, simple and fast as possible:
   per project nginx config, those are examples, additional drivers PR's are
   welcome.
 - DNS resolution needs to be manually managed through `/etc/hosts`.
+- `laser psql` needs a postgres client in the app container. The public app
+  images do not have `psql`.
 
 ## Versions
 
-Currently it uses the following versions of software:
+The app container is a public image per PHP series,
+`laserstack/app:<major.minor>`. Each image runs the newest patch of its series
+on the newest Alpine release that packages it:
 
-- PHP v8.3, v8.2, v8.1, v8.0 or v7.4
-- MySQL v8.0.36
-- PostgreSQL v15.1
-- node v20.11.1
-- npm v10.2.5
-- yarn v1.22.19
-- composer v2.7.1
-- redis v7.0.5
-- elasticsearch v7.14.2
+| image  | PHP    | Alpine | node      | npm     | yarn    | nginx  |
+| ------ | ------ | ------ | --------- | ------- | ------- | ------ |
+| `7.4`  | 7.4.33 | 3.15   | v16.20.2  | 8.1.3   | 1.22.17 | 1.20.2 |
+| `8.0`  | 8.0.30 | 3.16   | v16.20.2  | 8.10.0  | 1.22.19 | 1.22.1 |
+| `8.1`  | 8.1.34 | 3.19   | v20.15.1  | 10.2.5  | 1.22.19 | 1.24.0 |
+| `8.2`  | 8.2.35 | 3.22   | v22.23.4  | 11.6.4  | 1.22.22 | 1.28.3 |
+| `8.3`  | 8.3.36 | 3.24   | v24.22.1  | 11.12.1 | 1.22.22 | 1.30.6 |
+| `8.4`  | 8.4.27 | 3.24   | v24.22.1  | 11.12.1 | 1.22.22 | 1.30.6 |
+| `8.5`  | 8.5.12 | 3.24   | v24.22.1  | 11.12.1 | 1.22.22 | 1.30.6 |
+
+Every image has composer v2.10.3. The tag `latest` is the newest series. The
+images are built in
+[laserstack_app](https://github.com/sdbruder/laserstack_app).
+
+The additional containers come from `docker-compose.yml`:
+
+- MySQL `mysql:8.0`
+- MariaDB `mariadb:10.11`
+- PostgreSQL `postgres:15.1-alpine`
+- redis `redis:alpine`
+- memcached `memcached:alpine`
+- Elasticsearch `elasticsearch:7.14.2`
 
 ## Getting started
 
@@ -64,8 +81,9 @@ Copy env.example to .env:
 cp env.example .env
 ```
 
-Edit your .env to your liking. By default it's using php 8.1 (7.4, 8.0, 8.1, 8.2 or 8.3) and
-mysql 8.0 (mysql or postgreSQL).
+Edit your .env to your liking. `env.example` uses PHP 8.4 and the `mysql` and
+`redis` containers. Set `PHP_VERSION` to 7.4, 8.0, 8.1, 8.2, 8.3, 8.4 or 8.5,
+and `PROFILES` to the containers you want to run.
 
 Define also the usernames and passwords for mysql por postgresql and which
 containers you want to run defining the `PROFILES` variable.
@@ -147,8 +165,9 @@ submitted as pull request are welcomed.
 
 ## DNS resolution
 
-Add `.local` names in your `/etc/hosts` so Laser Stack can identify which project
-you are trying to access. For example for `projecta` and `projectb` (directory names):
+Add `.<SUFFIX>` names in your `/etc/hosts` so Laser Stack can identify which
+project you are trying to access. `SUFFIX` comes from `.env` and is `local` in
+`env.example`. For example for `projecta` and `projectb` (directory names):
 
 ```
 127.0.0.1  projecta.local
