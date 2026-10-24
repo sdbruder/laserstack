@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] 2026-10-24
+
 ### Added
 
 - `config/php85` and `config/supervisord.8.5`, the config of the images of
@@ -81,6 +83,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `*.<SUFFIX>` hosts.
 - A vhost for a single project must not use `default_server` next to the
   multi-project vhost. Both cannot be the default server.
+
+## [0.10.0] 2024-05-11
+
+### Added
+
+- the dns suffix is configurable in `.env`
+- one config directory per PHP version, and php runs as the user who owns the
+  mounted directories instead of nobody
+- php 8.3
+
+### Fixed
+
+- config fixes
+
+## [0.9.0] 2022-12-10
+
+### Added
+
+- memcached, as a profile
+
+### Changed
+
+- the twitter account is in the README
 
 ## [0.8.0] 2024-05-11
 
@@ -164,7 +189,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - DB_USER environment variable renamed to DB_USERNAME to be consistent with
   default Laravel environment. Breaking change, update your local .env file.
 
-## Added
+### Added
 
 - multiple subdomains are now allowed per project supporting multi-tenant
   Laravel apps.
