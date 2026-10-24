@@ -26,8 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `laser scan` write into `config/nginx/http.d`. Before, it ignored the whole
   `config` directory while many files of it were tracked, so a new config file
   needed `git add -f`.
-- The README lists the versions of the app images, the `mariadb` profile, the
-  configurable suffix and the missing postgres client of the app images.
+- The README lists the versions of the app images, the `mariadb` profile and
+  the configurable suffix. It no longer lists the missing postgres client of
+  the app images, because the images have `psql` now.
 
 ### Removed
 
