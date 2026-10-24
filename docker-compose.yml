@@ -78,11 +78,15 @@ services:
       - mariadb
   postgres:
     image: postgres:15.1-alpine
+    # the server reads the config directory of laserstack, see config/postgres
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
     ports:
       - 5432:5432
     volumes:
-      - ./config/postgres:/etc/mysql/conf.d:cached
-      - pgdata:/var/lib/mysql:delegated
+      # postgres keeps its data in /var/lib/postgresql/data, not in
+      # /var/lib/mysql like the mysql containers
+      - pgdata:/var/lib/postgresql/data:delegated
+      - ./config/postgres:/etc/postgresql:cached
     environment:
       LASER: 1
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
