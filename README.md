@@ -182,18 +182,33 @@ automatically, but that's beyond the scope of this introduction.
 
 ## Smoke test
 
-`test/smoke.sh` starts the stack once per PHP version and checks nginx,
-php-fpm, the php.ini of the repository, an http request, the command of the
-active database profile, and that the run writes nothing into
-`config/nginx/http.d`. The http check runs inside the container, so a web
-server on port 80 of the host, like Valet or Herd, does not disturb the test.
+`test/smoke.sh` starts the stack once per PHP version and once per database
+profile. It checks:
+
+- stage `app`, per version: nginx and php-fpm are RUNNING, no nginx emergency
+  in the log, php-fpm runs the workers as `laser`, PHP loads the php.ini of the
+  repository, a project answers over http with the requested version, and the
+  run writes nothing into `config/nginx/http.d`
+- stage `database`, per database profile and version: `laser mysql` or
+  `laser psql` answers with the server of the profile, and PHP of the app
+  container reaches that server with PDO, under the host name a project uses
+  (`db`, `mariadb`, `postgres`)
+
+The http check runs inside the container, so a web server on port 80 of the
+host, like Valet or Herd, does not disturb the test.
 
 ```
-test/smoke.sh             # every version
-test/smoke.sh 8.4 8.5     # only these versions
+test/smoke.sh                                 # every version, every database profile
+test/smoke.sh 8.4 8.5                         # only these versions
+SMOKE_DB_PROFILES=mariadb test/smoke.sh 8.2   # one database profile
+SMOKE_PULL=0 test/smoke.sh 8.4                # use the local images
 ```
 
-The test stops the stack at the end and leaves `.env` as it was.
+The test pulls the image of every version it starts, so an old image of an
+earlier run cannot fail the test. `SMOKE_PULL=0` keeps the local images.
+
+The test stops the stack at the end and leaves `.env` as it was. The database
+volumes stay, and the first run pulls the images of the database profiles.
 
 ## License
 
