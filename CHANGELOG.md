@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `env.example` has the `MARIADB_*` variables of `docker-compose.yml` and the
+  list of profiles has `mariadb`. Before, every docker compose command printed
+  "variable is not set" for the four mariadb variables on a fresh clone.
 - `.gitignore` ignores only `.env` and the vhosts that laserstack and
   `laser scan` write into `config/nginx/http.d`. Before, it ignored the whole
   `config` directory while many files of it were tracked, so a new config file
