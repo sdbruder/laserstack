@@ -109,14 +109,22 @@ laser help
 `PROFILES` define a comma separated list of additional containers you want to run. Available containers:
 
 - mysql
+- mariadb
 - postgres
 - redis
 - memcached
 - elasticsearch
 
+The database container of the mysql profile answers to the name `db`, the
+container of the mariadb profile to the name `mariadb` and to `db` as well.
+Projects that use `db` as the database host thus work with both profiles. Do
+not activate the mysql and the mariadb profile at the same time, both use port
+3306.
+
 ### PROFILES Examples
 
 - app and mysql: `PROFILES=mysql`
+- app and mariadb: `PROFILES=mariadb`
 - postgres and redis: `PROFILES=postgres,redis`
 - mysql, redis and elastic: `PROFILES=mysql,redis,elasticsearch`
 - mysql and memcached: `PROFILES=mysql,memcached`

@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The container of the mariadb profile answers to the name `db` too, the name
+  of the service of the mysql profile. Projects that use `db` as the database
+  host work with both profiles.
 - `laser mysql` uses the database container of the active profile, `mariadb`
   for the mariadb profile and `db` for the mysql profile. Before, it always
   used `db` and thus failed with the mariadb profile.

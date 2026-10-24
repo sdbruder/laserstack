@@ -68,7 +68,12 @@ services:
       MARIADB_PASSWORD: "${MARIADB_PASSWORD}"
       MARIADB_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
     networks:
-      - laser
+      laser:
+        # Projects created before the mariadb profile use "db" as the database
+        # host, the name of the service of the mysql profile. Do not activate
+        # both database profiles at the same time, both use port 3306.
+        aliases:
+          - db
     profiles:
       - mariadb
   postgres:
