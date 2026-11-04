@@ -200,6 +200,28 @@ done
 `|| break` stops at the first version that fails, and the test prints the names
 of the failed checks with the report of that run.
 
+Neither the sweep nor a single run starts from a clean stack: `laser down` stops
+the containers of the profiles of the active `.env` only, so a container of
+another profile that is still up keeps its host ports *and* its `db` alias, and
+the app container then reaches that server instead of the one under test. Stop
+your own stack (`laser down` with your `.env`) before a run with another profile,
+and look at `laser ps` when a result looks wrong.
+
+The test proves the PDO path of the app container. A check of a real framework
+setup is a command in a project of the projects directory, the way the version
+selection was checked against a Laravel 12 application:
+
+```
+laser appexec bash -c "cd /var/www/<project> && DB_CONNECTION=mysql DB_HOST=db \
+  DB_PORT=3306 DB_DATABASE=laser DB_USERNAME=laser DB_PASSWORD=<password> \
+  php artisan db:show"
+```
+
+Override every variable of that connection: Laravel merges the shell environment
+over the `.env` of the project one variable at a time, so a variable that is not
+overridden keeps the value of the project, and a cached configuration
+(`bootstrap/cache/config.php`) ignores the overrides altogether.
+
 ## Shell in this repository
 
 - `laser` runs with `set -euo pipefail` and `IFS=$'\n\t '`; `test/smoke.sh` runs
