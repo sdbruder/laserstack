@@ -27,7 +27,7 @@
 
 <main>
 <section class="hero"><div class="wrap">
-  <p class="eyebrow">docker-compose · one shell script · BSD-3-Clause</p>
+  <p class="eyebrow">macOS · Linux · WSL2 · docker-compose · one shell script · BSD-3-Clause</p>
   <h1>Many PHP projects.<br>One small stack.</h1>
   <p class="lede">Laser Stack serves all of your Laravel, Symfony and WordPress projects from a single set of Alpine containers — one nginx, one PHP-FPM, one database server — with the PHP and database versions chosen by a variable. No VM, no per-project containers, no dashboard.</p>
   <div class="actions">
@@ -35,13 +35,16 @@
     <a class="btn" href="benchmarks.html">Measured numbers</a>
     <a class="btn" href="https://github.com/sdbruder/laserstack">Source on GitHub</a>
   </div>
+  <p class="install-line"><code>curl -fsSL https://localdev.it/laserstack/install | bash</code></p>
+  <p class="platforms"><strong>Runs on macOS, Linux and WSL2/WSLg</strong> — Intel and Apple silicon, any docker with compose v2 (Docker Desktop, OrbStack, Colima, the engine). It installs nothing on the host: no VM, no system package, no daemon of its own.</p>
 
   <div class="term" style="margin-top:2.2rem">
     <div class="bar"><i></i><i></i><i></i><span>a first run, end to end</span></div>
-<pre><code>$ git clone https://github.com/sdbruder/laserstack ~/src/laserstack
-$ cd ~/src/laserstack &amp;&amp; cp env.example .env
-<span class="out"># .env: PHP_VERSION=8.4, PROFILES=mysql,redis, your credentials</span>
-$ laser up -d
+<pre><code>$ curl -fsSL https://localdev.it/laserstack/install | bash
+<span class="out">  bash 5.3.20   git 2.56.0   docker 29.9.2   compose 5.7.0</span>
+<span class="out">  system macOS, arm64</span>
+<span class="out">  wrote .env from env.example in ~/src/laserstack</span>
+$ cd ~/src/laserstack &amp;&amp; laser up -d
 <span class="out">Container laserstack-app-1     Started</span>
 <span class="out">Container laserstack-db-1      Started</span>
 <span class="out">Container laserstack-redis-1   Started</span>
@@ -81,7 +84,7 @@ $ <span class="ok"># http://projecta.local and http://projectb.local are both se
     <div class="card"><h3>A CLI that stays out of the way</h3><p><code>laser</code> exposes every docker-compose command unchanged and adds the ones you type all day: <code>artisan</code>, <code>composer</code>, <code>php</code>, <code>npm</code>, <code>shell</code>, <code>mysql</code>, <code>psql</code>, <code>share</code>, <code>scan</code>.</p></div>
     <div class="card"><h3>Tested, not vibes</h3><p><code>test/smoke.sh</code> starts the stack once per PHP version and once per database profile and checks nginx, php-fpm, the php.ini of the repository, an HTTP response and the PDO path from the app container to the server. The 0.13.0 release was verified against every version of every engine.</p></div>
     <div class="card"><h3>No magic, no lock-in</h3><p>Nothing rewrites your compose file and nothing guesses. When a container is missing you get docker's own error, which is the error you can act on.</p></div>
-    <div class="card"><h3>macOS, Linux, WSL2</h3><p>Runs on arm64 and x86-64, on macOS, on Linux and in WSL2/WSLg. The projects directory is bind-mounted, so your editor keeps working on your own files.</p></div>
+    <div class="card"><h3>macOS, Linux, WSL2</h3><p>Official support for macOS (Intel and Apple silicon), Linux and WSL2/WSLg, with Docker Desktop, OrbStack, Colima or the docker engine. The projects directory is bind-mounted, so your editor keeps working on your own files.</p></div>
   </div>
 </div></section>
 

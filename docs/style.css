@@ -69,6 +69,9 @@ nav.site a[aria-current="page"], nav.site a:hover { color: var(--fg); text-decor
 .hero { padding: 4rem 0 2.5rem; border-bottom: 1px solid var(--line); }
 .hero .lede { font-size: clamp(1.05rem, 2.2vw, 1.3rem); color: var(--muted); max-width: 46rem; }
 .eyebrow { font: 600 .8rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
+.platforms { color: var(--muted); font-size: .92rem; margin: 1.4rem 0 0; }
+.install-line { margin: 1.6rem 0 0; }
+.install-line code { font-size: .95rem; padding: .5em .7em; }
 .actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.6rem; }
 .btn { display: inline-block; padding: .6rem 1rem; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); font-weight: 600; font-size: .95rem; }
 .btn:hover { text-decoration: none; border-color: var(--muted); }

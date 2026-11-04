@@ -7,7 +7,15 @@ Sail and multi-project like Valet. Aims to be small and fast. It's opinionated:
 it does not support everything under the sun but it's configurable, you can
 customize the container to suit your needs.
 
-It supports macOS, WSL2, WSLg (Windows) and Linux and it needs docker.
+It supports macOS (Intel and Apple silicon), Linux, WSL2 and WSLg (Windows) and
+it needs docker with compose v2.
+
+Install it next to your projects with one line, or clone it yourself (see
+[Getting started](#getting-started)):
+
+```
+curl -fsSL https://localdev.it/laserstack/install | bash
+```
 
 Laser has a shell script around docker-compose as an interface to it, it exposes
 all docker-compose commands and extends it with its own subcommands.

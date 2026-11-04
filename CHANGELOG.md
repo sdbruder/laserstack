@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `docs/install`, the one-line installer served by the site:
+  `curl -fsSL https://localdev.it/laserstack/install | bash`. It checks bash,
+  git and docker with compose v2, clones the stack next to the projects (or
+  fast-forwards a checkout that is already there), writes `env.example` to
+  `.env` when there is none, and prints the steps left. It touches nothing else
+  on the machine: no system package, no shell profile, no daemon.
 - The project website, `docs/` in the repository, published by GitHub Pages at
   <https://localdev.it/laserstack/>: an overview with the measured cost of
   the stack, the features, the numbers with the method to reproduce them, a

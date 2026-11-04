@@ -35,12 +35,14 @@
   <ul>
     <li><strong>Docker</strong> with Compose v2 (<code>docker compose</code> or <code>docker-compose</code>). That is the only heavy dependency;</li>
     <li><strong>git</strong> and <strong>bash</strong> on the host. No PHP, no Node, no database client, no package from a language ecosystem — the containers carry those;</li>
-    <li><strong>macOS</strong> (Intel or Apple silicon), <strong>Linux</strong>, or <strong>Windows through WSL2/WSLg</strong>;</li>
+    <li><strong>macOS</strong> (Intel or Apple silicon), <strong>Linux</strong>, or <strong>Windows through WSL2/WSLg</strong> — on WSL keep the projects inside the Linux filesystem (<code>~/src</code>), not under <code>/mnt/c</code>, and the bind mounts stay fast;</li>
     <li>a directory where your projects live (this is what the stack mounts and serves), and the stack cloned next to it.</li>
   </ul>
 
   <h2>Install</h2>
-  <pre><code>git clone https://github.com/sdbruder/laserstack ~/src/laserstack
+  <pre><code>curl -fsSL https://localdev.it/laserstack/install | bash
+<span class="out"># or clone it yourself; the installer only does these steps for you:</span>
+git clone https://github.com/sdbruder/laserstack ~/src/laserstack
 cd ~/src/laserstack
 cp env.example .env          <span class="out"># laser also copies it on first use</span>
 <span class="out"># edit .env: PROJECTS_DIRECTORY, PHP_VERSION, PROFILES, credentials, SUFFIX</span>

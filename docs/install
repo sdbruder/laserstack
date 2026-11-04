@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+# Laser Stack installer.
+#
+#   curl -fsSL https://localdev.it/laserstack/install | bash
+#   curl -fsSL https://localdev.it/laserstack/install | bash -s -- --dir ~/dev/laserstack
+#
+# It clones Laser Stack next to your projects, writes .env from env.example and
+# prints the two steps left. It starts nothing by itself unless you ask (--start).
+# macOS, Linux and WSL2. Needs bash, git, and docker with the compose v2 plugin.
+
+set -euo pipefail
+
+REPO="${LASERSTACK_REPO:-https://github.com/sdbruder/laserstack.git}"
+DIR="${LASERSTACK_DIR:-$HOME/src/laserstack}"
+START=0
+
+usage() {
+  cat <<'USAGE'
+Install or update Laser Stack.
+
+Usage:
+  install [--dir <path>] [--start] [--help]
+
+  --dir <path>   where Laser Stack is cloned (default: ~/src/laserstack).
+                 It should be a sibling of your projects: the directory that
+                 holds them is what the stack serves.
+  --start        run "laser up -d" at the end, with the defaults of env.example.
+  --help         this text.
+
+Environment:
+  LASERSTACK_DIR    same as --dir
+  LASERSTACK_REPO   another git remote (default: the public repository)
+
+What it does: checks bash, git and docker (with compose v2), clones the
+repository or updates an existing checkout with a fast-forward pull, copies
+env.example to .env when there is no .env yet, and prints what is left to do.
+Nothing else on your machine is touched: no system package, no shell profile, no
+daemon of its own.
+USAGE
+}
+
+say()  { printf '%s\n' "$*"; }
+step() { printf '\n==> %s\n' "$*"; }
+note() { printf '    %s\n' "$*"; }
+die()  { printf 'error: %s\n' "$*" >&2; exit 1; }
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --dir) [ "$#" -ge 2 ] || die "--dir needs a path"; DIR="$2"; shift 2 ;;
+    --dir=*) DIR="${1#--dir=}"; shift ;;
+    --start) START=1; shift ;;
+    --help|-h) usage; exit 0 ;;
+    *) die "unknown argument: $1 (try --help)" ;;
+  esac
+done
+
+case "$DIR" in
+  "~/"*) DIR="$HOME/${DIR#\~/}" ;;
+  "~") DIR="$HOME" ;;
+esac
+
+step "what this machine has"
+command -v bash >/dev/null 2>&1 || die "bash is required"
+command -v git  >/dev/null 2>&1 || die "git is required: https://git-scm.com/downloads"
+command -v docker >/dev/null 2>&1 || die "docker is required:
+       macOS: Docker Desktop, OrbStack or Colima
+       Linux: docker engine with the compose plugin
+       Windows: Docker Desktop with the WSL2 backend"
+say "  bash    $(bash --version | sed -n '1s/.*version \([0-9.]*\).*/\1/p')"
+say "  git     $(git --version | sed 's/git version //')"
+say "  docker  $(docker --version | sed -e 's/Docker version //' -e 's/,.*//')"
+if docker compose version >/dev/null 2>&1; then
+  say "  compose $(docker compose version --short 2>/dev/null || echo 'v2 plugin')"
+elif command -v docker-compose >/dev/null 2>&1; then
+  say "  compose $(docker-compose version --short 2>/dev/null || echo 'docker-compose binary')"
+else
+  die "docker compose v2 is required: https://docs.docker.com/compose/install/"
+fi
+
+case "$(uname -s)" in
+  Darwin) platform=macOS ;;
+  Linux)
+    if grep -qi microsoft /proc/version 2>/dev/null; then platform=WSL2; else platform=Linux; fi ;;
+  *) platform="$(uname -s)" ;;
+esac
+say "  system  $platform, $(uname -m)"
+
+if ! docker info >/dev/null 2>&1; then
+  say "  warning the docker daemon does not answer yet: start Docker before 'laser up -d'"
+fi
+
+step "Laser Stack in $DIR"
+if [ -d "$DIR/.git" ]; then
+  say "  already a git checkout, updating it"
+  git -C "$DIR" pull --ff-only
+elif [ -e "$DIR" ]; then
+  die "$DIR exists and is not a git checkout. Move it away or pass --dir <path>."
+else
+  mkdir -p "$(dirname "$DIR")"
+  git clone --depth 1 "$REPO" "$DIR"
+fi
+cd "$DIR"
+say "  version $(git describe --tags --always 2>/dev/null || echo unknown)"
+
+if [ ! -f .env ]; then
+  cp env.example .env
+  say "  wrote .env from env.example"
+else
+  say "  .env is already there, left as it is"
+fi
+
+projects_dir=$(cd "${PROJECTS_DIRECTORY:-..}" 2>/dev/null && pwd || echo "?")
+step "next"
+note "The stack in $DIR serves the projects in $projects_dir."
+note "env.example sets PROJECTS_DIRECTORY=./.., so a project is a directory there"
+note "with a public/ directory: projecta, projectb, myapp …"
+say ""
+note "1. edit $DIR/.env"
+note "     PHP_VERSION=8.4          # 7.4, 8.0, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6"
+note "     PROFILES=mysql,redis     # mysql, mariadb, postgres, redis, memcached, elasticsearch"
+note "     DB_PASSWORD=…            # and the other credentials"
+note "     SUFFIX=local             # so a project answers on projecta.local"
+say ""
+note "2. make 'laser' reachable from your projects (one of these):"
+note "     alias laser=$DIR/laser"
+note "     export PATH=\"\$PATH:$DIR\""
+say ""
+note "3. start the stack and write one nginx vhost per project:"
+note "     laser up -d"
+note "     laser scan"
+note "     cd $projects_dir/myproject && laser artisan migrate"
+say ""
+note "4. name resolution, once (the stack takes this over in a later release):"
+note "     127.0.0.1 projecta.local projectb.local"
+say ""
+note "Documentation: https://localdev.it/laserstack/   (README.md, CONTRIBUTING.md in the checkout)"
+
+if [ "$START" -eq 1 ]; then
+  step "starting the stack"
+  "$DIR/laser" up -d
+  say ""
+  say "  started. 'laser ps' shows the containers, 'laser scan' the projects."
+fi

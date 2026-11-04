@@ -58,6 +58,18 @@
   </table></div>
   <p>Only the profile of the mysql container answers on 3306 at a time: projects that point at <code>db</code> work with the <code>mysql</code> profile and with the <code>mariadb</code> profile, which is why the mariadb service carries that alias.</p>
 
+  <h2>Platforms</h2>
+  <p>Official support for the three environments developers use, with any docker that speaks compose v2 — and nothing at all installed on the host besides it:</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>system</th><th>what it needs</th><th>notes</th></tr></thead>
+    <tbody>
+      <tr><td><strong>macOS</strong></td><td>Docker Desktop, OrbStack or Colima</td><td>Intel and Apple silicon; the measurements on this site come from an M3 with OrbStack</td></tr>
+      <tr><td><strong>Linux</strong></td><td>docker engine with the compose v2 plugin</td><td>no desktop app, no VM</td></tr>
+      <tr><td><strong>WSL2 / WSLg</strong></td><td>Docker Desktop with the WSL2 backend</td><td>keep the projects inside the Linux filesystem (<code>~/src</code>), not under <code>/mnt/c</code>: bind mounts and file watching stay fast</td></tr>
+    </tbody>
+  </table></div>
+  <p>No VM of its own, no system package, no shell profile, no daemon: <code>laser</code> is a bash script and docker does the rest. The <a href="install">installer</a> checks bash, git and docker with compose v2 before it clones anything, and stops with a clear message when one of them is missing.</p>
+
   <h2 id="versions-are-variables">Versions are variables</h2>
   <p>One variable per engine selects the image tag <em>and</em> the config directory, so the settings of a version travel with it. As of release 0.13.0:</p>
   <div class="table-scroll"><table>
