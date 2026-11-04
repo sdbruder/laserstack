@@ -286,21 +286,69 @@ need, and no more, with the smallest number of containers. Every container
 serves all the projects that need the same thing: one app container per PHP
 version, one container per database engine *and* version (mysql 8.0 next to
 mysql 9.7, on different host ports), and each project states which of them it
-uses. What has to grow for that:
+uses.
 
-- the mapping project → PHP version and database versions, and where it lives
-  (the `.env` of the project, a file of this repository, a label on the
-  project);
-- `laser scan`, which then renders a vhost per project against the php-fpm of
-  the version of that project: one nginx with one socket per version, or one
-  nginx per version;
+Proposed direction for that work (a proposal, the plan still decides the
+details):
+
+- a `router`: one `nginx:alpine` that publishes port 80 and is the only
+  container that does. Its config is generated, one server per project, and it
+  sends `Host: <project>.<SUFFIX>` to the app container of the version of that
+  project. It is the only new piece;
+- `app<VV>`: one container per PHP version in use, the image of today
+  (`laserstack/app:8.2`, `:8.5`) unchanged, with the same supervisord and the
+  same vhost rendering. `laser` starts the versions the mapping asks for, so a
+  version nobody needs never runs;
+- the mapping project → versions: `.laserstack` in the project root, a
+  `KEY=VALUE` file sourced like `.env` (`PHP_VERSION=8.4`, later
+  `MYSQL_VERSION=9.7`), written by `laser use php 8.4` and read by `laser scan`.
+  It resolves as that file, then `composer.json` (`require.php` as a floor),
+  then the `PHP_VERSION` of the stack `.env`, so a setup without a mapping keeps
+  behaving as today;
 - the subcommands of a project (`artisan`, `php`, `composer`, `npm`, `shell`,
-  `appexec`, `mysql`, `psql`), which have to pick the container of the project
-  instead of "the" app container, and `laser share`, which links to it;
-- the defaults and the existing `.env`, so that a stack with one PHP version and
-  no mapping keeps behaving as today;
-- the smoke test, which then covers combinations of versions and not one version
-  at a time.
+  `appexec`, `test`, `mysql`, `psql`) pick their container through a helper
+  `appservice()` next to the existing `dbhost()`; `laser share` points at the
+  router and `laser list` shows the version of every project;
+- the databases follow the same shape: one service per engine and version, named
+  by the mapping. A shared server needs isolation by database and user, so a
+  project gets its own database and user (an idempotent provisioning step), and
+  `db` stays the alias of the default.
+
+Costs to accept and document: extensions, opcache and xdebug stay properties of a
+version and not of a project; an idle version costs tens of megabytes; the
+hostname inside a container stops being `laser`; and the number of containers is
+one router plus one app per version in use plus the database services, whatever
+the number of projects.
+
+Prior art to read before the plan: VVV does this in one box with an nginx
+upstream per site and a php-fpm pool per version; Valet and Herd put the version
+per site on the host; ddev, Lando and Sail go the other way and give every
+project its own set of containers.
+
+The path to it, in this order:
+
+1. the mapping file, `laser use php` and `appservice()`, with the mapping inert
+   while there is one app container;
+2. one `app<VV>` service per PHP version behind its profile, plus the router;
+3. `laser scan` generates the router config, and `laser share` follows it;
+4. per-project database and user provisioning, and the database versions in the
+   mapping;
+5. the smoke test over combinations of versions;
+6. optionally, one `web` container with one php-fpm container per version
+   instead of one nginx per version: the same number of containers, less work
+   inside the containers, more work in the images.
+
+Still to decide in the plan of that work:
+
+- the name and the format of the mapping file, and whether the `composer.json`
+  fallback is worth its surprises;
+- the router: plain `nginx:alpine` with a generated config, or an image of this
+  project that carries its template;
+- whether an app container keeps a published port for direct access
+  (`http://localhost:8082`) or only the router publishes one;
+- what `hostname: laser` becomes, and what the tools that read it should do;
+- the order against the DNS TODO: the router does not need `.test` to work, but
+  the two together are what makes many projects on many versions comfortable.
 
 ### Local DNS for the project names
 
