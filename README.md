@@ -10,7 +10,11 @@ customize the container to suit your needs.
 It supports macOS, WSL2, WSLg (Windows) and Linux and it needs docker.
 
 Laser has a shell script around docker-compose as an interface to it, it exposes
-all docker-compose commands and extends it with it's own subcommands.
+all docker-compose commands and extends it with its own subcommands.
+
+This file is the user documentation: installing the stack, configuring it and
+running it. For the project itself, its test and its releases, read
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Inspiration
 
@@ -31,9 +35,9 @@ Be as small, simple and fast as possible:
 
 ## Limitations
 
-- Currently we support Laravel, Symfony, Wordpress and overridable
-  per project nginx config, those are examples, additional drivers PR's are
-  welcome.
+- Currently we support Laravel, Symfony, Wordpress and overridable per project
+  nginx config. Those drivers are examples, and
+  [CONTRIBUTING.md](CONTRIBUTING.md) describes how to add one.
 - DNS resolution needs to be manually managed through `/etc/hosts`.
 - The `mysql` client of a shell in the app container (`laser shell`,
   `laser appexec mysql`) is the client of the image and authenticates with
@@ -200,10 +204,7 @@ To configure a particular nginx config for a project, create a
 your project will be in `/var/www/YOURPROJECTDIRECTORY`.
 
 Every time you add or remove a non-Laravel project, you need to call
-`laser scan` to allow Laser Stack to adjust it's nginx config.
-
-Laravel and Wordpress are simple examples of support drivers. Additional drivers
-submitted as pull request are welcomed.
+`laser scan` to allow Laser Stack to adjust its nginx config.
 
 ## DNS resolution
 
@@ -219,35 +220,12 @@ project you are trying to access. `SUFFIX` comes from `.env` and is `local` in
 You can add a dnsmasq config to resolve every `*.local` to 127.0.0.1
 automatically, but that's beyond the scope of this introduction.
 
-## Smoke test
+## Contributing
 
-`test/smoke.sh` starts the stack once per PHP version and once per database
-profile. It checks:
-
-- stage `app`, per version: nginx and php-fpm are RUNNING, no nginx emergency
-  in the log, php-fpm runs the workers as `laser`, PHP loads the php.ini of the
-  repository, a project answers over http with the requested version, and the
-  run writes nothing into `config/nginx/http.d`
-- stage `database`, per database profile and version: `laser mysql` or
-  `laser psql` answers with the server of the profile, and PHP of the app
-  container reaches that server with PDO, under the host name a project uses
-  (`db`, `mariadb`, `postgres`)
-
-The http check runs inside the container, so a web server on port 80 of the
-host, like Valet or Herd, does not disturb the test.
-
-```
-test/smoke.sh                                 # every version, every database profile
-test/smoke.sh 8.4 8.5                         # only these versions
-SMOKE_DB_PROFILES=mariadb test/smoke.sh 8.2   # one database profile
-SMOKE_PULL=0 test/smoke.sh 8.4                # use the local images
-```
-
-The test pulls the image of every version it starts, so an old image of an
-earlier run cannot fail the test. `SMOKE_PULL=0` keeps the local images.
-
-The test stops the stack at the end and leaves `.env` as it was. The database
-volumes stay, and the first run pulls the images of the database profiles.
+The development documentation lives in [CONTRIBUTING.md](CONTRIBUTING.md): the
+layout of the repository, how the stack is put together, how to add a PHP or a
+database version, the smoke test, the release process and how to debug a
+container.
 
 ## License
 

@@ -58,6 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   where the plugin does not exist at all. The host cache is off on every version
   through `host_cache_size = 0`, because MySQL removed `skip-host-cache` in 8.3
   and refuses to start with it.
+- The documentation is split: `README.md` is the user documentation (installing,
+  configuring and running the stack) and `CONTRIBUTING.md` is the development
+  documentation (the repository layout, how the stack is put together, how to
+  add a PHP or a database version, the smoke test, the release process and how
+  to debug a container). The smoke test section moved out of the README
+  unchanged.
 
 ### Removed
 
