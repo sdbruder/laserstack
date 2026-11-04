@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laser Stack — a lean local development stack for many PHP projects</title>
+<meta name="description" content="Laser Stack runs many Laravel, Symfony or WordPress projects at once in a small set of Alpine containers: one nginx, one PHP-FPM, one database server. Pick the PHP and database versions with a variable.">
+<link rel="canonical" href="https://sdbruder.github.io/laserstack/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Laser Stack">
+<meta property="og:title" content="Laser Stack — a lean local development stack for many PHP projects">
+<meta property="og:description" content="Many projects, one small set of containers. Alpine images, versions you select with a variable, config in git, no VM.">
+<meta property="og:url" content="https://sdbruder.github.io/laserstack/">
+<meta property="og:image" content="https://sdbruder.github.io/laserstack/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0a0c10">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230a0c10'/%3E%3Cpath d='M4 19 L20 5' stroke='%234ade80' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <a class="brand" href="./"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 19.5 L20 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 4.5h11M3.5 20v-9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/><circle cx="18.4" cy="5.6" r="2.2" fill="#4ade80"/></svg>laserstack</a>
+  <nav class="site">
+    <a href="./" aria-current="page">Overview</a><a href="features.html">Features</a><a href="benchmarks.html">Numbers</a><a href="docs.html">Docs</a><a href="examples.html">Examples</a><a href="roadmap.html">Roadmap</a><a href="https://github.com/sdbruder/laserstack">GitHub ↗</a>
+  </nav>
+</div></header>
+
+<main>
+<section class="hero"><div class="wrap">
+  <p class="eyebrow">docker-compose · one shell script · BSD-3-Clause</p>
+  <h1>Many PHP projects.<br>One small stack.</h1>
+  <p class="lede">Laser Stack serves all of your Laravel, Symfony and WordPress projects from a single set of Alpine containers — one nginx, one PHP-FPM, one database server — with the PHP and database versions chosen by a variable. No VM, no per-project containers, no dashboard.</p>
+  <div class="actions">
+    <a class="btn primary" href="#quickstart">Quick start</a>
+    <a class="btn" href="benchmarks.html">Measured numbers</a>
+    <a class="btn" href="https://github.com/sdbruder/laserstack">Source on GitHub</a>
+  </div>
+
+  <div class="term" style="margin-top:2.2rem">
+    <div class="bar"><i></i><i></i><i></i><span>a first run, end to end</span></div>
+<pre><code>$ git clone https://github.com/sdbruder/laserstack ~/src/laserstack
+$ cd ~/src/laserstack &amp;&amp; cp env.example .env
+<span class="out"># .env: PHP_VERSION=8.4, PROFILES=mysql,redis, your credentials</span>
+$ laser up -d
+<span class="out">Container laserstack-app-1     Started</span>
+<span class="out">Container laserstack-db-1      Started</span>
+<span class="out">Container laserstack-redis-1   Started</span>
+$ laser scan
+<span class="out">SCAN: /Users/you/src/projecta identified as laravel.</span>
+<span class="out">SCAN: /Users/you/src/projectb identified as wordpress.</span>
+$ laser ps
+<span class="out">NAME                  IMAGE                 STATUS         PORTS</span>
+<span class="out">laserstack-app-1      laserstack/app:8.4    Up 4 seconds   0.0.0.0:80-&gt;80/tcp</span>
+<span class="out">laserstack-db-1       mysql:8.0             Up 4 seconds   0.0.0.0:3306-&gt;3306/tcp</span>
+<span class="out">laserstack-redis-1    redis:8.10-alpine     Up 4 seconds   0.0.0.0:6379-&gt;6379/tcp</span>
+$ <span class="ok"># http://projecta.local and http://projectb.local are both served</span></code></pre>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>What it costs</h2>
+  <p class="section-lede">Measured on a MacBook (Docker 29, arm64), warm images and data volumes — the state you are in from the second day. The method is on the <a href="benchmarks.html">numbers page</a>.</p>
+  <div class="stats">
+    <div class="stat"><b>2</b><span>containers serving every project of the projects directory</span></div>
+    <div class="stat"><b>113 MiB</b><span>idle memory for the app and the database together</span></div>
+    <div class="stat"><b>2.9 s</b><span>from <code>laser up -d</code> to nginx and php-fpm serving</span></div>
+    <div class="stat"><b>297 MB</b><span>the PHP 8.2 app image, 244–327 MB across 7.4–8.6</span></div>
+    <div class="stat"><b>7.4 – 8.6</b><span>PHP versions, one variable away</span></div>
+    <div class="stat"><b>6</b><span>database engines, each with selectable versions</span></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Built for a small footprint</h2>
+  <p class="section-lede">The whole stack is a compose file, a config directory and a shell script you can read in an afternoon.</p>
+  <div class="grid">
+    <div class="card"><h3>Many projects, one stack</h3><p>One nginx with a vhost per project, rendered by <code>laser scan</code> from the projects directory. Laravel, Symfony and WordPress drivers are included, and any project can ship its own nginx config in <code>laserstack-nginx.conf</code>.</p></div>
+    <div class="card"><h3>Versions are variables</h3><p><code>PHP_VERSION</code>, <code>MYSQL_VERSION</code>, <code>MARIADB_VERSION</code>, <code>POSTGRES_VERSION</code>, <code>REDIS_VERSION</code>, <code>MEMCACHED_VERSION</code>, <code>ELASTICSEARCH_VERSION</code>. Each one selects the image tag and the matching config directory, so two installs can run different versions from the same repository.</p></div>
+    <div class="card"><h3>Config lives in git</h3><p>php.ini, php-fpm, supervisord, nginx and every database config are files of this repository, one directory per version. Change a value, restart one service, keep the change in a commit.</p></div>
+    <div class="card"><h3>Alpine, no VM</h3><p>The images are Alpine-based and pulled from public registries. There is no virtual machine, no custom orchestrator and no daemon: docker-compose does the work.</p></div>
+    <div class="card"><h3>A CLI that stays out of the way</h3><p><code>laser</code> exposes every docker-compose command unchanged and adds the ones you type all day: <code>artisan</code>, <code>composer</code>, <code>php</code>, <code>npm</code>, <code>shell</code>, <code>mysql</code>, <code>psql</code>, <code>share</code>, <code>scan</code>.</p></div>
+    <div class="card"><h3>Tested, not vibes</h3><p><code>test/smoke.sh</code> starts the stack once per PHP version and once per database profile and checks nginx, php-fpm, the php.ini of the repository, an HTTP response and the PDO path from the app container to the server. The 0.13.0 release was verified against every version of every engine.</p></div>
+    <div class="card"><h3>No magic, no lock-in</h3><p>Nothing rewrites your compose file and nothing guesses. When a container is missing you get docker's own error, which is the error you can act on.</p></div>
+    <div class="card"><h3>macOS, Linux, WSL2</h3><p>Runs on arm64 and x86-64, on macOS, on Linux and in WSL2/WSLg. The projects directory is bind-mounted, so your editor keeps working on your own files.</p></div>
+  </div>
+</div></section>
+
+<section id="quickstart"><div class="wrap">
+  <h2>Quick start</h2>
+  <p class="section-lede">Three commands and a hosts entry. The clone belongs next to your projects, because that directory is what the stack mounts and serves.</p>
+  <div class="steps">
+    <div class="step"><div><h3>Clone it next to your projects</h3>
+      <pre><code>git clone https://github.com/sdbruder/laserstack ~/src/laserstack
+alias laser=~/src/laserstack/laser        <span class="out"># or add it to $PATH</span></code></pre></div></div>
+    <div class="step"><div><h3>Write your .env</h3>
+      <pre><code>cd ~/src/laserstack &amp;&amp; cp env.example .env
+<span class="out"># PHP_VERSION=8.4</span>
+<span class="out"># PROFILES=mysql,redis</span>
+<span class="out"># DB_PASSWORD=…  MYSQL_VERSION=8.0  REDIS_VERSION=8.10</span>
+<span class="out"># SUFFIX=local      # your projects answer to projecta.local</span></code></pre></div></div>
+    <div class="step"><div><h3>Start it and scan</h3>
+      <pre><code>laser up -d
+laser scan          <span class="out"># writes one nginx vhost per project</span>
+<span class="out"># add the names to /etc/hosts once, or use dnsmasq (see the roadmap):</span>
+<span class="out"># 127.0.0.1 projecta.local projectb.local</span></code></pre></div></div>
+  </div>
+  <p style="margin-top:1.6rem">Day to day: <code>laser artisan migrate</code>, <code>laser npm run dev</code>, <code>laser mysql</code>, <code>laser shell</code>, <code>laser share</code>, <code>laser stop</code>. Anything else goes straight to docker-compose: <code>laser logs app --tail 50</code>.</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>What it does not do (yet)</h2>
+  <p class="section-lede">The stack is opinionated and honest about the edges. Everything below is on the <a href="roadmap.html">roadmap</a> or documented as a limit.</p>
+  <div class="grid">
+    <div class="card"><h3>One PHP version at a time</h3><p>All projects of one stack share the app container, so they share its PHP version. Per-project PHP versions, one container per version in use, are the next feature.</p></div>
+    <div class="card"><h3>One version per database engine</h3><p>You can run mysql and postgres and redis side by side, but each engine runs the version you selected. Several versions of the same engine in parallel is part of the same roadmap item.</p></div>
+    <div class="card"><h3>DNS is a manual step today</h3><p>Project names are resolved through <code>/etc/hosts</code>. A local dnsmasq that <code>laser</code> installs, configures and maintains on macOS, Linux and WSL2 is planned, with <code>.test</code> as the default suffix.</p></div>
+    <div class="card"><h3>memcached is server only</h3><p>The app images carry no <code>memcached</code> PHP extension, so the profile serves the server and the protocol, not a Laravel cache store.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Where to go next</h2>
+  <div class="grid">
+    <div class="card"><h3><a href="features.html">Features in detail →</a></h3><p>What the drivers, the profiles, the versions and the CLI actually do.</p></div>
+    <div class="card"><h3><a href="benchmarks.html">Numbers and method →</a></h3><p>Image sizes, idle memory, startup time, and how each figure was produced.</p></div>
+    <div class="card"><h3><a href="docs.html">Documentation →</a></h3><p>The .env reference, the profiles, the versions and the laser commands, with links to the repository docs.</p></div>
+    <div class="card"><h3><a href="examples.html">Examples →</a></h3><p>Copy-paste recipes: many projects, a custom vhost, another database, another database version, artisan and npm.</p></div>
+  </div>
+</div></section>
+</main>
+
+<footer class="site"><div class="wrap">
+  <div class="cols">
+    <div><h4>Project</h4><ul>
+      <li><a href="https://github.com/sdbruder/laserstack">GitHub repository</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/releases">Releases</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/CHANGELOG.md">Changelog</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack_app">App images</a></li>
+    </ul></div>
+    <div><h4>Documentation</h4><ul>
+      <li><a href="docs.html">Site reference</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/README.md">README</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/CONTRIBUTING.md">Working on Laser Stack</a></li>
+      <li><a href="roadmap.html">Roadmap</a></li>
+    </ul></div>
+    <div><h4>Community</h4><ul>
+      <li><a href="https://github.com/sdbruder/laserstack/issues">Issues and ideas</a></li>
+      <li><a href="https://twitter.com/laserstack_sdb">@laserstack_sdb</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/LICENSE.md">BSD-3-Clause license</a></li>
+    </ul></div>
+  </div>
+  <div class="fine"><span>Laser Stack is open source software under the BSD-3-Clause license.</span><span>No telemetry, no account, no VM.</span><span>This site is static HTML and one CSS file.</span></div>
+</div></footer>
+</body>
+</html>

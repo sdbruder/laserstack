@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Numbers and method — Laser Stack</title>
+<meta name="description" content="What a Laser Stack costs: image sizes, idle memory, time to start, and how many projects it serves — measured on a real machine, with the commands to reproduce it.">
+<link rel="canonical" href="https://sdbruder.github.io/laserstack/benchmarks.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Numbers and method — Laser Stack">
+<meta property="og:description" content="607 MB of images, ~113 MiB idle, a stack up in about a second, seventeen projects served by two containers. Measured, with the method.">
+<meta property="og:image" content="https://sdbruder.github.io/laserstack/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0a0c10">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230a0c10'/%3E%3Cpath d='M4 19 L20 5' stroke='%234ade80' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <a class="brand" href="./"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 19.5 L20 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 4.5h11M3.5 20v-9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/><circle cx="18.4" cy="5.6" r="2.2" fill="#4ade80"/></svg>laserstack</a>
+  <nav class="site">
+    <a href="./">Overview</a><a href="features.html">Features</a><a href="benchmarks.html" aria-current="page">Numbers</a><a href="docs.html">Docs</a><a href="examples.html">Examples</a><a href="roadmap.html">Roadmap</a><a href="https://github.com/sdbruder/laserstack">GitHub ↗</a>
+  </nav>
+</div></header>
+
+<main>
+<section class="hero"><div class="wrap">
+  <p class="eyebrow">Numbers and method</p>
+  <h1>What it costs, measured.</h1>
+  <p class="lede">Marketing pages usually say "lightweight". Here is the arithmetic instead: a default install is two containers, 607&nbsp;MB of images, about 113&nbsp;MiB of memory, and it serves every project of your projects directory. Every figure below comes from a command you can run on your own machine.</p>
+</div></section>
+
+<section><div class="wrap prose">
+  <h2>The machine and the versions</h2>
+  <div class="table-scroll"><table>
+    <tbody>
+      <tr><th>Machine</th><td>Apple M3, 8 cores, 16 GB, macOS 27.0.1 (arm64)</td></tr>
+      <tr><th>Docker</th><td>Docker 29.8.2 with Compose v2 (5.7.0), Linux containers, no VM of this project involved</td></tr>
+      <tr><th>Laser Stack</th><td>release 0.13.0, images present, data volumes present — the state you are in from the second day</td></tr>
+      <tr><th>Measured</th><td>2026-11-05, with <code>docker images</code>, <code>docker stats --no-stream</code>, <code>time</code>/<code>date</code> around <code>laser</code> commands, and <code>curl</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>The cost of a stack</h2>
+  <div class="stats">
+    <div class="stat"><b>2</b><span>containers for app and database — whatever the number of projects</span></div>
+    <div class="stat"><b>607 MB</b><span>images of a default install (app 8.2 + mariadb 10.11)</span></div>
+    <div class="stat"><b>113 MiB</b><span>idle memory of both containers, after 60 s of idling</span></div>
+    <div class="stat"><b>1.0 s</b><span>from <code>laser up -d</code> to the database answering</span></div>
+    <div class="stat"><b>3 s</b><span>to nginx and php-fpm serving again</span></div>
+    <div class="stat"><b>26 ms</b><span>a Laravel 12 request, steady state</span></div>
+  </div>
+  <p>Numbers 1 and 2 come from the same stack: seventeen Laravel projects in the projects directory, one app container, one mariadb container.</p>
+
+  <h2>Images, as docker reports them</h2>
+  <p>Size on disk, arm64. The app image carries nginx, php-fpm, composer, node, npm, yarn, phpunit, xdebug and the mysql and postgres clients, so there is nothing else to install for a project.</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>image</th><th>versions</th><th>size</th></tr></thead>
+    <tbody>
+      <tr><td><code>laserstack/app</code></td><td>7.4 (272 MB), 8.0 (244 MB), 8.1 (327 MB), <strong>8.2 (297 MB)</strong>, 8.3 (302 MB), 8.4 (305 MB), 8.5 (314 MB), 8.6 (325 MB)</td><td>244–327 MB</td></tr>
+      <tr><td><code>mysql</code></td><td><strong>8.0 (795 MB)</strong>, 8.4 (809 MB), 9.7 (954 MB), 26.10 (776 MB)</td><td>776–954 MB</td></tr>
+      <tr><td><code>mariadb</code></td><td><strong>10.11 (310 MB)</strong>, 11.4 (355 MB), 11.8 (357 MB), 12.3 (361 MB), 13.0 (386 MB)</td><td>310–386 MB</td></tr>
+      <tr><td><code>postgres</code></td><td><strong>15.1 (241 MB)</strong>, 16 (288 MB), 17 (291 MB), 18 (298 MB) — the <code>-alpine</code> series</td><td>241–298 MB</td></tr>
+      <tr><td><code>redis</code></td><td>7.4 (39.5 MB), 8.2 (70.1 MB), 8.4 (95.9 MB), 8.6 (97.2 MB), 8.8 (115 MB), <strong>8.10 (119 MB)</strong></td><td>40–119 MB</td></tr>
+      <tr><td><code>memcached</code></td><td>1.6-alpine (13.6 MB)</td><td>13.6 MB</td></tr>
+      <tr><td><code>elasticsearch</code></td><td><strong>7.14.2 (1.12 GB)</strong>, 8.19.23 (992 MB), 9.5.5 (1.2 GB)</td><td>992 MB–1.2 GB</td></tr>
+    </tbody>
+  </table></div>
+  <p>Two of these are worth a sentence: <strong>mariadb is the lighter SQL server</strong> (310 MB against 795 MB for mysql 8.0, both with the data directory empty), and <strong>elasticsearch is the one heavy profile</strong> — everything else in the stack fits in a few hundred megabytes.</p>
+
+  <h2>Idle memory</h2>
+  <p><code>docker stats --no-stream</code>, after the stack was up and then left alone for 60 s:</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>container</th><th>idle memory</th><th>note</th></tr></thead>
+    <tbody>
+      <tr><td><code>laserstack-app-1</code> (laserstack/app:8.2)</td><td>35.5 MiB</td><td>nginx and php-fpm, one idle worker</td></tr>
+      <tr><td><code>laserstack-mariadb-1</code> (mariadb:10.11)</td><td>77.9 MiB</td><td>InnoDB pool allocated lazily</td></tr>
+      <tr><td><code>laserstack-postgres-1</code> (postgres:15.1-alpine)</td><td>16.2 MiB</td><td>right after start, no queries yet</td></tr>
+      <tr><td><code>laserstack-redis-1</code> (redis:8.10-alpine)</td><td>6.5 MiB</td><td>empty dataset</td></tr>
+      <tr><td><code>laserstack-memcached-1</code> (memcached:1.6-alpine)</td><td>1.3 MiB</td><td>empty cache</td></tr>
+      <tr><td><code>mysql:8.0</code></td><td>375.3 MiB</td><td>measured alone, with the config directory of the repository mounted</td></tr>
+      <tr><td><code>elasticsearch:7.14.2</code></td><td>6.4 GiB</td><td>60 s after the HTTP API answered: the JVM plus the memory-mapped index files, as docker counts them</td></tr>
+    </tbody>
+  </table></div>
+  <p>So the default install — app and mariadb, serving every project — idles at about <strong>113 MiB</strong>. Add redis and memcached for under 8 MiB more. MySQL 8.0 costs roughly five times what MariaDB costs in memory (375 MiB against 78 MiB, same configuration), which is worth knowing before you pick the <code>mysql</code> profile over <code>mariadb</code>. Elasticsearch is the exception in every stack, and here it is the only container that costs gigabytes: 6.4 GiB in <code>docker stats</code>, with the JVM and the memory-mapped index files counted against it, and tens of seconds of start-up.</p>
+
+  <h2>Time to start</h2>
+  <div class="table-scroll"><table>
+    <thead><tr><th>what is measured</th><th>time</th><th>method</th></tr></thead>
+    <tbody>
+      <tr><td><code>laser up -d</code> until the database answers a query</td><td>1.0 s</td><td>mariadb profile, data volume present</td></tr>
+      <tr><td><code>laser up -d</code> until nginx and php-fpm are RUNNING</td><td>2.9 s</td><td>app + mariadb, containers recreated by the command</td></tr>
+      <tr><td>the same, with mysql + redis + memcached</td><td>2.8 s</td><td>four services up at once</td></tr>
+      <tr><td>the same, with postgres</td><td>2.1 s</td><td></td></tr>
+      <tr><td>the same, with elasticsearch</td><td>3.6 s</td><td>the app container is up long before elasticsearch is: its API needs tens of seconds</td></tr>
+      <tr><td><code>laser start</code> of stopped containers</td><td>3.7 s</td><td>no recreation, containers already exist</td></tr>
+    </tbody>
+  </table></div>
+  <p>These are warm numbers: the images are pulled and the data volumes exist. A first run also initializes the data directory of a database, which is where the extra seconds of a brand-new install go.</p>
+
+  <h2>Serving projects</h2>
+  <div class="table-scroll"><table>
+    <thead><tr><th>what</th><th>figure</th><th>how</th></tr></thead>
+    <tbody>
+      <tr><td>projects served by the same two containers</td><td>17</td><td><code>find "$PROJECTS_DIRECTORY" -maxdepth 2 -name artisan</code></td></tr>
+      <tr><td><code>laser scan</code> over those projects</td><td>2.3 s</td><td>including hashing the vhosts to decide about an nginx restart</td></tr>
+      <tr><td>first response of a plain PHP project</td><td>8.1 ms</td><td><code>curl</code> from the host through nginx and php-fpm, 1-file project, first request</td></tr>
+      <tr><td>second response, same project</td><td>5.6 ms</td><td></td></tr>
+      <tr><td>Laravel 12 <code>/up</code> route, first request after start</td><td>492 ms</td><td>framework boot and opcode cache warm-up</td></tr>
+      <tr><td>Laravel 12 <code>/up</code> route, steady state</td><td>25–31 ms</td><td>four consecutive requests: 31.4, 26.1, 26.0, 25.3 ms</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>What these numbers are not</h2>
+  <ul>
+    <li><strong>Not a comparison.</strong> A fair one compares whole workflows on the same machine: how much of your disk a VM takes, how long a per-project container set needs to come up, what a file-sync daemon costs in CPU. Those are other people's numbers and they are on their sites;</li>
+    <li><strong>Not cold starts.</strong> Pulling 600 MB of images takes as long as your connection does; a first database start also writes its data directory;</li>
+    <li><strong>One machine, one run.</strong> An M3 laptop with fast storage. Memory of a database grows with its workload, and <code>docker stats</code> memory includes page cache;</li>
+    <li><strong>Not a promise about your project.</strong> 26 ms is a Laravel boot plus a health route. Your application's response time is your application's business.</li>
+  </ul>
+
+  <h2>Reproduce it</h2>
+  <p>With a running stack, from the repository:</p>
+  <pre><code><span class="out"># images</span>
+docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | sort
+
+<span class="out"># idle memory, after a minute of doing nothing</span>
+docker stats --no-stream --format '{{.Name}} {{.MemUsage}}'
+
+<span class="out"># time from a stopped stack to a database that answers</span>
+laser stop
+time ( laser up -d; until laser mysql -e 'select 1' &gt;/dev/null 2&gt;&amp;1; do sleep 0.5; done )
+
+<span class="out"># projects served, and how long the scan takes</span>
+find "$PROJECTS_DIRECTORY" -maxdepth 2 -name artisan | wc -l
+time laser scan
+
+<span class="out"># response time through nginx and php-fpm</span>
+curl -sS -o /dev/null -w '%{http_code} %{time_total}s\n' -H "Host: myapp.$SUFFIX" http://127.0.0.1/</code></pre>
+  <p>If your numbers differ, they are the ones that matter: this page exists so that nobody has to take a marketing claim on faith.</p>
+</div></section>
+</main>
+
+<footer class="site"><div class="wrap">
+  <div class="cols">
+    <div><h4>Project</h4><ul>
+      <li><a href="https://github.com/sdbruder/laserstack">GitHub repository</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/releases">Releases</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/CHANGELOG.md">Changelog</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack_app">App images</a></li>
+    </ul></div>
+    <div><h4>Documentation</h4><ul>
+      <li><a href="docs.html">Site reference</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/README.md">README</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/CONTRIBUTING.md">Working on Laser Stack</a></li>
+      <li><a href="roadmap.html">Roadmap</a></li>
+    </ul></div>
+    <div><h4>Community</h4><ul>
+      <li><a href="https://github.com/sdbruder/laserstack/issues">Issues and ideas</a></li>
+      <li><a href="https://twitter.com/laserstack_sdb">@laserstack_sdb</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/LICENSE.md">BSD-3-Clause license</a></li>
+    </ul></div>
+  </div>
+  <div class="fine"><span>Laser Stack is open source software under the BSD-3-Clause license.</span><span>No telemetry, no account, no VM.</span><span>This site is static HTML and one CSS file.</span></div>
+</div></footer>
+</body>
+</html>

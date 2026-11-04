@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roadmap — Laser Stack</title>
+<meta name="description" content="What Laser Stack ships next: several PHP versions and database servers at the same time, and a local DNS that maintains itself. Plus what just shipped in 0.13.0.">
+<link rel="canonical" href="https://sdbruder.github.io/laserstack/roadmap.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Roadmap — Laser Stack">
+<meta property="og:description" content="Per-project PHP versions, several database versions in parallel, and a self-maintaining local DNS.">
+<meta property="og:image" content="https://sdbruder.github.io/laserstack/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0a0c10">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230a0c10'/%3E%3Cpath d='M4 19 L20 5' stroke='%234ade80' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <a class="brand" href="./"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 19.5 L20 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 4.5h11M3.5 20v-9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/><circle cx="18.4" cy="5.6" r="2.2" fill="#4ade80"/></svg>laserstack</a>
+  <nav class="site">
+    <a href="./">Overview</a><a href="features.html">Features</a><a href="benchmarks.html">Numbers</a><a href="docs.html">Docs</a><a href="examples.html">Examples</a><a href="roadmap.html" aria-current="page">Roadmap</a><a href="https://github.com/sdbruder/laserstack">GitHub ↗</a>
+  </nav>
+</div></header>
+
+<main>
+<section class="hero"><div class="wrap">
+  <p class="eyebrow">Roadmap</p>
+  <h1>What comes next, in the open.</h1>
+  <p class="lede">Two things are missing from the picture and both are written down with their design, not just as a wish: per-project PHP and database versions, and a local DNS the stack maintains itself. The full notes live in the repository, in the TODO section of <a href="https://github.com/sdbruder/laserstack/blob/master/CONTRIBUTING.md">CONTRIBUTING.md</a>.</p>
+</div></section>
+
+<section><div class="wrap prose">
+  <p><span class="pill next">planned</span> <strong>Several PHP versions and database servers at the same time.</strong></p>
+  <p>Today a stack runs one PHP version and one version per database engine: the container is a property of the stack, not of a project. The goal is the smallest number of containers that still lets every project have what it needs:</p>
+  <ul>
+    <li>one <code>app</code> container per PHP version <em>in use</em>, not per project; the version that nobody needs never starts;</li>
+    <li>one container per database engine and version in parallel — mysql 8.0 next to mysql 9.7 next to postgres 16 — on their own ports;</li>
+    <li>a mapping from project to versions, read by <code>laser scan</code> and by the CLI, so <code>laser artisan</code> in a project picks the container of <em>that</em> project;</li>
+    <li>a small router in front, so all of it still answers on port 80 by host name;</li>
+    <li>defaults that keep today's behaviour: a stack that declares nothing behaves exactly as it does now.</li>
+  </ul>
+  <p>The direction we are working from: a <code>.laserstack</code> file in the project root (a <code>KEY=VALUE</code> file, read like <code>.env</code>), then <code>composer.json</code> as a floor, then the stack default. One container per version, shared by every project that needs it, instead of a stack per project.</p>
+
+  <hr>
+
+  <p><span class="pill next">planned</span> <strong>A local DNS that the stack maintains itself.</strong></p>
+  <p>Project names are resolved through <code>/etc/hosts</code> today: a manual step, easy to get wrong, and the first thing a newcomer trips over. Since <code>laser</code> already knows the suffix and every project, it should own the resolution:</p>
+  <ul>
+    <li>install what it needs, write the configuration, start the service, and keep it in step with <code>laser scan</code>, on macOS, Linux and WSL2;</li>
+    <li>tell the user what it changed, and remove all of it again on request;</li>
+    <li>work without a daemon where a machine cannot or should not run one.</li>
+  </ul>
+  <p>The direction is <strong>dnsmasq</strong> — it resolves the whole suffix as a wildcard, so a new project needs no DNS step at all — with <strong><code>.test</code></strong> as the default suffix, because that name is reserved by RFC 6761 for exactly this, while <code>local</code> belongs to mDNS/Bonjour and <code>.app</code>/<code>.dev</code> are real TLDs. <code>SUFFIX</code> stays a setting; <code>.test</code> becomes the default.</p>
+
+  <hr>
+
+  <h2>Just shipped — 0.13.0, 2026-11-04</h2>
+  <ul>
+    <li><strong>Database versions are selectable</strong> the same way PHP always was: one variable per engine selects the image tag and the config directory. mysql 8.0/8.4/9.7/26.10, mariadb 10.11–13.0, postgres 15.1–18, redis 7.4–8.10, elasticsearch 7.14.2/8.19.23/9.5.5, memcached 1.6 — each combination verified with the smoke test;</li>
+    <li><strong><code>laser mysql</code> runs the client inside the database container</strong>, over its own socket. That is what makes MySQL 8.4, 9.7 and the 26.10 series work at all, since their accounts use <code>caching_sha2_password</code>;</li>
+    <li><strong>Config per version</strong>: the mariadb, redis and elasticsearch profiles have their config in the repository now, and the mysql host cache setting moved into <code>config/mysql/&lt;version&gt;/docker.cnf</code>;</li>
+    <li><strong>The documentation is split</strong> into a user part (README) and a development part (CONTRIBUTING), including how to run the tests.</li>
+  </ul>
+  <p><a href="https://github.com/sdbruder/laserstack/blob/master/CHANGELOG.md">The full changelog →</a> · <a href="https://github.com/sdbruder/laserstack/releases">Releases →</a></p>
+
+  <h2>How to push these along</h2>
+  <ul>
+    <li><strong>Say what your projects need.</strong> Which PHP and database versions do you have to run side by side? That decides the defaults of the mapping;</li>
+    <li><strong>Open an issue</strong> for a bug, a missing driver, or a version the stack should support — the version work has a small, documented recipe, so adding one is a good first contribution;</li>
+    <li><strong>Bring a project type.</strong> The drivers behind <code>laser scan</code> are one file each, and a new framework or CMS usually needs a dozen lines;</li>
+    <li><strong>Star or share the repository</strong> if the stack fits your work: it is the whole distribution channel of this project.</li>
+  </ul>
+  <p><a href="https://github.com/sdbruder/laserstack/issues">Issues and ideas →</a> · <a href="https://github.com/sdbruder/laserstack/blob/master/CONTRIBUTING.md">Working on Laser Stack →</a></p>
+</div></section>
+</main>
+<footer class="site"><div class="wrap">
+  <div class="cols">
+    <div><h4>Project</h4><ul>
+      <li><a href="https://github.com/sdbruder/laserstack">GitHub repository</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/releases">Releases</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/CHANGELOG.md">Changelog</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack_app">App images</a></li>
+    </ul></div>
+    <div><h4>Documentation</h4><ul>
+      <li><a href="docs.html">Site reference</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/README.md">README</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/CONTRIBUTING.md">Working on Laser Stack</a></li>
+      <li><a href="roadmap.html">Roadmap</a></li>
+    </ul></div>
+    <div><h4>Community</h4><ul>
+      <li><a href="https://github.com/sdbruder/laserstack/issues">Issues and ideas</a></li>
+      <li><a href="https://twitter.com/laserstack_sdb">@laserstack_sdb</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/LICENSE.md">BSD-3-Clause license</a></li>
+    </ul></div>
+  </div>
+  <div class="fine"><span>Laser Stack is open source software under the BSD-3-Clause license.</span><span>No telemetry, no account, no VM.</span><span>This site is static HTML and one CSS file.</span></div>
+</div></footer>
+</body>
+</html>

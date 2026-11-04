@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Examples — Laser Stack</title>
+<meta name="description" content="Copy-paste recipes for Laser Stack: many projects at once, a custom vhost, another PHP version, another database, another database version, redis, sharing and inspecting the stack.">
+<link rel="canonical" href="https://sdbruder.github.io/laserstack/examples.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Examples — Laser Stack">
+<meta property="og:description" content="Copy-paste recipes for Laser Stack: many projects at once, a custom vhost, another PHP version, another database, another database version, redis, sharing and inspecting the stack.">
+<meta property="og:image" content="https://sdbruder.github.io/laserstack/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0a0c10">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230a0c10'/%3E%3Cpath d='M4 19 L20 5' stroke='%234ade80' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <a class="brand" href="./"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 19.5 L20 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 4.5h11M3.5 20v-9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/><circle cx="18.4" cy="5.6" r="2.2" fill="#4ade80"/></svg>laserstack</a>
+  <nav class="site">
+    <a href="./">Overview</a><a href="features.html">Features</a><a href="benchmarks.html">Numbers</a><a href="docs.html">Docs</a><a href="examples.html" aria-current="page">Examples</a><a href="roadmap.html">Roadmap</a><a href="https://github.com/sdbruder/laserstack">GitHub ↗</a>
+  </nav>
+</div></header>
+
+<main>
+<section class="hero"><div class="wrap">
+  <p class="eyebrow">Examples</p>
+  <h1>Recipes you can paste.</h1>
+  <p class="lede">Every snippet below ran against a real stack of this repository. They assume the clone next to your projects and <code>laser</code> on your path.</p>
+</div></section>
+
+<section><div class="wrap prose">
+  <h2>1 · Serve several projects at once</h2>
+  <pre><code>ls ~/src          <span class="out"># projecta  projectb  projectc  laserstack</span>
+cd ~/src/laserstack
+laser up -d
+laser scan
+<span class="out">SCAN: /Users/you/src/projecta identified as laravel.</span>
+<span class="out">SCAN: /Users/you/src/projectb identified as wordpress.</span>
+<span class="out">SCAN: /Users/you/src/projectc identified as laravel.</span></code></pre>
+  <pre><code><span class="out"># /etc/hosts, once:</span>
+127.0.0.1 projecta.local projectb.local projectc.local</code></pre>
+  <p>Three sites, two containers (app and database), no per-project setup. Add a fourth project later and run <code>laser scan</code> again.</p>
+
+  <h2>2 · Give one project its own nginx config</h2>
+  <p>Put a <code>laserstack-nginx.conf</code> in the project root — the generic driver installs it as the vhost of that project:</p>
+  <pre><code>cat &gt; ~/src/myapp/laserstack-nginx.conf &lt;&lt;'CONF'
+server {
+    listen 80;
+    server_name myapp.local;
+    root /var/www/myapp/public;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+    location ~ \.php$ {
+        include fastcgi.conf;
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+}
+CONF
+laser scan
+<span class="out">SCAN: /Users/you/src/myapp identified as generic.</span></code></pre>
+
+  <h2>3 · Run the whole stack on another PHP version</h2>
+  <pre><code>cd ~/src/laserstack
+sed -i '' 's/^PHP_VERSION=.*/PHP_VERSION=8.6/' .env     <span class="out"># or edit the file</span>
+laser down
+laser up -d
+laser appexec php -v | sed -n '1p'
+<span class="out">PHP 8.6.0RC5 (cli) …</span></code></pre>
+  <p>One <code>app</code> container serves every project, so the PHP version is a property of the stack, not of a project. Per-project PHP versions, one container per version in use, are on the <a href="roadmap.html">roadmap</a>.</p>
+
+  <h2>4 · Switch a project from MySQL to PostgreSQL</h2>
+  <pre><code><span class="out"># .env of the stack</span>
+PROFILES=postgres
+POSTGRES_VERSION=16
+POSTGRES_PASSWORD=secret
+
+<span class="out"># .env of the project</span>
+DB_CONNECTION=pgsql
+DB_HOST=postgres
+DB_PORT=5432
+DB_DATABASE=myapp
+DB_USERNAME=postgres
+DB_PASSWORD=secret
+
+<span class="out"># from the repository</span>
+laser down &amp;&amp; laser up -d
+laser psql -c '\l'
+cd ~/src/myapp &amp;&amp; laser artisan migrate</code></pre>
+  <p>The postgres service keeps its data in its own volume, so switching between engines (or back) never mixes data directories.</p>
+
+  <h2>5 · Try the database version you are about to deploy on</h2>
+  <pre><code>cd ~/src/laserstack
+sed -i '' 's/^MYSQL_VERSION=.*/MYSQL_VERSION=9.7/' .env
+laser down -v          <span class="out"># a data volume belongs to the server that created it</span>
+laser up -d
+laser mysql -e 'select version()'
+<span class="out">9.7.4</span>
+cd ~/src/myapp &amp;&amp; laser artisan migrate &amp;&amp; laser test</code></pre>
+  <div class="note"><strong>MySQL 8.4 and newer:</strong> their accounts use <code>caching_sha2_password</code>, which the app image's <code>mysql</code> client cannot do. Applications and PDO are fine; use <code>laser mysql</code> for a shell, which runs the client of the database container.</div>
+
+  <h2>6 · Add redis and use it in Laravel</h2>
+  <pre><code><span class="out"># .env of the stack</span>
+PROFILES=mysql,redis
+REDIS_VERSION=8.10
+
+<span class="out"># .env of the project</span>
+REDIS_HOST=redis
+REDIS_PORT=6379
+REDIS_CLIENT=phpredis
+CACHE_STORE=redis</code></pre>
+  <pre><code>cd ~/src/laserstack &amp;&amp; laser up -d
+laser appexec php -r '$r=new Redis();$r->connect("redis",6379);echo $r->ping(),PHP_EOL;'
+<span class="out">+PONG</span></code></pre>
+
+  <h2>7 · Put a project on a public URL for a demo</h2>
+  <pre><code>cd ~/src/myapp
+laser share
+<span class="out">ngrok by @inconshreveable ...</span>
+<span class="out">Forwarding  https://1a2b3c4d.ngrok.io -&gt; http://host.docker.internal:80</span></code></pre>
+  <p>The tunnel points at the stack, with the host header of the project, so the demo is the project as it behaves locally.</p>
+
+  <h2>8 · Look at what the stack is doing</h2>
+  <pre><code>laser ps                       <span class="out"># containers, images, ports</span>
+laser stats                    <span class="out"># docker stats, live</span>
+laser logs --tail 50 db        <span class="out"># one service</span>
+laser appexec supervisorctl status
+<span class="out">nginx      RUNNING   pid 12, uptime 0:02:14</span>
+<span class="out">php-fpm    RUNNING   pid 13, uptime 0:02:14</span>
+laser mysql -e 'select version(), @@hostname'</code></pre>
+
+  <h2>9 · Reset a stack that misbehaves</h2>
+  <pre><code>laser down &amp;&amp; laser up -d            <span class="out"># containers and network, data kept</span>
+laser logs --tail 100 app           <span class="out"># what went wrong</span>
+laser down -v                       <span class="out"># also removes the data volumes: databases are empty after this</span>
+test/smoke.sh 8.5                   <span class="out"># check the stack itself, not your project</span></code></pre>
+  <p>There is no hidden state to clear: what the stack owns is the containers, the network and the named volumes.</p>
+</div></section>
+</main>
+<footer class="site"><div class="wrap">
+  <div class="cols">
+    <div><h4>Project</h4><ul>
+      <li><a href="https://github.com/sdbruder/laserstack">GitHub repository</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/releases">Releases</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/CHANGELOG.md">Changelog</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack_app">App images</a></li>
+    </ul></div>
+    <div><h4>Documentation</h4><ul>
+      <li><a href="docs.html">Site reference</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/README.md">README</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/CONTRIBUTING.md">Working on Laser Stack</a></li>
+      <li><a href="roadmap.html">Roadmap</a></li>
+    </ul></div>
+    <div><h4>Community</h4><ul>
+      <li><a href="https://github.com/sdbruder/laserstack/issues">Issues and ideas</a></li>
+      <li><a href="https://twitter.com/laserstack_sdb">@laserstack_sdb</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/LICENSE.md">BSD-3-Clause license</a></li>
+    </ul></div>
+  </div>
+  <div class="fine"><span>Laser Stack is open source software under the BSD-3-Clause license.</span><span>No telemetry, no account, no VM.</span><span>This site is static HTML and one CSS file.</span></div>
+</div></footer>
+</body>
+</html>

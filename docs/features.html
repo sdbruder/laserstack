@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Features — Laser Stack</title>
+<meta name="description" content="What Laser Stack does: many projects in one stack, selectable PHP and database versions, config in the repository, a small CLI, and a smoke test over every version.">
+<link rel="canonical" href="https://sdbruder.github.io/laserstack/features.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Features — Laser Stack">
+<meta property="og:description" content="Many projects in one stack, versions as variables, config in git, Alpine images, tested over every version.">
+<meta property="og:image" content="https://sdbruder.github.io/laserstack/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0a0c10">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230a0c10'/%3E%3Cpath d='M4 19 L20 5' stroke='%234ade80' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <a class="brand" href="./"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 19.5 L20 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 4.5h11M3.5 20v-9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/><circle cx="18.4" cy="5.6" r="2.2" fill="#4ade80"/></svg>laserstack</a>
+  <nav class="site">
+    <a href="./">Overview</a><a href="features.html" aria-current="page">Features</a><a href="benchmarks.html">Numbers</a><a href="docs.html">Docs</a><a href="examples.html">Examples</a><a href="roadmap.html">Roadmap</a><a href="https://github.com/sdbruder/laserstack">GitHub ↗</a>
+  </nav>
+</div></header>
+
+<main>
+<section class="hero"><div class="wrap">
+  <p class="eyebrow">Features</p>
+  <h1>Small by design, not by accident.</h1>
+  <p class="lede">Every feature below exists to keep one thing true: a directory full of projects served by a handful of small containers you can explain in a minute.</p>
+</div></section>
+
+<section><div class="wrap prose">
+  <h2>Many projects at once</h2>
+  <p>Laser Stack mounts one directory — <code>PROJECTS_DIRECTORY</code>, the directory that holds your checkouts — into a single app container at <code>/var/www</code>. Every subdirectory with a <code>public/</code> directory becomes a site:</p>
+  <ul>
+    <li><code>laser scan</code> looks at each project and asks the drivers what it is. The <strong>Laravel</strong>, <strong>Symfony</strong>, <strong>WordPress</strong> and <strong>generic</strong> drivers are in <code>libs/</code>;</li>
+    <li>each project gets one nginx vhost, watching for <code>project.SUFFIX</code> and serving that project's <code>public/</code> directory;</li>
+    <li>any project can ship its own vhost: put a <code>laserstack-nginx.conf</code> in the project root and the generic driver installs it as <code>project.conf</code>;</li>
+    <li>the default vhost (the multi-project one) belongs to the image, so two projects cannot fight over <code>listen 80 default_server</code>;</li>
+    <li><code>laser scan</code> hashes the vhosts of the container before and after, so it restarts nginx only when something really changed.</li>
+  </ul>
+  <p>Adding a project is <code>laser scan</code>. Removing one is <code>laser scan</code>. Nothing is generated into your checkout.</p>
+
+  <h2>The whole stack</h2>
+  <p>One service per container, each behind a compose profile, so <code>PROFILES</code> decides what runs:</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>profile</th><th>container</th><th>purpose</th><th>host port</th></tr></thead>
+    <tbody>
+      <tr><td><code>app</code> (always)</td><td><code>laserstack/app:&lt;PHP_VERSION&gt;</code></td><td>nginx, php-fpm, your tools (composer, node, npm, yarn, phpunit, xdebug, mysql/psql clients)</td><td>80</td></tr>
+      <tr><td><code>mysql</code></td><td><code>mysql:&lt;MYSQL_VERSION&gt;</code></td><td>database, service name <code>db</code></td><td>3306</td></tr>
+      <tr><td><code>mariadb</code></td><td><code>mariadb:&lt;MARIADB_VERSION&gt;</code></td><td>database, service name <code>mariadb</code> and alias <code>db</code></td><td>3306</td></tr>
+      <tr><td><code>postgres</code></td><td><code>postgres:&lt;POSTGRES_VERSION&gt;-alpine</code></td><td>database, service name <code>postgres</code></td><td>5432</td></tr>
+      <tr><td><code>redis</code></td><td><code>redis:&lt;REDIS_VERSION&gt;-alpine</code></td><td>cache, queue, sessions</td><td>6379</td></tr>
+      <tr><td><code>memcached</code></td><td><code>memcached:&lt;MEMCACHED_VERSION&gt;-alpine</code></td><td>cache server (server only, see the limits)</td><td>11211</td></tr>
+      <tr><td><code>elasticsearch</code></td><td><code>elasticsearch:&lt;ELASTICSEARCH_VERSION&gt;</code></td><td>search, single node, security off for local use</td><td>9200</td></tr>
+    </tbody>
+  </table></div>
+  <p>Only the profile of the mysql container answers on 3306 at a time: projects that point at <code>db</code> work with the <code>mysql</code> profile and with the <code>mariadb</code> profile, which is why the mariadb service carries that alias.</p>
+
+  <h2 id="versions-are-variables">Versions are variables</h2>
+  <p>One variable per engine selects the image tag <em>and</em> the config directory, so the settings of a version travel with it. As of release 0.13.0:</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>engine</th><th>variable</th><th>default</th><th>other versions</th><th>config directory</th></tr></thead>
+    <tbody>
+      <tr><td>PHP</td><td><code>PHP_VERSION</code></td><td><code>8.4</code></td><td><code>7.4</code>, <code>8.0</code>–<code>8.3</code>, <code>8.5</code>, <code>8.6</code></td><td><code>config/php&lt;VV&gt;/</code>, <code>config/supervisord.&lt;VV&gt;/</code></td></tr>
+      <tr><td>MySQL</td><td><code>MYSQL_VERSION</code></td><td><code>8.0</code></td><td><code>8.4</code>, <code>9.7</code>, <code>26.10</code></td><td><code>config/mysql/&lt;version&gt;/</code></td></tr>
+      <tr><td>MariaDB</td><td><code>MARIADB_VERSION</code></td><td><code>10.11</code></td><td><code>11.4</code>, <code>11.8</code>, <code>12.3</code>, <code>13.0</code></td><td><code>config/mariadb/&lt;version&gt;/laserstack.cnf</code></td></tr>
+      <tr><td>PostgreSQL</td><td><code>POSTGRES_VERSION</code></td><td><code>15.1</code></td><td><code>16</code>, <code>17</code>, <code>18</code></td><td><code>config/postgres/&lt;version&gt;/</code></td></tr>
+      <tr><td>redis</td><td><code>REDIS_VERSION</code></td><td><code>8.10</code></td><td><code>8.8</code>, <code>8.6</code>, <code>8.4</code>, <code>8.2</code>, <code>7.4</code></td><td><code>config/redis/&lt;version&gt;/redis.conf</code></td></tr>
+      <tr><td>memcached</td><td><code>MEMCACHED_VERSION</code></td><td><code>1.6</code></td><td>—</td><td>none, the image takes flags</td></tr>
+      <tr><td>Elasticsearch</td><td><code>ELASTICSEARCH_VERSION</code></td><td><code>7.14.2</code></td><td><code>8.19.23</code>, <code>9.5.5</code></td><td><code>config/elasticsearch/&lt;version&gt;/elasticsearch.yml</code></td></tr>
+    </tbody>
+  </table></div>
+  <p>The defaults are the versions the previous release ran, so an existing <code>.env</code> keeps behaving the same. A version that is not in the list gives you docker's own error about a missing path — there is no validation layer to fight with.</p>
+
+  <h2>Config you can read, commit and diff</h2>
+  <p>The container config is not baked into the images. It lives in this repository, one directory per version:</p>
+  <pre><code>config/
+  php82/            php.ini, php-fpm.conf, php-fpm.d/www.conf
+  supervisord.8.2/  supervisord.conf (nginx + php-fpm in the app container)
+  nginx/            nginx.conf and the vhosts of the app container
+  my.cnf            the client config of a shell in the app container
+  mysql/8.0/        docker.cnf, mysql.cnf, mysqld.cnf
+  mariadb/10.11/    laserstack.cnf
+  postgres/15.1/    postgresql.conf
+  redis/8.10/       redis.conf
+  elasticsearch/7.14.2/ elasticsearch.yml</code></pre>
+  <p>Change a value, restart one service (<code>laser restartnginx</code>, <code>laser stop db &amp;&amp; laser up -d db</code>), review the change in a pull request. Your team gets the same php.ini and the same database settings because they are in the repository, not in somebody's Docker Desktop.</p>
+
+  <h2>The <code>laser</code> CLI</h2>
+  <p>One shell script is the whole interface. It copies <code>env.example</code> to <code>.env</code> on first use, reads it, and then:</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>command</th><th>what it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>laser up / stop / down / ps / logs</code></td><td>the docker-compose commands you expect, with the profiles of <code>.env</code> applied</td></tr>
+      <tr><td><code>laser scan</code></td><td>writes one nginx vhost per project and restarts nginx when something changed</td></tr>
+      <tr><td><code>laser artisan &lt;cmd&gt;</code></td><td>runs artisan in the project of the current directory</td></tr>
+      <tr><td><code>laser composer / npm / node / npx / yarn / php / test / tinker</code></td><td>the same for the other project tools</td></tr>
+      <tr><td><code>laser shell</code></td><td>a bash in the app container, in that project</td></tr>
+      <tr><td><code>laser appexec &lt;cmd&gt;</code></td><td>any command in the app container (from the repository root: the container itself)</td></tr>
+      <tr><td><code>laser mysql</code> / <code>laser psql</code></td><td>a client for the database of the profile, with the credentials of <code>.env</code></td></tr>
+      <tr><td><code>laser share</code></td><td>an ngrok tunnel to that project</td></tr>
+      <tr><td><code>laser new / list / stats / restartnginx</code></td><td>scaffold a project, list the served URLs, docker stats, reload nginx</td></tr>
+      <tr><td>anything else</td><td>passed straight to docker-compose: <code>laser exec db mysqladmin status</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Tested on every version</h2>
+  <p><code>test/smoke.sh</code> is part of the repository, and it starts the stack for real:</p>
+  <ul>
+    <li><strong>app stage, per PHP version:</strong> nginx and php-fpm reach RUNNING, no nginx emergency in the log, the workers run as the <code>laser</code> user, PHP loads the php.ini of the repository, a project answers over HTTP with the requested version, and the run writes nothing into the repository's nginx config directory;</li>
+    <li><strong>database stage, per profile:</strong> <code>laser mysql</code> or <code>laser psql</code> answers with the server of the profile, and PDO from the app container reaches that server under the host name a project uses.</li>
+  </ul>
+  <p>A version variable drives it: <code>SMOKE_MYSQL_VERSION=9.7 SMOKE_DB_PROFILES=mysql test/smoke.sh 8.5</code>. The 0.13.0 release was verified that way for mysql 8.0/8.4/9.7/26.10, mariadb 10.11–13.0, postgres 15.1–18, redis 7.4–8.10, memcached 1.6 and elasticsearch 7.14.2/8.19.23/9.5.5, plus a Laravel 12 application reaching every engine through <code>artisan</code>.</p>
+
+  <h2>Design decisions we do not apologise for</h2>
+  <ul>
+    <li><strong>Do not protect you from docker.</strong> If you ask the stack to do something while it is down, you get docker's error, not a stack trace of laser's own invention.</li>
+    <li><strong>One shell script, no daemon.</strong> <code>laser</code> is a bash script you can read end to end; docker-compose does the orchestration.</li>
+    <li><strong>Few containers, small images.</strong> Alpine where possible, public images for the services, and one image per PHP series rather than one per project.</li>
+    <li><strong>nginx serves the projects,</strong> and it is the same nginx for all of them.</li>
+    <li><strong>Your files stay yours.</strong> Projects are bind-mounted; the only things written back into a project are the vhosts inside the container, not into your checkout.</li>
+  </ul>
+  <p><a href="benchmarks.html">See the numbers →</a></p>
+</div></section>
+</main>
+
+<footer class="site"><div class="wrap">
+  <div class="cols">
+    <div><h4>Project</h4><ul>
+      <li><a href="https://github.com/sdbruder/laserstack">GitHub repository</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/releases">Releases</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/CHANGELOG.md">Changelog</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack_app">App images</a></li>
+    </ul></div>
+    <div><h4>Documentation</h4><ul>
+      <li><a href="docs.html">Site reference</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/README.md">README</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/CONTRIBUTING.md">Working on Laser Stack</a></li>
+      <li><a href="roadmap.html">Roadmap</a></li>
+    </ul></div>
+    <div><h4>Community</h4><ul>
+      <li><a href="https://github.com/sdbruder/laserstack/issues">Issues and ideas</a></li>
+      <li><a href="https://twitter.com/laserstack_sdb">@laserstack_sdb</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/LICENSE.md">BSD-3-Clause license</a></li>
+    </ul></div>
+  </div>
+  <div class="fine"><span>Laser Stack is open source software under the BSD-3-Clause license.</span><span>No telemetry, no account, no VM.</span><span>This site is static HTML and one CSS file.</span></div>
+</div></footer>
+</body>
+</html>
