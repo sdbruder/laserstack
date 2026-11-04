@@ -268,3 +268,60 @@ changed and how it was verified.
   tag that does not exist, or a variable in a config file that the server does
   not know all end as the raw docker or server error, and that error is the
   message to work from.
+
+## TODO
+
+Two abilities the stack does not have yet. Both need a plan that decides the
+mechanism before any code.
+
+### Several PHP versions and database servers at the same time
+
+Laser Stack serves many projects from *one* stack: one `app` container of the
+`PHP_VERSION` of `.env`, one server per database engine, one set of credentials.
+Two projects that need different versions therefore cannot run at the same time,
+and one stack per project is not the answer either.
+
+Goal: as many PHP versions and database servers in parallel as the projects
+need, and no more, with the smallest number of containers. Every container
+serves all the projects that need the same thing: one app container per PHP
+version, one container per database engine *and* version (mysql 8.0 next to
+mysql 9.7, on different host ports), and each project states which of them it
+uses. What has to grow for that:
+
+- the mapping project → PHP version and database versions, and where it lives
+  (the `.env` of the project, a file of this repository, a label on the
+  project);
+- `laser scan`, which then renders a vhost per project against the php-fpm of
+  the version of that project: one nginx with one socket per version, or one
+  nginx per version;
+- the subcommands of a project (`artisan`, `php`, `composer`, `npm`, `shell`,
+  `appexec`, `mysql`, `psql`), which have to pick the container of the project
+  instead of "the" app container, and `laser share`, which links to it;
+- the defaults and the existing `.env`, so that a stack with one PHP version and
+  no mapping keeps behaving as today;
+- the smoke test, which then covers combinations of versions and not one version
+  at a time.
+
+### Local DNS for the project names
+
+`<project>.<SUFFIX>` resolves through `/etc/hosts` entries that the user writes
+and keeps, and `SUFFIX` is a setting of `.env`. That contradicts the idea that
+`laser` owns the local stack, and it is the setup step users get wrong.
+
+Goal: `laser` knows `SUFFIX` and every project of the projects directory, so it
+should set the resolution up by itself on macOS, Linux and WSL2: install what it
+needs, write the configuration, start it, and keep it in step with `laser scan`.
+
+Open for the plan of that work:
+
+- the mechanism: `dnsmasq` (with `/etc/resolver/<suffix>` on macOS, the resolver
+  of the distribution or `NetworkManager`/`systemd-resolved` on Linux and the
+  generated `/etc/hosts` of WSL), a generated block of `/etc/hosts`, or the
+  automatic resolution of `*.localhost` by browsers and clients;
+- the privileges: which step needs `sudo`, and how much of it the stack can
+  avoid;
+- the suffix itself: the default `local` belongs to mDNS/Bonjour, `.test` is the
+  TLD reserved for tests, and `.app` and `.dev` are real TLDs; the choice
+  belongs to this decision, and it changes every URL of the projects;
+- the footprint: what the stack leaves on the machine of a user who stops using
+  it, and how `laser` removes it again.
