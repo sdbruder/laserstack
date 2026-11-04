@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The project website, `docs/` in the repository, published by GitHub Pages at
-  <https://sdbruder.github.io/laserstack/>: an overview with the measured cost of
+  <https://localdev.it/laserstack/>: an overview with the measured cost of
   the stack, the features, the numbers with the method to reproduce them, a
   documentation and an examples page, and the roadmap. Static HTML and one CSS
   file, no build step and no framework.

@@ -16,7 +16,7 @@ This file is the user documentation: installing the stack, configuring it and
 running it. For the project itself, its test and its releases, read
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-The website is <https://sdbruder.github.io/laserstack/>: the same material in a
+The website is <https://localdev.it/laserstack/>: the same material in a
 browsable form, with the measured numbers of the stack and copy-paste examples.
 
 ## Inspiration
