@@ -2,10 +2,10 @@
 
 ## Introduction
 
-Laser Stack is local Laravel development stack powered by docker like Laravel
-Sail and multi-project like Valet. Aims to be small and fast. It's opinionated:
-it does not support everything under the sun but it's configurable, you can
-customize the container to suit your needs.
+Laser Stack — the localdev.it stack — is a local Laravel development stack
+powered by docker, like Laravel Sail, and multi-project like Valet. Aims to be
+small and fast. It's opinionated: it does not support everything under the sun
+but it's configurable, you can customize the container to suit your needs.
 
 It supports macOS (Intel and Apple silicon), Linux, WSL2 and WSLg (Windows) and
 it needs docker with compose v2.

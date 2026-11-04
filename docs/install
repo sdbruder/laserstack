@@ -16,7 +16,7 @@ START=0
 
 usage() {
   cat <<'USAGE'
-Install or update Laser Stack.
+Install or update Laser Stack, the localdev.it stack.
 
 Usage:
   install [--dir <path>] [--start] [--help]
