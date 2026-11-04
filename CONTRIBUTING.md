@@ -312,16 +312,34 @@ Goal: `laser` knows `SUFFIX` and every project of the projects directory, so it
 should set the resolution up by itself on macOS, Linux and WSL2: install what it
 needs, write the configuration, start it, and keep it in step with `laser scan`.
 
-Open for the plan of that work:
+Decided: `dnsmasq`, with `.test` as the suffix.
 
-- the mechanism: `dnsmasq` (with `/etc/resolver/<suffix>` on macOS, the resolver
-  of the distribution or `NetworkManager`/`systemd-resolved` on Linux and the
-  generated `/etc/hosts` of WSL), a generated block of `/etc/hosts`, or the
-  automatic resolution of `*.localhost` by browsers and clients;
-- the privileges: which step needs `sudo`, and how much of it the stack can
-  avoid;
-- the suffix itself: the default `local` belongs to mDNS/Bonjour, `.test` is the
-  TLD reserved for tests, and `.app` and `.dev` are real TLDs; the choice
-  belongs to this decision, and it changes every URL of the projects;
-- the footprint: what the stack leaves on the machine of a user who stops using
-  it, and how `laser` removes it again.
+- `dnsmasq` resolves the whole suffix as a wildcard, so every current and future
+  project name works without a per-project step, which a generated block of
+  `/etc/hosts` cannot do. It is what Valet and Herd do. On macOS it needs one
+  file per suffix in `/etc/resolver/`, on Linux the resolver of the distribution
+  (`systemd-resolved`, `NetworkManager`) or `/etc/resolv.conf`, and on WSL2 the
+  path that the plan decides.
+- `.test` is the TLD that RFC 6761 reserves for tests: it resolves nowhere on
+  the internet and no client claims it. The default `local` of `env.example`
+  belongs to mDNS/Bonjour and fights `mDNSResponder` on macOS and Windows, and
+  `.app` and `.dev` are real TLDs served over https. `SUFFIX` stays a setting;
+  `test` becomes its default, and a `.env` that still says `local` needs a note
+  with the change.
+
+Still to decide in the plan of that work:
+
+- the privileges: which step needs `sudo` (the package, the service, the
+  resolver file), how to ask for it once, and what `laser` does when the user
+  says no;
+- the WSL2 path: the generated `/etc/hosts` of WSL, systemd inside WSL, or
+  dnsmasq on the Windows side, and what happens on a WSL that starts without
+  systemd;
+- the fallback without a daemon: a generated block of `/etc/hosts` between
+  markers, owned by `laser scan`, for the machines where a root service is not
+  wanted;
+- the footprint: what the stack leaves on the machine (the `dnsmasq` package,
+  the service, `/etc/resolver/test`), how `laser` reports it and how it removes
+  it again;
+- `*.localhost` stays out of the mechanism: only some clients resolve it, so it
+  can be an extra suffix for a user who wants no setup at all, never the default.
