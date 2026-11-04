@@ -1,0 +1,9 @@
+# laserstack mounts this file into the elasticsearch container as
+# /usr/share/elasticsearch/config/elasticsearch.yml, the working directory of
+# the image. The file replaces the one of the image, so it carries every setting
+# the stack needs.
+cluster.name: laserstack
+node.name: laserstack
+discovery.type: single-node
+network.host: 0.0.0.0
+xpack.security.enabled: false

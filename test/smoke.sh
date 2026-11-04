@@ -31,6 +31,7 @@
 #
 # Usage: test/smoke.sh [version ...]     default: 7.4 8.0 8.1 8.2 8.3 8.4 8.5 8.6
 #        SMOKE_DB_PROFILES="mariadb" test/smoke.sh 8.4
+#        SMOKE_MYSQL_VERSION=9.7 SMOKE_DB_PROFILES=mysql test/smoke.sh 8.5
 #        SMOKE_PULL=0 test/smoke.sh 8.4
 
 set -u
@@ -40,6 +41,11 @@ cd "$laser_dir" || exit 1
 laser="$laser_dir/laser"
 versions="${*:-7.4 8.0 8.1 8.2 8.3 8.4 8.5 8.6}"
 db_profiles="${SMOKE_DB_PROFILES:-mysql mariadb postgres}"
+# the server version to test per profile. An empty value keeps the version of
+# the .env under test, and the compose default when that file has none.
+smoke_mysql_version="${SMOKE_MYSQL_VERSION:-}"
+smoke_mariadb_version="${SMOKE_MARIADB_VERSION:-}"
+smoke_postgres_version="${SMOKE_POSTGRES_VERSION:-}"
 # the test pulls the images of the version it starts, so a stale image of an
 # older run cannot fail the test. SMOKE_PULL=0 keeps the local images.
 pull_images="${SMOKE_PULL:-1}"
@@ -68,6 +74,16 @@ check() {
   else
     echo "  FAIL $1"
     fails=$((fails + 1))
+  fi
+}
+
+setenv() {
+  # setenv <name> <value>: write NAME=VALUE into the .env the test builds. The
+  # line is replaced when the tested file has it, appended when it has not.
+  if grep -q "^$1=" .env; then
+    printf '%s\n' "$(sed "s/^$1=.*/$1=$2/" .env)" >.env
+  else
+    echo "$1=$2" >>.env
   fi
 }
 
@@ -156,10 +172,19 @@ for version in $versions; do
   "$laser" stop >/dev/null 2>&1
 done
 
-# pdo <description> <dsn> <user> <password> <query>
+# pdo <description> <fsn> <user> <password> <query>
 pdo() {
-  local out
-  out=$("$laser" appexec php -r "\$p=new PDO('$2','$3','$4');echo \$p->query(\"$5\")->fetchColumn();" 2>&1 | tr '\n' ' ' | tr -s ' ')
+  local out=""
+  # the entrypoint of a fresh volume starts a temporary server, stops it and
+  # starts the real one, so the first connection of the app container can land
+  # in the gap between the two
+  for _ in $(seq "$db_wait_seconds"); do
+    out=$("$laser" appexec php -r "\$p=new PDO('$2','$3','$4');echo \$p->query(\"$5\")->fetchColumn();" 2>&1 | tr '\n' ' ' | tr -s ' ')
+    if echo "$out" | grep -qE '^[0-9]+\.'; then
+      break
+    fi
+    sleep 1
+  done
   check "$1 (${out:0:120})" "$(echo "$out" | grep -qE '^[0-9]+\.' && echo 0 || echo 1)"
 }
 
@@ -218,8 +243,17 @@ for profile in $db_profiles; do
   "$laser" down >/dev/null 2>&1
   for version in $versions; do
     fails_before=$fails
-    echo "  -- PHP $version, profile $profile"
+    case "$profile" in
+    mysql) db_var=MYSQL_VERSION db_ver="${smoke_mysql_version:-${MYSQL_VERSION:-8.0}}" ;;
+    mariadb) db_var=MARIADB_VERSION db_ver="${smoke_mariadb_version:-${MARIADB_VERSION:-10.11}}" ;;
+    postgres) db_var=POSTGRES_VERSION db_ver="${smoke_postgres_version:-${POSTGRES_VERSION:-15.1}}" ;;
+    esac
+    echo "  -- PHP $version, profile $profile, $db_var=$db_ver"
     sed -e "s/^PHP_VERSION=.*/PHP_VERSION=$version/" -e "s/^PROFILES=.*/PROFILES=$profile/" "$env_backup" >.env
+    setenv "$db_var" "$db_ver"
+    # a data volume belongs to the server version that created it, so an
+    # explicit version of the test starts from an empty one
+    [ -n "$smoke_mysql_version$smoke_mariadb_version$smoke_postgres_version" ] && "$laser" down -v >/dev/null 2>&1
     [ "$pull_images" == "1" ] && { "$laser" pull >/dev/null 2>&1 || echo "  --   the pull failed, the local images are used"; }
     "$laser" up >/dev/null 2>&1
     dbcheck "$profile" "$version"

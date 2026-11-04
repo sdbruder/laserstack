@@ -63,7 +63,7 @@ function lasercommands() {
   echo "  composer           Execute composer"
   echo "  dockerhelp         List docker-compose and laser commands"
   echo "  help               List laser commands"
-  echo "  mysql              Execute mysql"
+  echo "  mysql              Execute mysql in the database container"
   echo "  psql               Execute psql"
   echo "  scan               Scan and identify projects to build nginx configs"
   echo "  node               Execute node"
@@ -134,24 +134,29 @@ function dbhost() {
 }
 
 function mysql() {
-  local host pass dbname
+  local host pass dbname client=mysql
   local args=()
   host=$(dbhost)
   if [ "$host" == "mariadb" ]; then
     pass="${MARIADB_ROOT_PASSWORD:-root}"
     dbname="${MARIADB_DATABASE:-}"
+    # the MariaDB images ship no "mysql" binary from 11.4 on, only "mariadb"
+    client=mariadb
   else
     pass="${DB_ROOT_PASSWORD:-root}"
     dbname="${DB_DATABASE:-}"
   fi
-  args=(-h "$host" -u root "-p$pass")
+  args=(-u root "-p$pass")
   # the database of the profile, only when the caller gives no argument of its
   # own, the client takes the first positional argument as the database
   if [ "$#" -eq 0 ] && [ -n "$dbname" ]; then
     args+=("$dbname")
   fi
-  # the arguments go to the client as they are, no shell in between
-  dc exec app mysql "${args[@]}" "$@"
+  # the client that ships with the server knows every authentication plugin of
+  # that server, and the local unix socket is a secure transport for
+  # caching_sha2_password, so neither TLS nor the RSA exchange take part. The
+  # arguments go to the client as they are, no shell in between.
+  dc exec "$host" "$client" "${args[@]}" "$@"
 }
 
 function psql() {

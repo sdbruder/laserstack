@@ -1,0 +1,6 @@
+[mysqld]
+# host_cache_size = 0: the current form of the image's skip-host-cache
+host_cache_size = 0
+skip-name-resolve
+default_authentication_plugin = mysql_native_password
+

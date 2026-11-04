@@ -35,6 +35,12 @@ Be as small, simple and fast as possible:
   per project nginx config, those are examples, additional drivers PR's are
   welcome.
 - DNS resolution needs to be manually managed through `/etc/hosts`.
+- The `mysql` client of a shell in the app container (`laser shell`,
+  `laser appexec mysql`) is the client of the image and authenticates with
+  `config/my.cnf`. It works with the mariadb profile and with mysql `8.0`. The
+  app images do not carry the `caching_sha2_password` plugin of that client, so
+  it cannot authenticate an account of mysql `8.4`, `9.7` or `26.10`; use
+  `laser mysql` there, the client of the database container.
 
 ## Versions
 
@@ -54,9 +60,10 @@ on the newest Alpine release that packages it:
 | `8.6`  | 8.6.0RC5 | edge   | v24.22.1  | 12.0.2  | 1.22.22 | 1.30.6 | 13.4.6  | 3.6.0alpha1  |
 
 Every image has composer 2.11.1, the mysql client and the postgres client
-(`psql`, `pg_dump`), for `laser mysql` and `laser psql`. Under supervisord each
-image runs nginx (which serves the projects) and php-fpm. The images are built
-from the Dockerfiles in
+(`psql`, `pg_dump`). `laser psql` uses the postgres client of the app container;
+`laser mysql` runs in the database container, see the Versions table. Under
+supervisord each image runs nginx (which serves the projects) and php-fpm. The
+images are built from the Dockerfiles in
 [laserstack_app](https://github.com/sdbruder/laserstack_app).
 
 The tag `latest` is the newest released series, currently `8.5`. The `8.6`
@@ -65,14 +72,27 @@ image is a release candidate (PHP 8.6.0RC5, Alpine `edge`) and does not take
 `latest`. Every other image runs on the newest Alpine release that packages its
 series.
 
-The additional containers come from `docker-compose.yml`:
+The additional containers come from `docker-compose.yml`. Each engine has one
+version variable that selects the image tag and the config directory
+`config/<engine>/<version>`:
 
-- MySQL `mysql:8.0`
-- MariaDB `mariadb:10.11`
-- PostgreSQL `postgres:15.1-alpine`
-- redis `redis:alpine`
-- memcached `memcached:alpine`
-- Elasticsearch `elasticsearch:7.14.2`
+| engine        | variable                | default                | other versions                    | config directory                                   |
+| ------------- | ----------------------- | ---------------------- | --------------------------------- | -------------------------------------------------- |
+| MySQL         | `MYSQL_VERSION`         | `mysql:8.0`            | `8.4`, `9.7`, `26.10`             | `config/mysql/<version>/`                          |
+| MariaDB       | `MARIADB_VERSION`       | `mariadb:10.11`        | `11.4`, `11.8`, `12.3`, `13.0`    | `config/mariadb/<version>/laserstack.cnf`          |
+| PostgreSQL    | `POSTGRES_VERSION`      | `postgres:15.1-alpine` | `16`, `17`, `18`                  | `config/postgres/<version>/`                       |
+| redis         | `REDIS_VERSION`         | `redis:8.10-alpine`    | `8.8`, `8.6`, `8.4`, `8.2`, `7.4` | `config/redis/<version>/redis.conf`                |
+| memcached     | `MEMCACHED_VERSION`     | `memcached:1.6-alpine` | none                              | none, the image has no config file                 |
+| Elasticsearch | `ELASTICSEARCH_VERSION` | `elasticsearch:7.14.2` | `8.19.23`, `9.5.5`                | `config/elasticsearch/<version>/elasticsearch.yml` |
+
+A data volume belongs to the server version that created it, so a version change
+needs `laser down -v` (or the server upgrade of that engine) before `laser up`.
+The accounts of MySQL `8.4`, `9.7` and `26.10` use `caching_sha2_password`
+(MySQL 9.0 removed `mysql_native_password`), which is why `laser mysql` runs the
+client of the database container, not the client of the app container. The
+postgres service pins `PGDATA=/var/lib/postgresql/data`: the images from
+postgres 18 store their data in `/var/lib/postgresql/<major>/docker` by default
+and refuse to start when a volume sits at the older path.
 
 ## Getting started
 
@@ -91,6 +111,11 @@ cp env.example .env
 Edit your .env to your liking. `env.example` uses PHP 8.4 and the `mysql` and
 `redis` containers. Set `PHP_VERSION` to 7.4, 8.0, 8.1, 8.2, 8.3, 8.4, 8.5 or
 8.6, and `PROFILES` to the containers you want to run.
+
+The version of every database server is selectable with the variables
+`MYSQL_VERSION`, `MARIADB_VERSION`, `POSTGRES_VERSION`, `REDIS_VERSION`,
+`MEMCACHED_VERSION` and `ELASTICSEARCH_VERSION`. They are optional: without them
+`docker-compose.yml` uses the defaults of the Versions table above.
 
 Define also the usernames and passwords for mysql por postgresql and which
 containers you want to run defining the `PROFILES` variable.
@@ -134,12 +159,12 @@ laser help
 `PROFILES` define a comma separated list of additional containers you want to
 run. The available profiles, each with the image `docker-compose.yml` pulls:
 
-- mysql (`mysql:8.0`)
-- mariadb (`mariadb:10.11`)
-- postgres (`postgres:15.1-alpine`)
-- redis (`redis:alpine`)
-- memcached (`memcached:alpine`)
-- elasticsearch (`elasticsearch:7.14.2`)
+- mysql (`mysql:${MYSQL_VERSION}`, default `mysql:8.0`)
+- mariadb (`mariadb:${MARIADB_VERSION}`, default `mariadb:10.11`)
+- postgres (`postgres:${POSTGRES_VERSION}-alpine`, default `postgres:15.1-alpine`)
+- redis (`redis:${REDIS_VERSION}-alpine`, default `redis:8.10-alpine`)
+- memcached (`memcached:${MEMCACHED_VERSION}-alpine`, default `memcached:1.6-alpine`)
+- elasticsearch (`elasticsearch:${ELASTICSEARCH_VERSION}`, default `elasticsearch:7.14.2`)
 
 The database container of the mysql profile answers to the name `db`, the
 container of the mariadb profile to the name `mariadb` and to `db` as well.
@@ -147,9 +172,13 @@ Projects that use `db` as the database host thus work with both profiles. Do
 not activate the mysql and the mariadb profile at the same time, both use port
 3306.
 
-The postgres container keeps its data in the `pgdata` volume and reads
-`config/postgres/postgresql.conf`. The container of the mysql profile reads
-`config/db`.
+The postgres container keeps its data in the `pgdata` volume and reads the
+config directory of its version, `config/postgres/<version>/`. The container of
+the mysql profile reads `config/mysql/<version>/`, the container of the mariadb
+profile reads `config/mariadb/<version>/laserstack.cnf`, redis reads
+`config/redis/<version>/redis.conf` and elasticsearch
+`config/elasticsearch/<version>/elasticsearch.yml`. memcached has no config
+file, its image takes the settings as command flags.
 
 ### PROFILES Examples
 

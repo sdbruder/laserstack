@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- One version variable per database engine, `MYSQL_VERSION`,
+  `MARIADB_VERSION`, `POSTGRES_VERSION`, `REDIS_VERSION`, `MEMCACHED_VERSION`
+  and `ELASTICSEARCH_VERSION`, the same capacity the PHP version has. The
+  variable selects the image tag and the config directory
+  `config/<engine>/<version>/`, which holds one directory per supported version.
+  The defaults stay `mysql:8.0`, `mariadb:10.11`, `postgres:15.1-alpine`,
+  `redis:8.10-alpine`, `memcached:1.6-alpine` and `elasticsearch:7.14.2`, so an
+  existing `.env` behaves as before.
+- The versions `MYSQL_VERSION=8.4`, `9.7` and `26.10`, `MARIADB_VERSION=11.4`,
+  `11.8`, `12.3` and `13.0`, `POSTGRES_VERSION=16`, `17` and `18`,
+  `REDIS_VERSION=8.8`, `8.6`, `8.4`, `8.2` and `7.4`, and
+  `ELASTICSEARCH_VERSION=8.19.23` and `9.5.5`. `test/smoke.sh` takes
+  `SMOKE_MYSQL_VERSION`, `SMOKE_MARIADB_VERSION` and `SMOKE_POSTGRES_VERSION`
+  for a run with one of them, and drops the volumes first, because a data volume
+  belongs to the server version that created it.
+
+### Changed
+
+- `laser mysql` runs the `mysql` client of the database container of the active
+  profile over its unix socket, not the client of the app container. A client
+  that ships with the server knows every authentication plugin of that server,
+  and the socket is a secure transport for `caching_sha2_password`, the plugin
+  that MySQL `8.4`, `9.7` and `26.10` use because MySQL 9.0 removed
+  `mysql_native_password`. It also selects the name of the client per profile,
+  `mariadb` for the mariadb one, whose images ship no `mysql` binary from 11.4
+  on. That makes `laser mysql` work with every supported version; the client of
+  the app image needs the `caching_sha2_password` plugin of
+  `mariadb-connector-c`, which the images do not have, and the README states
+  that limitation for a shell in the app container.
+- The postgres service sets `PGDATA=/var/lib/postgresql/data`, the path of
+  postgres 15 to 17 and of the entrypoint of the image. The images from
+  postgres 18 changed their default to `/var/lib/postgresql/<major>/docker` and
+  refuse to start when the data volume is at the older path.
+- The config directory of the mysql profile is `config/mysql/8.0`,
+  `config/postgres` is `config/postgres/15.1`, and every version directory
+  carries its own copy of the config file. MariaDB, redis and elasticsearch have
+  a config file of the repository now:
+  `config/mariadb/<version>/laserstack.cnf`,
+  `config/redis/<version>/redis.conf` and
+  `config/elasticsearch/<version>/elasticsearch.yml`, the last one with
+  `xpack.security.enabled: false`, which the images from elasticsearch 8 need.
+- `config/mysql/<version>/docker.cnf` holds the authentication settings of the
+  server version. On `8.0` the accounts use `mysql_native_password`
+  (`default_authentication_plugin`). On `8.4` that option is gone and
+  `mysql_native_password = ON` only *enables* the plugin, so its accounts use
+  `caching_sha2_password`, the default of the server, like `9.7` and `26.10`,
+  where the plugin does not exist at all. The host cache is off on every version
+  through `host_cache_size = 0`, because MySQL removed `skip-host-cache` in 8.3
+  and refuses to start with it.
+
+### Removed
+
+- The `command:` line of the mysql and the mariadb service of
+  `docker-compose.yml`. The option of the mysql one lives in the config
+  directory of the version now, the option of the mariadb one was a
+  compatibility no-op that the MariaDB image ignores.
+
 ## [0.12.0] 2026-11-04
 
 ### Added

@@ -37,12 +37,13 @@ services:
     networks:
       - laser
   db:
-    image: mysql:8.0
-    command: --default-authentication-plugin=mysql_native_password
+    image: "mysql:${MYSQL_VERSION:-8.0}"
+    # the authentication plugin of the server version is in the mounted config
+    # directory, see config/mysql/<version>/docker.cnf
     ports:
       - "3306:3306"
     volumes:
-      - ./config/db:/etc/mysql/conf.d:cached
+      - ./config/mysql/${MYSQL_VERSION:-8.0}:/etc/mysql/conf.d:cached
       - dbdata:/var/lib/mysql:delegated
     environment:
       LASER: 1
@@ -55,11 +56,11 @@ services:
     profiles:
       - mysql
   mariadb:
-    image: mariadb:10.11
-    command: --default-authentication-plugin=mysql_native_password
+    image: "mariadb:${MARIADB_VERSION:-10.11}"
     ports:
       - "3306:3306"
     volumes:
+      - ./config/mariadb/${MARIADB_VERSION:-10.11}/laserstack.cnf:/etc/mysql/conf.d/laserstack.cnf:cached
       - mariadata:/var/lib/mysql:delegated
     environment:
       LASER: 1
@@ -77,8 +78,9 @@ services:
     profiles:
       - mariadb
   postgres:
-    image: postgres:15.1-alpine
-    # the server reads the config directory of laserstack, see config/postgres
+    image: "postgres:${POSTGRES_VERSION:-15.1}-alpine"
+    # the server reads the config directory of its version, see
+    # config/postgres/<version>
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     ports:
       - 5432:5432
@@ -86,9 +88,14 @@ services:
       # postgres keeps its data in /var/lib/postgresql/data, not in
       # /var/lib/mysql like the mysql containers
       - pgdata:/var/lib/postgresql/data:delegated
-      - ./config/postgres:/etc/postgresql:cached
+      - ./config/postgres/${POSTGRES_VERSION:-15.1}:/etc/postgresql:cached
     environment:
       LASER: 1
+      # postgres 18 moved PGDATA to /var/lib/postgresql/<major>/docker and
+      # refuses to start with a data volume at the old path. The explicit value
+      # is the upstream way to keep the path of the older versions, and it is
+      # what they use as their default.
+      PGDATA: /var/lib/postgresql/data
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       # POSTGRES_USER: '${POSTGRES_USER}'
       # POSTGRES_DB: '${POSTGRES_DB}'
@@ -100,9 +107,14 @@ services:
     profiles:
       - postgres
   redis:
-    image: redis:alpine
+    image: "redis:${REDIS_VERSION:-8.10}-alpine"
+    # the image starts "redis-server" without arguments, the mounted file is the
+    # one setting the stack needs
+    command: redis-server /usr/local/etc/redis/redis.conf
     ports:
       - 6379:6379
+    volumes:
+      - ./config/redis/${REDIS_VERSION:-8.10}:/usr/local/etc/redis:cached
     environment:
       LASER: 1
     networks:
@@ -110,7 +122,7 @@ services:
     profiles:
       - redis
   memcached:
-    image: memcached:alpine
+    image: "memcached:${MEMCACHED_VERSION:-1.6}-alpine"
     ports:
       - 11211:11211
     environment:
@@ -120,10 +132,14 @@ services:
     profiles:
       - memcached
   elasticsearch:
-    image: elasticsearch:7.14.2
+    image: "elasticsearch:${ELASTICSEARCH_VERSION:-7.14.2}"
     ports:
       - 9200:9200
       - 9300:9300
+    volumes:
+      # security is off, the file of the image is replaced, see
+      # config/elasticsearch/<version>/elasticsearch.yml
+      - ./config/elasticsearch/${ELASTICSEARCH_VERSION:-7.14.2}/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:cached
     environment:
       LASER: 1
       discovery.type: single-node

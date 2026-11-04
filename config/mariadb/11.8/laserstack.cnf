@@ -1,0 +1,5 @@
+[mysqld]
+skip-name-resolve
+tmpdir = /dev/shm
+innodb_flush_log_at_trx_commit = 2
+innodb_flush_log_at_timeout = 10
