@@ -32,6 +32,8 @@
 # Usage: test/smoke.sh [version ...]     default: 7.4 8.0 8.1 8.2 8.3 8.4 8.5 8.6
 #        SMOKE_DB_PROFILES="mariadb" test/smoke.sh 8.4
 #        SMOKE_MYSQL_VERSION=9.7 SMOKE_DB_PROFILES=mysql test/smoke.sh 8.5
+#        SMOKE_MARIADB_VERSION=11.8 SMOKE_DB_PROFILES=mariadb test/smoke.sh 8.5
+#        SMOKE_POSTGRES_VERSION=18 SMOKE_DB_PROFILES=postgres test/smoke.sh 8.5
 #        SMOKE_PULL=0 test/smoke.sh 8.4
 
 set -u

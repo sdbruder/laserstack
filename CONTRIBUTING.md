@@ -112,8 +112,9 @@ welcome.
 4. for redis, memcached and elasticsearch there is no smoke stage: start the
    profile and probe it, for example
    `laser appexec php -r '$r=new Redis();$r->connect("redis",6379);echo $r->ping();'`
-   for redis, and `laser appexec curl -sS http://elasticsearch:9200` for
-   elasticsearch.
+   for redis and `laser appexec curl -sS http://elasticsearch:9200` for
+   elasticsearch. The app images have no `Memcached` class, so probe memcached
+   with its protocol: `printf 'version\r\n' | nc 127.0.0.1 11211` on the host.
 
 Things the current list taught us, in case the new version behaves the same way:
 
@@ -177,6 +178,27 @@ that created it.
 
 The test stops the stack at the end and leaves `.env` as it was. The database
 volumes stay, and the first run pulls the images of the database profiles.
+
+redis, memcached and elasticsearch have no stage in the test: start the profile
+and probe it by hand, see [Add a database version](#add-a-database-version).
+
+A sweep over every supported server version is a loop around the test, driven by
+the config directories, so no version list has to be kept in sync:
+
+```
+for dir in config/mysql/*/; do
+  SMOKE_MYSQL_VERSION="$(basename "$dir")" SMOKE_DB_PROFILES=mysql test/smoke.sh 8.5 || break
+done
+for dir in config/mariadb/*/; do
+  SMOKE_MARIADB_VERSION="$(basename "$dir")" SMOKE_DB_PROFILES=mariadb test/smoke.sh 8.5 || break
+done
+for dir in config/postgres/*/; do
+  SMOKE_POSTGRES_VERSION="$(basename "$dir")" SMOKE_DB_PROFILES=postgres test/smoke.sh 8.5 || break
+done
+```
+
+`|| break` stops at the first version that fails, and the test prints the names
+of the failed checks with the report of that run.
 
 ## Shell in this repository
 

@@ -39,6 +39,9 @@ Be as small, simple and fast as possible:
   nginx config. Those drivers are examples, and
   [CONTRIBUTING.md](CONTRIBUTING.md) describes how to add one.
 - DNS resolution needs to be manually managed through `/etc/hosts`.
+- The app images have no `memcached` PHP extension (`php -m`), so the
+  `memcached` profile serves the server only: PHP and Laravel cannot use it as a
+  cache or a session store.
 - The `mysql` client of a shell in the app container (`laser shell`,
   `laser appexec mysql`) is the client of the image and authenticates with
   `config/my.cnf`. It works with the mariadb profile and with mysql `8.0`. The

@@ -63,7 +63,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   documentation (the repository layout, how the stack is put together, how to
   add a PHP or a database version, the smoke test, the release process and how
   to debug a container). The smoke test section moved out of the README
-  unchanged.
+  unchanged, and the development documentation now shows how to run a sweep over
+  every supported server version and where the manual probes of redis, memcached
+  and elasticsearch are. The README also states that the app images carry no
+  `memcached` PHP extension, so that profile serves the server only.
 
 ### Removed
 
