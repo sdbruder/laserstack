@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `SUFFIX=localdev.it` needs no local DNS at all: every name under that domain —
+  any depth, IPv4 and IPv6 — resolves to `127.0.0.1` and `::1`, so every project
+  of the projects directory answers as `projecta.localdev.it` on the machine that
+  runs the stack, with no `/etc/hosts` and no dnsmasq. The docs, the README, the
+  `env.example` comment and the installer's next steps say so, and
+  `https://localdev.it/` redirects to the site.
 - `laser update` and `laser update --check`: fast-forward the checkout, pull the
   newest images of the active profiles, print the PHP version of the app image
   next to the one the container runs, and restart only the containers whose image

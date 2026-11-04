@@ -383,6 +383,12 @@ Decided: `dnsmasq`, with `.test` as the suffix.
   `test` becomes its default, and a `.env` that still says `local` needs a note
   with the change.
 
+Worth saying before that plan: the domain `localdev.it` already gives this
+without a daemon. Every name under it — any depth, IPv4 and IPv6 — resolves to
+loopback for anyone, so `SUFFIX=localdev.it` needs none of the work below. That
+work is for a suffix of the user's own; making `localdev.it` the default suffix
+would reduce this item to a convenience.
+
 Still to decide in the plan of that work:
 
 - the privileges: which step needs `sudo` (the package, the service, the

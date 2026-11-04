@@ -86,6 +86,16 @@
   </table></div>
   <p>No VM of its own, no system package, no shell profile, no daemon: <code>laser</code> is a bash script and docker does the rest. The <a href="install">installer</a> checks bash, git and docker with compose v2 before it clones anything, and stops with a clear message when one of them is missing.</p>
 
+  <h2>Project names without a DNS server</h2>
+  <p>Point <code>SUFFIX</code> at a domain that resolves to loopback and no project name needs any local setup at all. <code>localdev.it</code> is such a domain, and it is public: every name under it — any depth, IPv4 and IPv6 — answers <code>127.0.0.1</code> and <code>::1</code>.</p>
+  <pre><code><span class="out"># .env</span>
+SUFFIX=localdev.it
+
+<span class="out"># every project of the projects directory then answers to</span>
+http://projecta.localdev.it      http://myapp.localdev.it      http://clientportal.localdev.it</code></pre>
+  <p>That means no <code>/etc/hosts</code> line, no dnsmasq, no Acrylic DNS, nothing installed: the names resolve for anyone, anywhere, and on the machine that runs the stack they land on the stack. The notes behind the domain are at <a href="https://localdev.it/catch-all-dns.html">localdev.it/catch-all-dns.html</a>.</p>
+  <p>A suffix of your own still needs the hosts lines — or the DNS work that is on the <a href="roadmap.html">roadmap</a>.</p>
+
   <h2 id="versions-are-variables">Versions are variables</h2>
   <p>One variable per engine selects the image tag <em>and</em> the config directory, so the settings of a version travel with it. As of release 0.13.0:</p>
   <div class="table-scroll"><table>

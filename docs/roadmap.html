@@ -52,6 +52,7 @@
     <li>work without a daemon where a machine cannot or should not run one.</li>
   </ul>
   <p>The direction is <strong>dnsmasq</strong> — it resolves the whole suffix as a wildcard, so a new project needs no DNS step at all — with <strong><code>.test</code></strong> as the default suffix, because that name is reserved by RFC 6761 for exactly this, while <code>local</code> belongs to mDNS/Bonjour and <code>.app</code>/<code>.dev</code> are real TLDs. <code>SUFFIX</code> stays a setting; <code>.test</code> becomes the default.</p>
+  <p><strong>Partly moot, and worth saying:</strong> the domain <code>localdev.it</code> already does this without any daemon. Every name under it resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone, so <code>SUFFIX=localdev.it</code> gives every project a working name with nothing installed and nothing to maintain. The work described above is for a user who wants a suffix of their own — and one honest alternative is to make <code>localdev.it</code> the default suffix and drop this item to a convenience.</p>
 
   <hr>
 

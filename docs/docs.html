@@ -56,7 +56,7 @@ laser help                   <span class="out"># the commands; laser dockerhelp 
     <thead><tr><th>variable</th><th>default in env.example</th><th>what it does</th></tr></thead>
     <tbody>
       <tr><td><code>PROJECTS_DIRECTORY</code></td><td><code>./..</code></td><td>the directory bind-mounted into the app container at <code>/var/www</code> and scanned for projects</td></tr>
-      <tr><td><code>SUFFIX</code></td><td><code>local</code></td><td>the domain suffix of a project URL: <code>projecta.local</code></td></tr>
+      <tr><td><code>SUFFIX</code></td><td><code>local</code></td><td>the domain suffix of a project URL: <code>projecta.local</code>. <code>localdev.it</code> needs no setup at all: every name under it resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone, so <code>projecta.localdev.it</code> just works — a suffix of your own needs the names in <code>/etc/hosts</code></td></tr>
       <tr><td><code>PHP_VERSION</code></td><td><code>8.4</code></td><td>the app image series, <code>laserstack/app:&lt;version&gt;</code>: 7.4, 8.0–8.6</td></tr>
       <tr><td><code>MYSQL_VERSION</code></td><td><code>8.0</code></td><td>the mysql profile image and its config directory</td></tr>
       <tr><td><code>MARIADB_VERSION</code></td><td><code>10.11</code></td><td>the mariadb profile image and its config file</td></tr>
@@ -92,7 +92,8 @@ laser help                   <span class="out"># the commands; laser dockerhelp 
     <li>Every subdirectory of <code>PROJECTS_DIRECTORY</code> with a <code>public/</code> directory is a candidate site; <code>laser scan</code> decides what each one is and writes its vhost;</li>
     <li>the drivers are <strong>laravel</strong>, <strong>symfony</strong>, <strong>wordpress</strong> and <strong>generic</strong>. The generic driver installs a <code>laserstack-nginx.conf</code> from the project root as the vhost of that project;</li>
     <li>the name a request must use is <code>&lt;directory&gt;.&lt;SUFFIX&gt;</code>, so <code>projecta.local</code> for a directory called <code>projecta</code>;</li>
-    <li>those names must resolve to 127.0.0.1: add them to <code>/etc/hosts</code>, or point a local DNS at them. Installing and maintaining that DNS is on the <a href="roadmap.html">roadmap</a>;</li>
+    <li>those names must resolve to 127.0.0.1, and the first way needs nothing: <strong>set <code>SUFFIX=localdev.it</code></strong> in <code>.env</code>. Every name under <code>localdev.it</code> already resolves to <code>127.0.0.1</code> (and <code>::1</code>) for anyone, so <code>projecta.localdev.it</code> works on this machine the moment the stack is up — no hosts file, no DNS server, nothing to install. The notes behind that domain are at <a href="https://localdev.it/catch-all-dns.html">localdev.it/catch-all-dns.html</a>;</li>
+    <li>with a suffix of your own, add the names to <code>/etc/hosts</code> or point a local DNS at them. Installing and maintaining that DNS is on the <a href="roadmap.html">roadmap</a>;</li>
     <li>projects live at <code>/var/www/&lt;directory&gt;</code> in the app container, so a project's own paths, relative URLs and artisan invocations stay ordinary;</li>
     <li>after adding or removing a project: <code>laser scan</code>. It restarts nginx only when the vhosts really changed.</li>
   </ul>

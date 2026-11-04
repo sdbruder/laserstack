@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nothing at this address — Laser Stack</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230a0c10'/%3E%3Cpath d='M4 19 L20 5' stroke='%234ade80' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/laserstack/style.css">
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <a class="brand" href="/laserstack/"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 19.5 L20 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 4.5h11M3.5 20v-9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/><circle cx="18.4" cy="5.6" r="2.2" fill="#4ade80"/></svg>laserstack</a>
+  <nav class="site">
+    <a href="/laserstack/">Overview</a><a href="/laserstack/features.html">Features</a><a href="/laserstack/benchmarks.html">Numbers</a><a href="/laserstack/docs.html">Docs</a><a href="/laserstack/examples.html">Examples</a><a href="/laserstack/roadmap.html">Roadmap</a><a href="https://github.com/sdbruder/laserstack">GitHub ↗</a>
+  </nav>
+</div></header>
+<main>
+<section class="hero"><div class="wrap">
+  <p class="eyebrow">404</p>
+  <h1>Nothing at this address.</h1>
+  <p class="lede">The documentation lives under <code>/laserstack/</code>. Pick one of these, or head back to the overview.</p>
+  <div class="actions">
+    <a class="btn primary" href="/laserstack/">Overview</a>
+    <a class="btn" href="/laserstack/docs.html">Documentation</a>
+    <a class="btn" href="/laserstack/benchmarks.html">Numbers</a>
+    <a class="btn" href="/laserstack/examples.html">Examples</a>
+  </div>
+  <p class="platforms" id="note"></p>
+</div></section>
+</main>
+<footer class="site"><div class="wrap">
+  <div class="fine"><span>Laser Stack is open source software under the BSD-3-Clause license.</span><span>No telemetry, no account, no VM.</span></div>
+</div></footer>
+<script>
+  (function () {
+    var p = location.pathname;
+    if (p && p !== "/" && p !== "/index.html") { document.getElementById("note").textContent = "The path " + p + " does not exist."; }
+  })();
+</script>
+</body>
+</html>
