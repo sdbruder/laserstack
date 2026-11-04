@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `laser update` and `laser update --check`: fast-forward the checkout, pull the
+  newest images of the active profiles, print the PHP version of the app image
+  next to the one the container runs, and restart only the containers whose image
+  changed. It pairs with the nightly rebuild of the app images in laserstack_app,
+  whose series tag (`laserstack/app:8.4`) always carries the newest patch of that
+  series, so a patch release reaches a running stack with one command.
 - `docs/install`, the one-line installer served by the site:
   `curl -fsSL https://localdev.it/laserstack/install | bash`. It checks bash,
   git and docker with compose v2, clones the stack next to the projects (or

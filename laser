@@ -77,6 +77,7 @@ function lasercommands() {
   echo "  appexec            Execute arbitrary commands in the app container"
   echo "  yarn               Execute yarn"
   echo "  stats              top-like docker stats"
+  echo "  update             Update the checkout and the images, restart what changed"
 }
 
 function dohelp() {
@@ -170,6 +171,48 @@ function psql() {
     args+=("$dbname")
   fi
   dc exec -e "PGPASSWORD=$pass" app psql "${args[@]}" "$@"
+}
+
+function appversion() {
+  # the PHP version of the running app container, empty when it is not up
+  dc exec -T app php -r 'echo PHP_VERSION;' 2>/dev/null || true
+}
+
+function update() {
+  # laser update [--check]: the newest code of the checkout and the newest
+  # images of the active profiles, then restart what changed.
+  # The image of a PHP series is rebuilt every night in laserstack_app, so this
+  # is how a newer patch of the series reaches a running stack.
+  local check=0
+  [ "${1:-}" == "--check" ] && check=1
+  local image="laserstack/app:${PHP_VERSION}"
+
+  if [ -d .git ]; then
+    echo "-- the checkout"
+    if [ "$check" -eq 1 ]; then
+      git fetch --quiet origin || warning_message "could not reach origin"
+      git status --short --branch | sed -n 1p
+    else
+      git pull --ff-only || warning_message "the checkout has local changes, the images below are updated anyway"
+    fi
+  fi
+
+  echo "-- the images of the active profiles"
+  #shellcheck disable=SC2086
+  dc pull
+
+  echo "-- the app image"
+  echo "   $image carries PHP $(docker run --rm --entrypoint php "$image" -r 'echo PHP_VERSION;' 2>/dev/null || echo unknown)"
+  echo "   the app container runs PHP $(appversion)"
+
+  if [ "$check" -eq 1 ]; then
+    echo "-- check only, nothing restarted"
+    return 0
+  fi
+
+  echo "-- restarting what changed"
+  dc up -d
+  echo "-- the app container now runs PHP $(appversion)"
 }
 
 function stackisup() {
@@ -403,6 +446,9 @@ list)
   ;;
 up)
   up
+  ;;
+update)
+  update "$@"
   ;;
 dockerhelp)
   dockerhelp

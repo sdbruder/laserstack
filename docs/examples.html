@@ -140,6 +140,32 @@ laser logs --tail 100 app           <span class="out"># what went wrong</span>
 laser down -v                       <span class="out"># also removes the data volumes: databases are empty after this</span>
 test/smoke.sh 8.5                   <span class="out"># check the stack itself, not your project</span></code></pre>
   <p>There is no hidden state to clear: what the stack owns is the containers, the network and the named volumes.</p>
+
+  <h2>10 · Keep the stack up to date</h2>
+  <p>The app images are rebuilt every night, so a patch release of your PHP series shows up in the tag you already run. Two commands, and the first one changes nothing:</p>
+  <pre><code>$ laser update --check
+-- the checkout
+## master...origin/master
+-- the images of the active profiles
+ Image mariadb:10.11 Pulled
+ Image laserstack/app:8.2 Pulled
+-- the app image
+   laserstack/app:8.2 carries PHP 8.2.35
+   the app container runs PHP 8.2.35
+-- check only, nothing restarted
+
+$ laser update
+<span class="out">-- the checkout
+Already up to date.
+-- the images of the active profiles
+ Image laserstack/app:8.2 Pulled
+-- the app image
+   laserstack/app:8.2 carries PHP 8.2.35
+   the app container runs PHP 8.2.35
+-- restarting what changed
+ Container laserstack-app-1  Running
+-- the app container now runs PHP 8.2.35</span></code></pre>
+  <p>Both blocks above are one real run: the image was already the newest, so docker-compose reported <code>Running</code> and nothing was recreated. When the pulled image differs, the same command reports <code>Recreated</code> for that container only, and the last line prints the version that is running now. Databases, volumes and <code>.env</code> are not part of this: it moves code and images, nothing else.</p>
 </div></section>
 </main>
 <footer class="site"><div class="wrap">

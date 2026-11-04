@@ -134,6 +134,7 @@ note "4. name resolution, once (the stack takes this over in a later release):"
 note "     127.0.0.1 projecta.local projectb.local"
 say ""
 note "Documentation: https://localdev.it/laserstack/   (README.md, CONTRIBUTING.md in the checkout)"
+note "Later, to take the newest code and images: laser update   (--check to look first)"
 
 if [ "$START" -eq 1 ]; then
   step "starting the stack"

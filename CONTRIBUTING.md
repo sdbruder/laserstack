@@ -70,6 +70,14 @@ welcome.
 
 ## Add a PHP version
 
+The nightly workflow of
+[laserstack_app](https://github.com/sdbruder/laserstack_app) rebuilds every
+series that has a version directory: for each one it installs the series from
+the Alpine release of that image, reads back the version it got, and publishes
+two tags — the series (`8.4`) and the exact patch (`8.4.27`), for amd64 and
+arm64. So patch releases of an existing series come by themselves, and only the
+first image of a *new* series is work.
+
 1. build and publish the series in
    [laserstack_app](https://github.com/sdbruder/laserstack_app) as
    `laserstack/app:<major.minor>`;

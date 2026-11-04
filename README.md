@@ -172,6 +172,26 @@ To look additional laser commands:
 laser help
 ```
 
+## Staying up to date
+
+The app images are rebuilt every night in
+[laserstack_app](https://github.com/sdbruder/laserstack_app): the tag of a PHP
+series always carries the newest patch of that series, so a running stack can
+take a patch release without changing anything else.
+
+```
+laser update --check    # fetch the code and the images, change nothing
+laser update            # the same, then restart what changed
+```
+
+`laser update` fast-forwards the checkout (an edit of yours to a tracked file
+stops that, on purpose), pulls the images of the active profiles, prints the PHP
+version of the image next to the one the container runs, and restarts only the
+containers whose image changed. A new PHP *series* is the one manual step: a
+version directory in laserstack_app plus `config/php<VV>` and
+`config/supervisord.<VV>` here, which
+[CONTRIBUTING.md](CONTRIBUTING.md) describes.
+
 ## PROFILES setup
 
 `PROFILES` define a comma separated list of additional containers you want to

@@ -58,6 +58,22 @@
   </table></div>
   <p>Only the profile of the mysql container answers on 3306 at a time: projects that point at <code>db</code> work with the <code>mysql</code> profile and with the <code>mariadb</code> profile, which is why the mariadb service carries that alias.</p>
 
+  <h2>Always up to date</h2>
+  <p>The app images are built in the open and rebuilt every night by a scheduled workflow in <a href="https://github.com/sdbruder/laserstack_app">laserstack_app</a> (01:00 UTC, plus a manual run). For every PHP series that workflow builds, it installs the series from the Alpine release of that image and reads back the version it got, so <code>laserstack/app:8.4</code> always carries the newest PHP 8.4 patch available. Each build publishes two tags: the series (<code>8.4</code>) and the exact version (<code>8.4.27</code>), for amd64 and arm64, with <code>latest</code> on the newest released series. You can watch it in the registry: while the 8.6 line tracked a release candidate, its tags were rebuilt on consecutive days.</p>
+  <p><code>laser update</code> is the other half of that promise — one command, and a <code>--check</code> that changes nothing:</p>
+  <pre><code>$ laser update --check        <span class="out"># or: laser update, to apply it</span>
+-- the checkout
+## master...origin/master
+-- the images of the active profiles
+ Image mariadb:10.11 Pulled
+ Image laserstack/app:8.2 Pulled
+-- the app image
+   laserstack/app:8.2 carries PHP 8.2.35
+   the app container runs PHP 8.2.35
+-- check only, nothing restarted</code></pre>
+  <p>With <code>laser update</code> the same command continues: it pulls the newest code of the checkout and the newest images of the active profiles, and restarts what changed. When the pulled image differs from the running one, docker-compose recreates that container and the last line reports the version that is now running — applied patches, no guessing.</p>
+  <p>One thing stays manual, on purpose: a <em>new</em> PHP series. The nightly build covers every series that has a directory in laserstack_app, and a new one is a directory there plus the config directory here (<code>config/php&lt;VV&gt;</code> and <code>config/supervisord.&lt;VV&gt;</code>) — one entry each, with the recipe in <a href="https://github.com/sdbruder/laserstack/blob/master/CONTRIBUTING.md">CONTRIBUTING.md</a>.</p>
+
   <h2>Platforms</h2>
   <p>Official support for the three environments developers use, with any docker that speaks compose v2 — and nothing at all installed on the host besides it:</p>
   <div class="table-scroll"><table>
@@ -114,6 +130,7 @@
       <tr><td><code>laser mysql</code> / <code>laser psql</code></td><td>a client for the database of the profile, with the credentials of <code>.env</code></td></tr>
       <tr><td><code>laser share</code></td><td>an ngrok tunnel to that project</td></tr>
       <tr><td><code>laser new / list / stats / restartnginx</code></td><td>scaffold a project, list the served URLs, docker stats, reload nginx</td></tr>
+      <tr><td><code>laser update</code></td><td>pulls the newest code and the newest images and restarts only what changed; <code>laser update --check</code> stops after the download</td></tr>
       <tr><td>anything else</td><td>passed straight to docker-compose: <code>laser exec db mysqladmin status</code></td></tr>
     </tbody>
   </table></div>

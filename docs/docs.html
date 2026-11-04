@@ -130,6 +130,17 @@ SMOKE_MYSQL_VERSION=9.7 SMOKE_DB_PROFILES=mysql test/smoke.sh 8.5
 SMOKE_PULL=0 test/smoke.sh 8.4                  <span class="out"># use the local images</span></code></pre>
   <p>The test stops the stack at the end and leaves <code>.env</code> as it was. It is also the fastest way to find out whether a problem is yours or the stack's.</p>
 
+  <h2>Staying up to date</h2>
+  <p>The images of the PHP series are rebuilt every night in <a href="https://github.com/sdbruder/laserstack_app">laserstack_app</a>, so a series tag such as <code>laserstack/app:8.4</code> carries the newest 8.4 patch available. Taking what is new is one command:</p>
+  <pre><code>laser update --check    <span class="out"># fetch the code and the images, change nothing</span>
+laser update            <span class="out"># the same, then restart the containers whose image changed</span></code></pre>
+  <ul>
+    <li>it fast-forwards the checkout first (<code>git pull --ff-only</code>, when the directory is a git working tree). An edit of yours to a tracked file stops that pull and it says so, instead of merging behind your back; <code>.env</code> and untracked files are never touched;</li>
+    <li>then it pulls every image of the active profiles, the app image included, and prints the PHP version the image carries next to the one the container is running;</li>
+    <li>then it brings the stack up, which recreates exactly the containers whose image changed, and prints the version that is now running;</li>
+    <li>a new PHP <em>series</em> is the one manual step: a version directory in laserstack_app plus <code>config/php&lt;VV&gt;</code> and <code>config/supervisord.&lt;VV&gt;</code> here.</li>
+  </ul>
+
   <h2>Known limits</h2>
   <ul>
     <li><strong>one PHP version per stack.</strong> Every project of a stack shares the app container. Per-project PHP versions are planned;</li>
