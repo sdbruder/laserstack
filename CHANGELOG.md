@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] 2026-11-04
+
+### Added
+
+- `config/php86` and `config/supervisord.8.6`, the config of the images of
+  PHP 8.6. `PHP_VERSION=8.6` starts the new app image. PHP 8.6 has no stable
+  release yet (GA is planned for 19 November 2026), so that image is a release
+  candidate and does not take the `latest` tag, which stays on `8.5`.
+- PHP 8.6 in the default version list of `test/smoke.sh`, and in the
+  `PHP_VERSION` list of `env.example`.
+
+### Changed
+
+- The README lists the current versions of the app images: PHP 7.4.33, 8.0.30,
+  8.1.34, 8.2.35, 8.3.36, 8.4.27, 8.5.12 and 8.6.0RC5, on Alpine 3.15, 3.16,
+  3.19, 3.22, 3.24, 3.24, 3.24 and `edge`, plus node, npm, yarn, nginx,
+  phpunit and xdebug of each series. Every image has composer 2.11.1. Before,
+  the README listed composer 2.10.3 and stopped at PHP 8.5.
+- The README `PROFILES` list names the image of each profile (`mysql:8.0`,
+  `mariadb:10.11`, `postgres:15.1-alpine`, `redis:alpine`,
+  `memcached:alpine`, `elasticsearch:7.14.2`).
+
 ## [0.11.1] 2026-10-24
 
 ### Added

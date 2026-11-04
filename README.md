@@ -42,19 +42,28 @@ The app container is a public image per PHP series,
 `laserstack/app:<major.minor>`. Each image runs the newest patch of its series
 on the newest Alpine release that packages it:
 
-| image  | PHP    | Alpine | node      | npm     | yarn    | nginx  |
-| ------ | ------ | ------ | --------- | ------- | ------- | ------ |
-| `7.4`  | 7.4.33 | 3.15   | v16.20.2  | 8.1.3   | 1.22.17 | 1.20.2 |
-| `8.0`  | 8.0.30 | 3.16   | v16.20.2  | 8.10.0  | 1.22.19 | 1.22.1 |
-| `8.1`  | 8.1.34 | 3.19   | v20.15.1  | 10.2.5  | 1.22.19 | 1.24.0 |
-| `8.2`  | 8.2.35 | 3.22   | v22.23.4  | 11.6.4  | 1.22.22 | 1.28.3 |
-| `8.3`  | 8.3.36 | 3.24   | v24.22.1  | 11.12.1 | 1.22.22 | 1.30.6 |
-| `8.4`  | 8.4.27 | 3.24   | v24.22.1  | 11.12.1 | 1.22.22 | 1.30.6 |
-| `8.5`  | 8.5.12 | 3.24   | v24.22.1  | 11.12.1 | 1.22.22 | 1.30.6 |
+| image  | PHP      | Alpine | node      | npm     | yarn    | nginx  | phpunit | xdebug       |
+| ------ | -------- | ------ | --------- | ------- | ------- | ------ | ------- | ------------ |
+| `7.4`  | 7.4.33   | 3.15   | v16.20.2  | 8.1.3   | 1.22.17 | 1.20.2 | 9.6.38  | 3.1.4        |
+| `8.0`  | 8.0.30   | 3.16   | v16.20.2  | 8.10.0  | 1.22.19 | 1.22.1 | 9.6.38  | 3.1.6        |
+| `8.1`  | 8.1.34   | 3.19   | v20.15.1  | 10.2.5  | 1.22.19 | 1.24.0 | 10.5.66 | 3.3.2        |
+| `8.2`  | 8.2.35   | 3.22   | v22.23.4  | 11.6.4  | 1.22.22 | 1.28.3 | 11.5.57 | 3.4.6        |
+| `8.3`  | 8.3.36   | 3.24   | v24.22.1  | 11.12.1 | 1.22.22 | 1.30.6 | 12.5.42 | 3.5.3        |
+| `8.4`  | 8.4.27   | 3.24   | v24.22.1  | 11.12.1 | 1.22.22 | 1.30.6 | 13.4.5  | 3.5.3        |
+| `8.5`  | 8.5.12   | 3.24   | v24.22.1  | 11.12.1 | 1.22.22 | 1.30.6 | 13.4.5  | 3.5.3        |
+| `8.6`  | 8.6.0RC5 | edge   | v24.22.1  | 12.0.2  | 1.22.22 | 1.30.6 | 13.4.6  | 3.6.0alpha1  |
 
-Every image has composer v2.10.3. The tag `latest` is the newest series. The
-images are built in
+Every image has composer 2.11.1, the mysql client and the postgres client
+(`psql`, `pg_dump`), for `laser mysql` and `laser psql`. Under supervisord each
+image runs nginx (which serves the projects) and php-fpm. The images are built
+from the Dockerfiles in
 [laserstack_app](https://github.com/sdbruder/laserstack_app).
+
+The tag `latest` is the newest released series, currently `8.5`. The `8.6`
+series has no stable release yet (GA is planned for 19 November 2026), so its
+image is a release candidate (PHP 8.6.0RC5, Alpine `edge`) and does not take
+`latest`. Every other image runs on the newest Alpine release that packages its
+series.
 
 The additional containers come from `docker-compose.yml`:
 
@@ -80,8 +89,8 @@ cp env.example .env
 ```
 
 Edit your .env to your liking. `env.example` uses PHP 8.4 and the `mysql` and
-`redis` containers. Set `PHP_VERSION` to 7.4, 8.0, 8.1, 8.2, 8.3, 8.4 or 8.5,
-and `PROFILES` to the containers you want to run.
+`redis` containers. Set `PHP_VERSION` to 7.4, 8.0, 8.1, 8.2, 8.3, 8.4, 8.5 or
+8.6, and `PROFILES` to the containers you want to run.
 
 Define also the usernames and passwords for mysql por postgresql and which
 containers you want to run defining the `PROFILES` variable.
@@ -122,14 +131,15 @@ laser help
 
 ## PROFILES setup
 
-`PROFILES` define a comma separated list of additional containers you want to run. Available containers:
+`PROFILES` define a comma separated list of additional containers you want to
+run. The available profiles, each with the image `docker-compose.yml` pulls:
 
-- mysql
-- mariadb
-- postgres
-- redis
-- memcached
-- elasticsearch
+- mysql (`mysql:8.0`)
+- mariadb (`mariadb:10.11`)
+- postgres (`postgres:15.1-alpine`)
+- redis (`redis:alpine`)
+- memcached (`memcached:alpine`)
+- elasticsearch (`elasticsearch:7.14.2`)
 
 The database container of the mysql profile answers to the name `db`, the
 container of the mariadb profile to the name `mariadb` and to `db` as well.

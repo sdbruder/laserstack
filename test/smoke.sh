@@ -29,7 +29,7 @@
 # The test pulls the image of every version it starts, so a stale image of an
 # older run cannot fail the test. SMOKE_PULL=0 uses the local images.
 #
-# Usage: test/smoke.sh [version ...]     default: 7.4 8.0 8.1 8.2 8.3 8.4 8.5
+# Usage: test/smoke.sh [version ...]     default: 7.4 8.0 8.1 8.2 8.3 8.4 8.5 8.6
 #        SMOKE_DB_PROFILES="mariadb" test/smoke.sh 8.4
 #        SMOKE_PULL=0 test/smoke.sh 8.4
 
@@ -38,7 +38,7 @@ set -u
 laser_dir=$(cd -P -- "$(dirname -- "$0")/.." && pwd -P)
 cd "$laser_dir" || exit 1
 laser="$laser_dir/laser"
-versions="${*:-7.4 8.0 8.1 8.2 8.3 8.4 8.5}"
+versions="${*:-7.4 8.0 8.1 8.2 8.3 8.4 8.5 8.6}"
 db_profiles="${SMOKE_DB_PROFILES:-mysql mariadb postgres}"
 # the test pulls the images of the version it starts, so a stale image of an
 # older run cannot fail the test. SMOKE_PULL=0 keeps the local images.
