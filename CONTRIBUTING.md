@@ -355,8 +355,9 @@ Still to decide in the plan of that work:
 - whether an app container keeps a published port for direct access
   (`http://localhost:8082`) or only the router publishes one;
 - what `hostname: laser` becomes, and what the tools that read it should do;
-- the order against the DNS TODO: the router does not need `.test` to work, but
-  the two together are what makes many projects on many versions comfortable.
+- the order against the DNS TODO: the router does not need that work to happen
+  first, but the two together are what makes many projects on many versions
+  comfortable.
 
 ### Local DNS for the project names
 
@@ -368,7 +369,8 @@ Goal: `laser` knows `SUFFIX` and every project of the projects directory, so it
 should set the resolution up by itself on macOS, Linux and WSL2: install what it
 needs, write the configuration, start it, and keep it in step with `laser scan`.
 
-Decided: `dnsmasq`, with `.test` as the suffix.
+Decided: `dnsmasq`, for a suffix of the user's own. `.test` is the candidate
+there; the default of `env.example`, `localdev.it`, needs no daemon at all.
 
 - `dnsmasq` resolves the whole suffix as a wildcard, so every current and future
   project name works without a per-project step, which a generated block of

@@ -109,7 +109,7 @@ alias laser=~/src/laserstack/laser        <span class="out"># or add it to $PATH
 laser scan          <span class="out"># writes one nginx vhost per project</span>
 <span class="out"># nothing else with the default suffix; with one of your own, add the names</span>
 <span class="out"># to /etc/hosts once (or use dnsmasq, see the roadmap):</span>
-<span class="out"># 127.0.0.1 projecta.local projectb.local</span></code></pre></div></div>
+<span class="out"># 127.0.0.1 projecta.test projectb.test</span></code></pre></div></div>
   </div>
   <p style="margin-top:1.6rem">Day to day: <code>laser artisan migrate</code>, <code>laser npm run dev</code>, <code>laser mysql</code>, <code>laser shell</code>, <code>laser share</code>, <code>laser stop</code>. Anything else goes straight to docker-compose: <code>laser logs app --tail 50</code>.</p>
 </div></section>
@@ -120,7 +120,7 @@ laser scan          <span class="out"># writes one nginx vhost per project</span
   <div class="grid">
     <div class="card"><h3>One PHP version at a time</h3><p>All projects of one stack share the app container, so they share its PHP version. Per-project PHP versions, one container per version in use, are the next feature.</p></div>
     <div class="card"><h3>One version per database engine</h3><p>You can run mysql and postgres and redis side by side, but each engine runs the version you selected. Several versions of the same engine in parallel is part of the same roadmap item.</p></div>
-    <div class="card"><h3>DNS is a manual step today</h3><p>Project names are resolved through <code>/etc/hosts</code>. A local dnsmasq that <code>laser</code> installs, configures and maintains on macOS, Linux and WSL2 is planned, with <code>.test</code> as the default suffix.</p></div>
+    <div class="card"><h3>A suffix of your own needs /etc/hosts</h3><p>The default suffix, <code>localdev.it</code>, resolves every name under it to loopback for anyone and needs nothing. A local dnsmasq that <code>laser</code> installs, configures and maintains on macOS, Linux and WSL2 is planned for a suffix of your own.</p></div>
     <div class="card"><h3>memcached is server only</h3><p>The app images carry no <code>memcached</code> PHP extension, so the profile serves the server and the protocol, not a Laravel cache store.</p></div>
   </div>
 </div></section>

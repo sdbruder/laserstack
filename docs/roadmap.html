@@ -45,7 +45,7 @@
   <hr>
 
   <p><span class="pill next">planned</span> <strong>A local DNS that the stack maintains itself.</strong></p>
-  <p>Project names are resolved through <code>/etc/hosts</code> today: a manual step, easy to get wrong, and the first thing a newcomer trips over. Since <code>laser</code> already knows the suffix and every project, it should own the resolution:</p>
+  <p>A suffix of your own is resolved through <code>/etc/hosts</code> today: a manual step, easy to get wrong, and the first thing a newcomer trips over. Since <code>laser</code> already knows the suffix and every project, it should own the resolution:</p>
   <ul>
     <li>install what it needs, write the configuration, start the service, and keep it in step with <code>laser scan</code>, on macOS, Linux and WSL2;</li>
     <li>tell the user what it changed, and remove all of it again on request;</li>

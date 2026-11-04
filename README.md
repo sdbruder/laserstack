@@ -49,7 +49,9 @@ Be as small, simple and fast as possible:
 - Currently we support Laravel, Symfony, Wordpress and overridable per project
   nginx config. Those drivers are examples, and
   [CONTRIBUTING.md](CONTRIBUTING.md) describes how to add one.
-- DNS resolution needs to be manually managed through `/etc/hosts`.
+- A suffix of your own needs `/etc/hosts`. The default `localdev.it` resolves
+  every name under it to loopback for anyone, so it needs nothing (see
+  [DNS resolution](#dns-resolution)).
 - The app images have no `memcached` PHP extension (`php -m`), so the
   `memcached` profile serves the server only: PHP and Laravel cannot use it as a
   cache or a session store.
@@ -253,11 +255,11 @@ Stack can identify which project you are trying to access. `SUFFIX` comes from
 `.env`. For example for `projecta` and `projectb` (directory names):
 
 ```
-127.0.0.1  projecta.local
-127.0.0.1  projectb.local
+127.0.0.1  projecta.test
+127.0.0.1  projectb.test
 ```
 
-You can add a dnsmasq config to resolve every `*.local` to 127.0.0.1
+You can add a dnsmasq config to resolve every `*.<SUFFIX>` to 127.0.0.1
 automatically, but that's beyond the scope of this introduction.
 
 ## Contributing

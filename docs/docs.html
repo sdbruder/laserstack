@@ -56,7 +56,7 @@ laser help                   <span class="out"># the commands; laser dockerhelp 
     <thead><tr><th>variable</th><th>default in env.example</th><th>what it does</th></tr></thead>
     <tbody>
       <tr><td><code>PROJECTS_DIRECTORY</code></td><td><code>./..</code></td><td>the directory bind-mounted into the app container at <code>/var/www</code> and scanned for projects</td></tr>
-      <tr><td><code>SUFFIX</code></td><td><code>localdev.it</code></td><td>the domain suffix of a project URL: <code>projecta.localdev.it</code>. Every name under <code>localdev.it</code> resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone, so the default needs no setup at all; a suffix of your own, <code>local</code> for instance, needs the names in <code>/etc/hosts</code></td></tr>
+      <tr><td><code>SUFFIX</code></td><td><code>localdev.it</code></td><td>the domain suffix of a project URL: <code>projecta.localdev.it</code>. Every name under <code>localdev.it</code> resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone, so the default needs no setup at all; a suffix of your own, <code>test</code> for instance, needs the names in <code>/etc/hosts</code></td></tr>
       <tr><td><code>PHP_VERSION</code></td><td><code>8.4</code></td><td>the app image series, <code>laserstack/app:&lt;version&gt;</code>: 7.4, 8.0–8.6</td></tr>
       <tr><td><code>MYSQL_VERSION</code></td><td><code>8.0</code></td><td>the mysql profile image and its config directory</td></tr>
       <tr><td><code>MARIADB_VERSION</code></td><td><code>10.11</code></td><td>the mariadb profile image and its config file</td></tr>
@@ -147,7 +147,7 @@ laser update            <span class="out"># the same, then restart the container
   <ul>
     <li><strong>one PHP version per stack.</strong> Every project of a stack shares the app container. Per-project PHP versions are planned;</li>
     <li><strong>one version per database engine.</strong> mysql, mariadb, postgres, redis, memcached and elasticsearch can run side by side, but each engine runs the version you selected;</li>
-    <li><strong>project DNS is manual today</strong> (<code>/etc/hosts</code>). A local dnsmasq that <code>laser</code> installs and maintains is planned, with <code>.test</code> as the default suffix;</li>
+    <li><strong>a suffix of your own needs <code>/etc/hosts</code></strong>. The default suffix, <code>localdev.it</code>, resolves every name under it to loopback for anyone, so it needs nothing at all; a local dnsmasq that <code>laser</code> installs and maintains, for a suffix of your own, is planned;</li>
     <li><strong>memcached is server only:</strong> the app images carry no <code>memcached</code> PHP extension, so it cannot be a Laravel cache store;</li>
     <li><strong>no Windows-native support:</strong> use WSL2. macOS and Linux run as they are;</li>
     <li><strong>no environment validation:</strong> by design. A missing image, an unknown config path or a stopped container gives you docker's own error.</li>
