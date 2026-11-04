@@ -39,8 +39,10 @@ laser scan
 <span class="out">SCAN: /Users/you/src/projecta identified as laravel.</span>
 <span class="out">SCAN: /Users/you/src/projectb identified as wordpress.</span>
 <span class="out">SCAN: /Users/you/src/projectc identified as laravel.</span></code></pre>
-  <pre><code><span class="out"># /etc/hosts, once:</span>
-127.0.0.1 projecta.local projectb.local projectc.local</code></pre>
+  <pre><code><span class="out"># nothing else: env.example sets SUFFIX=localdev.it, so these are served</span>
+# http://projecta.localdev.it      http://projectb.localdev.it
+<span class="out"># with a suffix of your own, one /etc/hosts line:</span>
+# 127.0.0.1 projecta.local projectb.local projectc.local</code></pre>
   <p>Three sites, two containers (app and database), no per-project setup. Add a fourth project later and run <code>laser scan</code> again.</p>
 
   <h2>2 · Give one project its own nginx config</h2>
@@ -48,7 +50,7 @@ laser scan
   <pre><code>cat &gt; ~/src/myapp/laserstack-nginx.conf &lt;&lt;'CONF'
 server {
     listen 80;
-    server_name myapp.local;
+    server_name myapp.localdev.it;
     root /var/www/myapp/public;
     index index.php;
 

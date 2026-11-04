@@ -56,7 +56,7 @@ $ laser ps
 <span class="out">laserstack-app-1      laserstack/app:8.4    Up 4 seconds   0.0.0.0:80-&gt;80/tcp</span>
 <span class="out">laserstack-db-1       mysql:8.0             Up 4 seconds   0.0.0.0:3306-&gt;3306/tcp</span>
 <span class="out">laserstack-redis-1    redis:8.10-alpine     Up 4 seconds   0.0.0.0:6379-&gt;6379/tcp</span>
-$ <span class="ok"># http://projecta.local and http://projectb.local are both served</span></code></pre>
+$ <span class="ok"># http://projecta.localdev.it and http://projectb.localdev.it are both served</span></code></pre>
   </div>
 </div></section>
 
@@ -85,7 +85,7 @@ $ <span class="ok"># http://projecta.local and http://projectb.local are both se
     <div class="card"><h3>A CLI that stays out of the way</h3><p><code>laser</code> exposes every docker-compose command unchanged and adds the ones you type all day: <code>artisan</code>, <code>composer</code>, <code>php</code>, <code>npm</code>, <code>shell</code>, <code>mysql</code>, <code>psql</code>, <code>share</code>, <code>scan</code>.</p></div>
     <div class="card"><h3>Tested, not vibes</h3><p><code>test/smoke.sh</code> starts the stack once per PHP version and once per database profile and checks nginx, php-fpm, the php.ini of the repository, an HTTP response and the PDO path from the app container to the server. The 0.13.0 release was verified against every version of every engine.</p></div>
     <div class="card"><h3>Always up to date</h3><p>The app images are rebuilt every night, so <code>laserstack/app:8.4</code> always carries the newest PHP 8.4 patch and a newer series appears as its own tag. <code>laser update</code> pulls the newest code and images and restarts only what changed.</p></div>
-    <div class="card"><h3>Project names with no DNS setup</h3><p>Set <code>SUFFIX=localdev.it</code> and every project answers as <code>projecta.localdev.it</code>: every name under that domain already resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone. No hosts file, no dnsmasq, nothing to install.</p></div>
+    <div class="card"><h3>Project names with no DNS setup</h3><p><code>localdev.it</code> is the default suffix, so every project answers as <code>projecta.localdev.it</code>: every name under that domain already resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone. No hosts file, no dnsmasq, nothing to install.</p></div>
     <div class="card"><h3>No magic, no lock-in</h3><p>Nothing rewrites your compose file and nothing guesses. When a container is missing you get docker's own error, which is the error you can act on.</p></div>
     <div class="card"><h3>macOS, Linux, WSL2</h3><p>Official support for macOS (Intel and Apple silicon), Linux and WSL2/WSLg, with Docker Desktop, OrbStack, Colima or the docker engine. The projects directory is bind-mounted, so your editor keeps working on your own files.</p></div>
   </div>
@@ -103,11 +103,12 @@ alias laser=~/src/laserstack/laser        <span class="out"># or add it to $PATH
 <span class="out"># PHP_VERSION=8.4</span>
 <span class="out"># PROFILES=mysql,redis</span>
 <span class="out"># DB_PASSWORD=…  MYSQL_VERSION=8.0  REDIS_VERSION=8.10</span>
-<span class="out"># SUFFIX=local      # your projects answer to projecta.local</span></code></pre></div></div>
+<span class="out"># SUFFIX=localdev.it   # the default, no setup: projecta.localdev.it</span></code></pre></div></div>
     <div class="step"><div><h3>Start it and scan</h3>
       <pre><code>laser up -d
 laser scan          <span class="out"># writes one nginx vhost per project</span>
-<span class="out"># add the names to /etc/hosts once, or use dnsmasq (see the roadmap):</span>
+<span class="out"># nothing else with the default suffix; with one of your own, add the names</span>
+<span class="out"># to /etc/hosts once (or use dnsmasq, see the roadmap):</span>
 <span class="out"># 127.0.0.1 projecta.local projectb.local</span></code></pre></div></div>
   </div>
   <p style="margin-top:1.6rem">Day to day: <code>laser artisan migrate</code>, <code>laser npm run dev</code>, <code>laser mysql</code>, <code>laser shell</code>, <code>laser share</code>, <code>laser stop</code>. Anything else goes straight to docker-compose: <code>laser logs app --tail 50</code>.</p>

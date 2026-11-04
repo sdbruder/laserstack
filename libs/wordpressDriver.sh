@@ -22,7 +22,7 @@ function wordpress::config() {
 server {
 	listen 80;
 
-	server_name $project.local *.$project.local;
+	server_name $project.$SUFFIX *.$project.$SUFFIX;
 
 	root /var/www/$project;
 

@@ -377,17 +377,17 @@ Decided: `dnsmasq`, with `.test` as the suffix.
   (`systemd-resolved`, `NetworkManager`) or `/etc/resolv.conf`, and on WSL2 the
   path that the plan decides.
 - `.test` is the TLD that RFC 6761 reserves for tests: it resolves nowhere on
-  the internet and no client claims it. The default `local` of `env.example`
-  belongs to mDNS/Bonjour and fights `mDNSResponder` on macOS and Windows, and
-  `.app` and `.dev` are real TLDs served over https. `SUFFIX` stays a setting;
-  `test` becomes its default, and a `.env` that still says `local` needs a note
-  with the change.
+  the internet and no client claims it, while `local` belongs to mDNS/Bonjour and
+  fights `mDNSResponder` on macOS and Windows, and `.app` and `.dev` are real
+  TLDs served over https. `SUFFIX` stays a setting; the default of `env.example`
+  is `localdev.it`, which needs no daemon at all, so `.test` is the candidate for
+  a user who wants a suffix of their own.
 
 Worth saying before that plan: the domain `localdev.it` already gives this
 without a daemon. Every name under it — any depth, IPv4 and IPv6 — resolves to
-loopback for anyone, so `SUFFIX=localdev.it` needs none of the work below. That
-work is for a suffix of the user's own; making `localdev.it` the default suffix
-would reduce this item to a convenience.
+loopback for anyone, so `SUFFIX=localdev.it` needs none of the work below. It is
+the default of `env.example` now, which reduces this item to a convenience: what
+remains is for a user who wants a suffix of their own.
 
 Still to decide in the plan of that work:
 

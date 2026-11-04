@@ -33,6 +33,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   documentation and an examples page, and the roadmap. Static HTML and one CSS
   file, no build step and no framework.
 
+### Changed
+
+- `env.example` defaults `SUFFIX` to `localdev.it`, so a fresh install serves
+  every project as `projecta.localdev.it` with no `/etc/hosts` line, no dnsmasq
+  and nothing installed. `laser share` and the wordpress driver use the
+  configured suffix instead of the hard-coded `.test` and `.local` they had, and
+  `laser new` opens `http://<project>.<SUFFIX>/` and writes an `/etc/hosts` line
+  only for a suffix of the user's own.
+
 ## [0.13.0] 2026-11-04
 
 ### Added

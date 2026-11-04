@@ -87,8 +87,8 @@
   <p>No VM of its own, no system package, no shell profile, no daemon: <code>laser</code> is a bash script and docker does the rest. The <a href="install">installer</a> checks bash, git and docker with compose v2 before it clones anything, and stops with a clear message when one of them is missing.</p>
 
   <h2>Project names without a DNS server</h2>
-  <p>Point <code>SUFFIX</code> at a domain that resolves to loopback and no project name needs any local setup at all. <code>localdev.it</code> is such a domain, and it is public: every name under it — any depth, IPv4 and IPv6 — answers <code>127.0.0.1</code> and <code>::1</code>.</p>
-  <pre><code><span class="out"># .env</span>
+  <p>The default <code>SUFFIX</code> is <code>localdev.it</code>, a domain that resolves to loopback, so no project name needs any local setup at all. It is public: every name under it — any depth, IPv4 and IPv6 — answers <code>127.0.0.1</code> and <code>::1</code>.</p>
+  <pre><code><span class="out"># .env — the default, no setup needed</span>
 SUFFIX=localdev.it
 
 <span class="out"># every project of the projects directory then answers to</span>

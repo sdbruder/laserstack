@@ -130,6 +130,9 @@ for version in $versions; do
   say "PHP $version"
   fails_before=$fails
   sed "s/^PHP_VERSION=.*/PHP_VERSION=$version/" "$env_backup" >.env
+  # the app container reads SUFFIX at creation and the vhosts are rendered from
+  # it, so the built .env always carries the value the test works with
+  setenv SUFFIX "$SUFFIX"
   httpd_before=$(ls config/nginx/http.d)
 
   "$laser" stop >/dev/null 2>&1
@@ -252,6 +255,7 @@ for profile in $db_profiles; do
     esac
     echo "  -- PHP $version, profile $profile, $db_var=$db_ver"
     sed -e "s/^PHP_VERSION=.*/PHP_VERSION=$version/" -e "s/^PROFILES=.*/PROFILES=$profile/" "$env_backup" >.env
+    setenv SUFFIX "$SUFFIX"
     setenv "$db_var" "$db_ver"
     # a data volume belongs to the server version that created it, so an
     # explicit version of the test starts from an empty one

@@ -242,17 +242,15 @@ Every time you add or remove a non-Laravel project, you need to call
 
 ## DNS resolution
 
-Nothing to do, if you point `SUFFIX` at `localdev.it`: every name under that
-domain resolves to `127.0.0.1` and `::1` for anyone, so `SUFFIX=localdev.it`
-makes every project of the projects directory answer as
-`projecta.localdev.it` on the machine that runs the stack. No `/etc/hosts`, no
-dnsmasq, nothing installed. The notes behind that domain are at
-<https://localdev.it/catch-all-dns.html>.
+Nothing to do: `env.example` defaults `SUFFIX` to `localdev.it`, and every name
+under that domain resolves to `127.0.0.1` and `::1` for anyone. So every project
+of the projects directory answers as `projecta.localdev.it` on the machine that
+runs the stack. No `/etc/hosts`, no dnsmasq, nothing installed. The notes behind
+that domain are at <https://localdev.it/catch-all-dns.html>.
 
 With a suffix of your own: add `.<SUFFIX>` names in your `/etc/hosts` so Laser
-Stack can identify which
-project you are trying to access. `SUFFIX` comes from `.env` and is `local` in
-`env.example`. For example for `projecta` and `projectb` (directory names):
+Stack can identify which project you are trying to access. `SUFFIX` comes from
+`.env`. For example for `projecta` and `projectb` (directory names):
 
 ```
 127.0.0.1  projecta.local

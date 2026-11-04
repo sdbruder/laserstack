@@ -298,7 +298,7 @@ function dotest() {
 function share() {
   project=$1
   shift
-  docker run --rm -it --network "${dockerproject}_laser" --link app wernight/ngrok ngrok http -host-header="$project.test" host.docker.internal:80
+  docker run --rm -it --network "${dockerproject}_laser" --link app wernight/ngrok ngrok http -host-header="$project.$SUFFIX" host.docker.internal:80
 }
 
 function shell() {
@@ -370,13 +370,17 @@ function new() {
 "
   # echo "<h1 style=\"font-family: sans-serif; color: #777; margin: 1em; \">hello world from $project</h1>" > $laser_dir/../$project/public/index.php
   echo "$HELLOWORLD" >"$laser_dir/../$project/public/index.php"
-  sudo bash -c "echo -e '\n127.0.0.1 $project.local $project' >> /etc/hosts"
+  # the catch-all domain resolves every name under it, so only a suffix of the
+  # user's own needs an /etc/hosts entry
+  if [ "$SUFFIX" != "localdev.it" ]; then
+    sudo bash -c "echo -e '\n127.0.0.1 $project.$SUFFIX $project' >> /etc/hosts"
+  fi
   cd "$laser_dir/../$project"
   echo "$project created."
   if [[ "$WSL" ]]; then
-    echo "WSL detected, manually add \"127.0.0.1 $project.local $project\" to %windir%\\System32\\drivers\\etc\\hosts"
+    echo "WSL detected, manually add \"127.0.0.1 $project.$SUFFIX $project\" to %windir%\\System32\\drivers\\etc\\hosts"
   fi
-  open "http://$project.local/"
+  open "http://$project.$SUFFIX/"
 }
 
 # MAIN ----------------------------------------------------------------------
