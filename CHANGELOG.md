@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- https is where you can see it: a line in the hero on the overview, the three
+  things it buys in a band directly under it, and the https section moved from
+  the ninth position of the features page to the first.
+
 ## [0.14.0] 2026-11-05
 
 ### Added
