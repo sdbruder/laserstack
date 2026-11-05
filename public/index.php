@@ -203,7 +203,6 @@ foreach (scandir($projectsDir) ?: [] as $entry) {
         'name' => $entry,
         'index' => is_file($path . '/public/index.php'),
         'public' => is_dir($path . '/public'),
-        'vhost' => is_file('/etc/nginx/http.d/' . $entry . '.conf'),
         'driver' => driver($path),
         'self' => $entry === $self,
     ];
@@ -379,7 +378,6 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                         <?php if ($project['driver'] !== null): ?><span class="pill on" title="laser scan writes the vhost of this project with the <?= e($project['driver']) ?> driver"><?= e($project['driver']) ?></span><?php endif; ?>
                         <?php if ($project['self']): ?><span class="pill dim">this page</span><?php endif; ?>
                         <?php if ($project['driver'] === null && !$project['public']): ?><span class="pill dim" title="no public directory and no driver: the multi-project vhost cannot serve it">no public/</span><?php endif; ?>
-                        <?php if ($project['vhost']): ?><span class="pill dim" title="the project has an nginx vhost of its own">own vhost</span><?php endif; ?>
                     </li>
                 <?php endforeach; ?>
             </ul>
