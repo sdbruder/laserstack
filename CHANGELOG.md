@@ -7,13 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] 2026-11-05
+
 ### Added
 
 - `SUFFIX=localdev.it` needs no local DNS at all: every name under that domain —
   any depth, IPv4 and IPv6 — resolves to `127.0.0.1` and `::1`, so every project
   of the projects directory answers as `projecta.localdev.it` on the machine that
   runs the stack, with no `/etc/hosts` and no dnsmasq. The docs, the README, the
-  `env.example` comment and the installer's next steps say so, and
+  `env.example` comment and the installer's next steps say so — including that a
+  suffix change needs `laser up -d` before `laser scan` — and
   `https://localdev.it/` redirects to the site.
 - `laser update` and `laser update --check`: fast-forward the checkout, pull the
   newest images of the active profiles, print the PHP version of the app image
@@ -40,7 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and nothing installed. `laser share` and the wordpress driver use the
   configured suffix instead of the hard-coded `.test` and `.local` they had, and
   `laser new` opens `http://<project>.<SUFFIX>/` and writes an `/etc/hosts` line
-  only for a suffix of the user's own.
+  only for a suffix of the user's own. The examples that need a hosts line use
+  `test`, the name RFC 6761 reserves, instead of the legacy `local`.
+- The project is also called *the localdev.it stack*: the README, the site hero,
+  the installer help and the GitHub description say so, tied to the domain of the
+  default suffix.
 
 ## [0.13.0] 2026-11-04
 

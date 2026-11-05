@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Roadmap — Laser Stack</title>
-<meta name="description" content="What Laser Stack ships next: several PHP versions and database servers at the same time, and a local DNS that maintains itself. Plus what just shipped in 0.13.0.">
+<meta name="description" content="What Laser Stack ships next: several PHP versions and database servers at the same time, and a local DNS that maintains itself. Plus what just shipped in 0.13.1.">
 <link rel="canonical" href="https://localdev.it/laserstack/roadmap.html">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Roadmap — Laser Stack">
@@ -55,6 +55,15 @@
   <p><strong>Mostly moot, and worth saying:</strong> the domain <code>localdev.it</code> already does this without any daemon. Every name under it resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone, so <code>SUFFIX=localdev.it</code> gives every project a working name with nothing installed and nothing to maintain — which is why it is the default of <code>env.example</code> now, and a project needs no DNS step at all. What remains above is the convenience of a suffix of the user's own.</p>
 
   <hr>
+
+  <h2>Just shipped — 0.13.1, 2026-11-05</h2>
+  <ul>
+    <li><strong>Project names need no DNS setup</strong>: <code>env.example</code> defaults <code>SUFFIX</code> to <code>localdev.it</code>, and every name under that domain — any depth, IPv4 and IPv6 — resolves to loopback for anyone, so a fresh install serves <code>projecta.localdev.it</code> with no <code>/etc/hosts</code> line and no dnsmasq. A suffix of your own still needs the hosts file, and <code>laser new</code> writes that line for you;</li>
+    <li><strong><code>laser update</code></strong>: fast-forward the checkout, pull the newest images of the active profiles, and restart only the containers whose image changed, so a nightly app image patch reaches a running stack with one command;</li>
+    <li><strong>One-line install</strong>: <code>curl -fsSL https://localdev.it/laserstack/install | bash</code> checks bash, git and docker, clones the stack next to your projects and writes <code>.env</code>, touching nothing else on the machine;</li>
+    <li><strong>This site</strong>, published from the repository: overview, features, measured numbers with the method, documentation, examples and this roadmap — static HTML and one CSS file.</li>
+  </ul>
+  <p>The project is also called <strong>the localdev.it stack</strong> now, tied to the domain of the default suffix.</p>
 
   <h2>Just shipped — 0.13.0, 2026-11-04</h2>
   <ul>
