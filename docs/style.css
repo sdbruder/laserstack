@@ -146,5 +146,26 @@ footer.site li { margin-bottom: .35rem; }
 footer.site .fine { border-top: 1px solid var(--line); padding-top: 1.2rem; display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; }
 @media (max-width: 640px) { .hero { padding-top: 3rem; } }
 
-/* demo gif */
-.demo { display: block; width: 100%; max-width: 62.5rem; height: auto; margin: 2.2rem 0 0; border: 1px solid var(--line); border-radius: 10px; }
+/* screenshots and recordings: a slight tilt, a deep shadow, and an edge in the
+   accent colour, so a dark image does not dissolve into the dark page. The
+   pointer straightens it and brightens the edge. */
+.shot-link { display: block; margin: 2.2rem 0 0; }
+.shot, .shot-link img {
+  display: block; width: 100%; max-width: 62.5rem; height: auto;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+  border-radius: 10px; background: var(--panel);
+  box-shadow: 0 22px 55px rgba(0, 0, 0, .45), 0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent);
+  transform: rotate(-.4deg);
+  transition: transform .35s ease, border-color .35s ease, box-shadow .35s ease;
+}
+.shot:hover, .shot-link:hover img {
+  transform: rotate(0) scale(1.01);
+  border-color: color-mix(in srgb, var(--accent) 85%, var(--line));
+  box-shadow: 0 30px 75px rgba(0, 0, 0, .55), 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+@media (prefers-color-scheme: light) {
+  .shot, .shot-link img { box-shadow: 0 16px 36px rgba(18, 22, 28, .13), 0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shot, .shot-link img { transform: none; transition: none; }
+}

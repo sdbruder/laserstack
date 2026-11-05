@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A screenshot or a recording on the site tilts a little, carries an edge in the
+  accent colour and a deep shadow, and straightens under the pointer. The pages
+  here are dark and the images are dark, so the edge is what separates them.
+
 - https is where you can see it: a line in the hero on the overview, the three
   things it buys in a band directly under it, and the https section moved from
   the ninth position of the features page to the first.
