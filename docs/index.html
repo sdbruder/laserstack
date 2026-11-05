@@ -107,9 +107,8 @@ alias laser=~/src/laserstack/laser        <span class="out"># or add it to $PATH
     <div class="step"><div><h3>Start it and scan</h3>
       <pre><code>laser up -d
 laser scan          <span class="out"># writes one nginx vhost per project</span>
-<span class="out"># nothing else with the default suffix; with one of your own, add the names</span>
-<span class="out"># to /etc/hosts once (or use dnsmasq, see the roadmap):</span>
-<span class="out"># 127.0.0.1 projecta.test projectb.test</span></code></pre></div></div>
+<span class="out"># nothing else: http://projecta.localdev.it and http://projectb.localdev.it answer</span>
+<span class="out"># with a suffix of your own (SUFFIX=test): 127.0.0.1 projecta.test projectb.test</span></code></pre></div></div>
   </div>
   <p style="margin-top:1.6rem">Day to day: <code>laser artisan migrate</code>, <code>laser npm run dev</code>, <code>laser mysql</code>, <code>laser shell</code>, <code>laser share</code>, <code>laser stop</code>. Anything else goes straight to docker-compose: <code>laser logs app --tail 50</code>.</p>
 </div></section>

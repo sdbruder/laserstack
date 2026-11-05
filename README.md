@@ -252,7 +252,8 @@ that domain are at <https://localdev.it/catch-all-dns.html>.
 
 With a suffix of your own: add `.<SUFFIX>` names in your `/etc/hosts` so Laser
 Stack can identify which project you are trying to access. `SUFFIX` comes from
-`.env`. For example for `projecta` and `projectb` (directory names):
+`.env`. For example for `projecta` and `projectb` (directory names), with
+`SUFFIX=test`:
 
 ```
 127.0.0.1  projecta.test
