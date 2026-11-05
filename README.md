@@ -286,14 +286,16 @@ It is read-only, and it says what the stack is doing right now:
 
 - the PHP series of the app container and the `config/php<VV>` directory it uses;
 - the projects of `PROJECTS_DIRECTORY`, each with its link, the driver
-  `laser scan` identifies it by and whether it has an nginx vhost of its own;
+  `laser scan` identifies it by, whether it has an nginx vhost of its own and the
+  code its front page answers with;
 - one socket test per service, with the answer time and the server version of the
   database, and the difference between a service of an enabled profile that does
   not answer and one whose profile is off;
 - the version directories of `config/`, the extensions of the image and the head
   of the CHANGELOG.
 
-It reads the checkout, opens a socket to each service and nothing else: it writes
+It reads the checkout, opens a socket to each service and asks each project for its
+front page: it writes
 nothing, runs no command and never prints a credential.
 
 

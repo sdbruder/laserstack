@@ -20,8 +20,10 @@ $suffix = suffix();
 $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
 $self = basename($root);
 
-// the page reloads itself every this many seconds; ?refresh=0 turns it off
-$refreshSeconds = 10;
+// the page reloads itself every this many seconds; ?refresh=0 turns it off.
+// every render also asks each servable project for its front page, so the
+// default is thirty seconds rather than ten: ?refresh=10 asks for faster
+$refreshSeconds = 30;
 
 function e(string $value): string
 {
@@ -144,6 +146,61 @@ function enabledProfiles(string $envFile): ?array
     return $names;
 }
 
+/**
+ * The answer of the front page of each project: one HEAD request per project
+ * through the vhost of that name. The container resolves no *.SUFFIX name (the
+ * resolver of the suffix lives on the host), so the request goes to the nginx
+ * of this very container on 127.0.0.1 and the Host header picks the vhost. A
+ * project that answers nothing within the timeout reads as no answer.
+ *
+ * @return array<string, int|null> the status code per project name, null when
+ *                                 nothing answered
+ */
+function project_statuses(array $names, string $suffix, float $timeout = 0.8): array
+{
+    if ($names === [] || !extension_loaded('curl')) {
+        return [];
+    }
+    $multi = curl_multi_init();
+    $byHandle = [];
+    foreach ($names as $name) {
+        $handle = curl_init('http://127.0.0.1/');
+        if ($handle === false) {
+            continue;
+        }
+        curl_setopt_array($handle, [
+            CURLOPT_NOBODY => true,
+            CURLOPT_HTTPHEADER => ['Host: ' . $name . '.' . $suffix, 'X-Laserstack-Probe: 1'],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_CONNECTTIMEOUT_MS => 300,
+            CURLOPT_TIMEOUT_MS => (int) round($timeout * 1000),
+        ]);
+        curl_multi_add_handle($multi, $handle);
+        $byHandle[spl_object_id($handle)] = [$name, $handle];
+    }
+    do {
+        $state = curl_multi_exec($multi, $running);
+        if ($running > 0) {
+            curl_multi_select($multi, $timeout);
+        }
+    } while ($running > 0 && $state === CURLM_OK);
+
+    $statuses = [];
+    while (($info = curl_multi_info_read($multi)) !== false) {
+        $handle = $info['handle'];
+        [$name] = $byHandle[spl_object_id($handle)] ?? [null, null];
+        $code = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
+        if ($name !== null) {
+            $statuses[$name] = $code > 0 ? $code : null;
+        }
+        curl_multi_remove_handle($multi, $handle);
+    }
+    curl_multi_close($multi);
+
+    return $statuses;
+}
+
 $services = [
     ['label' => 'MySQL', 'host' => 'db', 'port' => 3306, 'engine' => 'mysql', 'profile' => 'mysql'],
     ['label' => 'MariaDB', 'host' => 'mariadb', 'port' => 3306, 'engine' => 'mariadb', 'profile' => 'mariadb'],
@@ -208,6 +265,19 @@ foreach (scandir($projectsDir) ?: [] as $entry) {
         'self' => $entry === $self,
     ];
 }
+
+// only a project the stack can serve is asked for its front page: one with a
+// vhost of its own, or one the multi-project vhost reaches through public/
+$probed = array_values(array_map(
+    static fn (array $project): string => $project['name'],
+    array_filter($projects, static fn (array $project): bool => $project['vhost'] || $project['index'])
+));
+// this page is one of the projects, so a probe of it would render the page
+// again and fan out: the probe carries a header, and a render that sees that
+// header asks nobody
+$statuses = ($_SERVER['HTTP_X_LASERSTACK_PROBE'] ?? '') === '1'
+    ? []
+    : project_statuses($probed, $suffix);
 
 $phpVersion = PHP_VERSION;
 $phpDir = php_config_dir($phpVersion);
@@ -277,6 +347,7 @@ ul.projects li { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 6px
 ul.projects li a { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .pill { flex:0 0 auto; border:1px solid var(--pill-line); border-radius:999px; padding:1px 8px; font-size:11px; letter-spacing:.02em; white-space:nowrap; }
 .pill.on { color:var(--ok); border-color:var(--ok); }
+.pill.bad { color:var(--off); border-color:var(--off); }
 .pill.dim { color:var(--dim); }
 footer { margin-top:26px; color:var(--muted); font-size:13px; }
 </style>
@@ -377,14 +448,18 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                     <li>
                         <a href="<?= e('//' . $project['name'] . '.' . $suffix . '/') ?>" target="_blank" rel="noopener noreferrer" title="<?= e($project['name'] . '.' . $suffix) ?>"><?= e($project['name']) ?></a>
                         <?php if ($project['driver'] !== null): ?><span class="pill on" title="laser scan writes the vhost of this project with the <?= e($project['driver']) ?> driver"><?= e($project['driver']) ?></span><?php endif; ?>
+                        <?php $code = $statuses[$project['name']] ?? null; ?>
+                        <?php if (in_array($project['name'], $probed, true)): ?>
+                            <?php if ($code === null): ?><span class="pill dim" title="the front page answered nothing within a second">no answer</span><?php elseif ($code < 400): ?><span class="pill on" title="the front page answers <?= $code ?>"><?= $code ?></span><?php else: ?><span class="pill bad" title="the front page answers <?= $code ?>"><?= $code ?></span><?php endif; ?>
+                        <?php endif; ?>
                         <?php if ($project['self']): ?><span class="pill dim">this page</span><?php endif; ?>
                         <?php // the flags of a project the driver does not already describe: no public directory under no driver, and a vhost written outside the driver ?>
                         <?php if ($project['driver'] === null && !$project['public']): ?><span class="pill dim" title="no public directory and no driver: the multi-project vhost cannot serve it">no public/</span><?php endif; ?>
-                        <?php if ($project['vhost'] && !in_array($project['driver'], ['wordpress', 'generic'], true)): ?><span class="pill dim" title="an nginx vhost of its own, which its driver does not write">own vhost</span><?php endif; ?>
+                        <?php if ($project['vhost'] && !in_array($project['driver'], ['wordpress', 'generic'], true)): ?><span class="pill on" title="laserstack serves this project through an nginx vhost of its own, not through the multi-project one">own vhost</span><?php endif; ?>
                     </li>
                 <?php endforeach; ?>
             </ul>
-            <p class="note"><code><?= e($projectsDir) ?></code>, <code>PROJECTS_DIRECTORY</code> in <code>.env</code>. Add a directory with a <code>public/index.php</code>, run <code>laser scan</code>, and it answers on its own name. The first pill is the driver <code>laser scan</code> finds: <code>laravel</code> carries an <code>artisan</code>, <code>symfony</code> a <code>symfony.lock</code>, <code>wordpress</code> a <code>wp-config.php</code>, <code>generic</code> a <code>laserstack-nginx.conf</code>, and a project of no driver is served by the multi-project vhost.</p>
+            <p class="note"><code><?= e($projectsDir) ?></code>, <code>PROJECTS_DIRECTORY</code> in <code>.env</code>. Add a directory with a <code>public/index.php</code>, run <code>laser scan</code>, and it answers on its own name. The first pill is the driver <code>laser scan</code> finds: <code>laravel</code> carries an <code>artisan</code>, <code>symfony</code> a <code>symfony.lock</code>, <code>wordpress</code> a <code>wp-config.php</code>, <code>generic</code> a <code>laserstack-nginx.conf</code>, and a project of no driver is served by the multi-project vhost. The code is the answer of the front page, one HEAD request through the vhost of that name: green from 200 to 399, red from 400 up, grey when nothing answered within a second. <code>own vhost</code> means laserstack serves the project through an nginx vhost of its own instead of the multi-project one; <code>no public/</code> means no driver claims it and the multi-project vhost cannot reach it.</p>
         </section>
 
         <section class="card wide">
@@ -397,7 +472,7 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
         <a href="https://localdev.it/laserstack/" target="_blank" rel="noopener noreferrer">Documentation</a> &middot;
         <a href="https://github.com/sdbruder/laserstack" target="_blank" rel="noopener noreferrer">Repository</a> &middot;
         <a href="https://localdev.it/laserstack/compare.html" target="_blank" rel="noopener noreferrer">Comparison</a>
-        <p class="note">Running from <code><?= e($root) ?></code>. Read-only status page: it reads the checkout, opens a socket to each service and nothing else. It reloads itself every <span id="refresh-every">few</span> seconds, keeping your place on the page; append <code>?refresh=0</code> to stop that.</p>
+        <p class="note">Running from <code><?= e($root) ?></code>. Read-only status page: it reads the checkout, opens a socket to each service and asks each project for its front page. It reloads itself every <span id="refresh-every">few</span> seconds, keeping your place on the page; append <code>?refresh=0</code> to stop that.</p>
     </footer>
 </main>
 <script>

@@ -14,18 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `laserstack.<SUFFIX>` as soon as `laser up -d` runs — no extra vhost, no extra
   container. It is a read-only page: the PHP series and the config directory of
   the container, the projects of `PROJECTS_DIRECTORY` with their links, the
-  driver `laser scan` identifies each one by and their own vhosts, one socket
-  test per service of the active profiles, the server
+  driver `laser scan` identifies each one by and their own vhosts, the answer of
+  their front page, one socket test per service of the active profiles, the server
   version of the database, the version directories of `config/`, the extensions
   of the image and the head of this changelog. It writes nothing, runs no
   command and never prints a credential. The projects are tiles that fill the
   width and every link opens in its own tab; the pills of a tile are the driver
-  `laser scan` found and the flags of the project: `this page`, and the cases the
-  driver does not describe — `no public/` on a project no driver claims, and
-  `own vhost` on a project whose vhost the driver does not write. The page
-  reloads itself every ten seconds while the tab is visible — keeping your place
-  on the page — unless the URL asks for another interval or for none
-  (`?refresh=30`, `?refresh=0`).
+  `laser scan` found, the code the front page of the project answers with (one HEAD
+  request through its vhost: green from 200 to 399, red from 400 up, grey when
+  nothing answered within a second), `this page`, and the cases the driver does not
+  describe — `no public/` on a project no driver claims, and `own vhost` on a
+  project laserstack serves through a vhost of its own. The page reloads itself
+  every thirty seconds while the tab is visible — keeping your place on the page —
+  unless the URL asks for another interval or for none (`?refresh=10`,
+  `?refresh=0`).
   The services card says which of MySQL and MariaDB the stack actually started —
   they share the `db` alias, so the one that answers to its own name is the one
   running — and it tells a service of an enabled profile that does not answer
