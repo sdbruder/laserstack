@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Optional HTTPS: `HTTPS=on` in `.env` and `laser tls` serve the same projects
+  over 443 with a certificate from a certificate authority local to the machine,
+  and `laser trust` adds that CA to the trust store. The certificate names every
+  project of the projects directory, 443 is published only while the mode is on,
+  and the http stack on port 80 is untouched. `docker-compose.https.yml` is the
+  overlay `laser` adds in that mode; `config/tls/` holds what `laser tls` writes
+  and is not tracked.
+
 ## [0.13.2] 2026-11-05
 
 ### Added

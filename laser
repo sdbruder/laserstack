@@ -51,6 +51,9 @@ function dc() {
 }
 
 function up() {
+  if [ "$HTTPS" == "on" ] && [ ! -f config/tls/laserstack.pem ]; then
+    warning_message "HTTPS=on needs a certificate: run laser tls first."
+  fi
   dc up -d
 }
 
@@ -78,6 +81,8 @@ function lasercommands() {
   echo "  yarn               Execute yarn"
   echo "  stats              top-like docker stats"
   echo "  update             Update the checkout and the images, restart what changed"
+  echo "  tls                Create the local CA and the certificate for HTTPS"
+  echo "  trust              Add the local CA to the trust store of the machine"
 }
 
 function dohelp() {
@@ -233,6 +238,118 @@ function restart_nginx_if_up() {
     echo "Laser Stack is up, restarting nginx."
     restartnginx
   fi
+}
+
+function tls() {
+  # The certificate authority stays in ca/, the certificate that the container
+  # serves stays in serve/. Only serve/ is mounted into the container, and it is
+  # mounted as a directory: a bind mount of a single file keeps the inode, so
+  # reissuing a certificate would leave the container with the old file, or with
+  # none at all.
+  local dir="config/tls"
+  local ca_dir="$dir/ca"
+  local serve_dir="$dir/serve"
+  local ca="$ca_dir/laserstack-local-ca.pem"
+  local ca_key="$ca_dir/laserstack-local-ca-key.pem"
+  local leaf="$serve_dir/laserstack.pem"
+  local leaf_key="$serve_dir/laserstack-key.pem"
+  local marker="$serve_dir/suffix"
+  mkdir -p "$ca_dir" "$serve_dir"
+
+  # The certificate names every project of the projects directory explicitly.
+  # A wildcard over a suffix of one label (*.mac) is refused by macOS and by
+  # other verifiers, so the names have to be in the certificate. The list is
+  # hashed into the marker file, so adding a project and running laser tls again
+  # reissues the certificate.
+  local san="DNS:$SUFFIX, DNS:*.$SUFFIX, DNS:localhost, IP:127.0.0.1"
+  local names=""
+  local name
+  for name in "$projects_dir"/*; do
+    [ -d "$name" ] || continue
+    name=$(basename "$name")
+    case "$name" in
+    *[!A-Za-z0-9._-]*) continue ;;
+    esac
+    san="$san, DNS:$name.$SUFFIX"
+    names="$names$name\n"
+  done
+  printf '%b' "$names" >"$serve_dir/names.txt"
+  local names_hash
+  if command -v md5sum >/dev/null 2>&1; then
+    names_hash=$(md5sum "$serve_dir/names.txt" | awk '{print $1}')
+  else
+    names_hash=$(md5 -q "$serve_dir/names.txt")
+  fi
+
+  if [ ! -f "$ca" ] || [ ! -f "$ca_key" ]; then
+    echo "TLS: creating the local certificate authority of this machine"
+    openssl req -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes \
+      -keyout "$ca_key" -out "$ca" \
+      -subj "/CN=Laser Stack local CA/O=Laser Stack" 2>/dev/null
+    chmod 600 "$ca_key"
+  fi
+
+  local issued=""
+  [ -f "$marker" ] && issued=$(cat "$marker")
+  local expired=1
+  if [ -f "$leaf" ] && openssl x509 -checkend 2592000 -noout -in "$leaf" >/dev/null 2>&1; then
+    expired=0
+  fi
+
+  # a new suffix needs a new certificate: the certificate carries the names
+  if [ "$issued" != "$SUFFIX:$names_hash" ] || [ "$expired" == "1" ] || [ ! -f "$leaf_key" ]; then
+    echo "TLS: issuing a certificate for $SUFFIX and $(wc -l <"$serve_dir/names.txt" | tr -d ' ') projects, valid 825 days"
+    cat >"$serve_dir/leaf.ext" <<EXT
+subjectAltName = $san
+basicConstraints = CA:FALSE
+keyUsage = digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+EXT
+    openssl req -newkey rsa:2048 -sha256 -nodes -keyout "$leaf_key" -out "$serve_dir/leaf.csr" \
+      -subj "/CN=*.$SUFFIX/O=Laser Stack" 2>/dev/null
+    openssl x509 -req -in "$serve_dir/leaf.csr" -CA "$ca" -CAkey "$ca_key" -CAcreateserial \
+      -out "$leaf" -days 825 -sha256 -extfile "$serve_dir/leaf.ext" 2>/dev/null
+    rm -f "$serve_dir/leaf.csr" "$serve_dir/leaf.ext" "$ca_dir/laserstack-local-ca.srl"
+    chmod 600 "$leaf_key"
+    printf '%s' "$SUFFIX:$names_hash" >"$marker"
+  else
+    echo "TLS: the certificate for $SUFFIX is in place, with $(wc -l <"$serve_dir/names.txt" | tr -d ' ') project names"
+  fi
+
+  # the rendered vhost, from the same template and the same directory supervisord
+  # renders the http one from. The driver owns both, so laser scan keeps the
+  # pair in sync when HTTPS changes.
+  # shellcheck source=/dev/null
+  source libs/multilaravelDriver.sh
+  multilaravel::https_vhost
+  if [ "$HTTPS" == "on" ]; then
+    echo "TLS: next: laser up -d, and laser trust for the browser"
+  else
+    echo "TLS: set HTTPS=on in .env and run laser up -d to serve it"
+  fi
+  echo "TLS: the CA is $ca, the certificate the container serves is in $serve_dir"
+}
+
+function trust() {
+  local ca="config/tls/laserstack-local-ca.pem"
+  if [ ! -f "$ca" ]; then
+    error_message "TLS: there is no CA yet, run laser tls first"
+    return 1
+  fi
+  if [ "$(uname)" == "Darwin" ]; then
+    echo "TLS: adding the CA to the system keychain, macOS asks for your password"
+    sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "$ca"
+  elif [ -n "$WSL" ]; then
+    echo "TLS: adding the CA to the certificate store of Windows"
+    certutil.exe -addstore -user Root "$(wslpath -w "$ca")"
+  else
+    echo "TLS: adding the CA to the system trust store"
+    sudo cp "$ca" /usr/local/share/ca-certificates/laserstack-local-ca.crt &&
+      sudo update-ca-certificates
+  fi
+  echo "TLS: done. Firefox has its own store: import $ca there if you use it."
+  echo "TLS: remove it later with 'laser trust --remove' is not implemented; the"
+  echo "TLS: CA is a file in config/tls and an entry in the store of the machine."
 }
 
 function scan() {
@@ -403,6 +520,8 @@ else
   source ./.env
 fi
 POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-postgres}"
+# off unless .env turns it on, so an older .env behaves exactly as before
+HTTPS="${HTTPS:-off}"
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
 POSTGRES_DB="${POSTGRES_DB:-postgres}"
 export PHPV=$(echo $PHP_VERSION | sed 's/\.//g')
@@ -426,6 +545,10 @@ dc_params="-f docker-compose.yml"
 if [ -n "$PROFILES" ]; then
   PROFILE="${PROFILES//,/ --profile }"
   dc_params="$dc_params --profile $PROFILE"
+fi
+# HTTPS=on publishes 443 and mounts the certificate that laser tls writes
+if [ "$HTTPS" == "on" ]; then
+  dc_params="$dc_params -f docker-compose.https.yml"
 fi
 
 WSL=
@@ -465,6 +588,12 @@ psql)
   ;;
 scan)
   scan "$@"
+  ;;
+tls)
+  tls
+  ;;
+trust)
+  trust
   ;;
 stats)
   stats "$@"

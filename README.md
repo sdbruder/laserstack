@@ -274,6 +274,49 @@ Stack can identify which project you are trying to access. `SUFFIX` comes from
 You can add a dnsmasq config to resolve every `*.<SUFFIX>` to 127.0.0.1
 automatically, but that's beyond the scope of this introduction.
 
+## HTTPS
+
+An optional mode serves the same projects over https, with a certificate from a
+certificate authority local to your machine. It is off by default: until `.env`
+says otherwise, the stack is the http stack it always was.
+
+```
+# in .env
+HTTPS=on
+```
+
+```
+laser tls      # create the CA and a certificate that names every project
+laser up -d    # publish 443 and mount the certificate
+laser trust    # add the CA to the trust store of the machine, one password prompt
+```
+
+`laser tls` writes `config/tls/`: the CA in `ca/`, the certificate the container
+serves in `serve/`, and it renders the https vhost from
+`config/nginx/http.d/multiProjectLaravelHttps.conf.template`. The certificate
+names `<SUFFIX>`, `*.<SUFFIX>`, `localhost`, `127.0.0.1` and every project of the
+projects directory, because a wildcard over a suffix of one label (`*.mac`) is
+refused by macOS and by other verifiers. Add a project, run `laser tls` again, and
+the name is in the certificate; `laser scan` writes or removes the https vhost as
+`HTTPS` changes, and restarts nginx when it does.
+
+Why not a public certificate: a Let's Encrypt certificate lasts 90 days, so a copy
+inside a release expires before the next release, renewing it on your machine would
+need the credentials of the DNS zone, and shipping one private key to every install
+would let any user impersonate any other. A CA that lives on the machine has none
+of that; the price is `laser trust`, one password prompt, because a browser only
+trusts a CA that is in its store. Firefox keeps its own store: import
+`config/tls/ca/laserstack-local-ca.pem` there if you use it.
+
+Verify it without a browser:
+
+```
+curl --cacert config/tls/ca/laserstack-local-ca.pem \
+  --resolve laserstack.$SUFFIX:443:127.0.0.1 https://laserstack.$SUFFIX/
+```
+
+Port 80 keeps serving the projects. 443 is published only while `HTTPS=on`.
+
 ## Contributing
 
 The development documentation lives in [CONTRIBUTING.md](CONTRIBUTING.md): the
