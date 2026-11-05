@@ -209,7 +209,7 @@ a:hover { text-decoration:underline; }
 .chip.off { color:var(--muted); opacity:.65; }
 .muted { color:var(--muted); }
 .note { color:var(--muted); font-size:13px; margin:10px 0 0; }
-ul.projects { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(10.5rem,1fr)); gap:6px; }
+ul.projects { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(11.5rem,1fr)); gap:6px; }
 ul.projects li { display:flex; align-items:baseline; gap:6px; padding:4px 9px; border:1px solid var(--line); border-radius:8px; font-size:14px; min-width:0; }
 ul.projects li a { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 ul.projects li .tag { flex:0 0 auto; }
@@ -286,7 +286,7 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
             <p class="note">Each name is a directory under <code>config/</code> and a version the stack can select by environment variable.</p>
         </section>
 
-        <section class="card">
+        <section class="card wide">
             <h2>PHP extensions</h2>
             <div class="chips">
                 <?php foreach ($extensions as $extension): ?>
@@ -300,7 +300,7 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
             <ul class="projects">
                 <?php foreach ($projects as $project): ?>
                     <li>
-                        <a href="<?= e('//' . $project['name'] . '.' . $suffix . '/') ?>" target="_blank" rel="noopener noreferrer"><?= e($project['name']) ?></a>
+                        <a href="<?= e('//' . $project['name'] . '.' . $suffix . '/') ?>" target="_blank" rel="noopener noreferrer" title="<?= e($project['name'] . '.' . $suffix) ?>"><?= e($project['name']) ?></a>
                         <?php if ($project['self']): ?><span class="tag">this page</span><?php endif; ?>
                         <?php if (!$project['public']): ?><span class="tag">no public/</span><?php endif; ?>
                         <?php if ($project['vhost']): ?><span class="tag">own vhost</span><?php endif; ?>
