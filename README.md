@@ -276,47 +276,78 @@ automatically, but that's beyond the scope of this introduction.
 
 ## HTTPS
 
-An optional mode serves the same projects over https, with a certificate from a
-certificate authority local to your machine. It is off by default: until `.env`
-says otherwise, the stack is the http stack it always was.
+Two optional modes serve the projects over https. Until `.env` says otherwise,
+the stack is the http stack it always was.
 
 ```
 # in .env
 HTTPS=on
 ```
 
+### The suffix of the stack: a certificate that is already trusted
+
+```
+laser tls      # fetch the published certificate of *.localdev.it
+laser up -d    # publish 443 and mount it
+```
+
+<https://localdev.it/laserstack/tls/> publishes a wildcard certificate for
+`*.localdev.it`, issued by a public certificate authority on the server of the
+project and renewed there. `laser tls` downloads it into `config/tls/serve/` and
+downloads it again when the copy is within a month of its end of life. Every
+browser already trusts it — macOS, Linux, and **the Windows browser of a WSL
+user** — so there is no `laser trust` step, no warning page, and nothing to
+install on a phone.
+
+The key is public on purpose: the stack terminates TLS on your machine, so the
+key has to be there, exactly as with `local-ip.co` and `traefik.me`. Two things
+follow. Anyone can answer as `*.localdev.it` with a valid certificate, so the
+padlock proves nothing about who answers — the name resolves to 127.0.0.1, so in
+practice it is your machine. And `*.localdev.it` also covers
+`www.localdev.it`, the site. Both are written down in `docs/tls/README.md`.
+
+### A suffix of your own: the CA of this machine signs it
+
+No public certificate can cover `myproject.test` or `myproject.mac`, so the stack
+becomes its own authority:
+
 ```
 laser tls      # create the CA and a certificate that names every project
-laser up -d    # publish 443 and mount the certificate
-laser trust    # add the CA to the trust store of the machine, one password prompt
+laser up -d    # publish 443 and mount it
+laser trust    # add the CA to the trust store of this machine
 ```
 
-`laser tls` writes `config/tls/`: the CA in `ca/`, the certificate the container
-serves in `serve/`, and it renders the https vhost from
-`config/nginx/http.d/multiProjectLaravelHttps.conf.template`. The certificate
-names `<SUFFIX>`, `*.<SUFFIX>`, `localhost`, `127.0.0.1` and every project of the
-projects directory, because a wildcard over a suffix of one label (`*.mac`) is
-refused by macOS and by other verifiers. Add a project, run `laser tls` again, and
-the name is in the certificate; `laser scan` writes or removes the https vhost as
-`HTTPS` changes, and restarts nginx when it does.
+| platform | what `laser trust` does |
+|---|---|
+| macOS | `security add-trusted-cert` into the system keychain: one password prompt |
+| Linux | `update-ca-certificates`, or `update-ca-trust` on Fedora and Arch |
+| WSL | `certutil.exe -addstore -user Root`: the browser runs on Windows, so the CA goes into the store of Windows, in the user store, with no administrator |
 
-Why not a public certificate: a Let's Encrypt certificate lasts 90 days, so a copy
-inside a release expires before the next release, renewing it on your machine would
-need the credentials of the DNS zone, and shipping one private key to every install
-would let any user impersonate any other. A CA that lives on the machine has none
-of that; the price is `laser trust`, one password prompt, because a browser only
-trusts a CA that is in its store. Firefox keeps its own store: import
+`laser trust --remove` takes it out again. One CA per machine covers every
+suffix: the suffix lives in the certificate that the CA signs, not in the CA, so a
+second suffix needs no second trust step. Firefox keeps its own store: import
 `config/tls/ca/laserstack-local-ca.pem` there if you use it.
 
-Verify it without a browser:
+The certificate names `<SUFFIX>`, `*.<SUFFIX>`, `localhost`, `127.0.0.1` and
+every project of the projects directory, because a wildcard over a suffix of one
+label (`*.mac`) is refused by macOS and by other verifiers. Add a project, run
+`laser tls` again, and its name is in the certificate. `laser scan` writes or
+removes the https vhost as `HTTPS` changes, and restarts nginx when it does.
+
+### Checking it without a browser
 
 ```
+# the published certificate, of the default suffix
+curl --resolve laserstack.localdev.it:443:127.0.0.1 https://laserstack.localdev.it/
+
+# the certificate of the CA of this machine, for your own suffix
 curl --cacert config/tls/ca/laserstack-local-ca.pem \
   --resolve laserstack.$SUFFIX:443:127.0.0.1 https://laserstack.$SUFFIX/
 ```
 
-Port 80 keeps serving the projects. 443 is published only while `HTTPS=on`.
-
+Port 80 keeps serving the projects, and 443 is published only while `HTTPS=on`.
+`config/tls/` is not tracked; the published certificate of the site is, and
+`tools/issue-global-certificate.sh` renews it.
 ## Contributing
 
 The development documentation lives in [CONTRIBUTING.md](CONTRIBUTING.md): the

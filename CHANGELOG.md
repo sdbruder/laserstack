@@ -9,14 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Optional HTTPS: `HTTPS=on` in `.env` and `laser tls` serve the same projects
-  over 443 with a certificate from a certificate authority local to the machine,
-  and `laser trust` adds that CA to the trust store. The certificate names every
-  project of the projects directory, 443 is published only while the mode is on,
-  and the http stack on port 80 is untouched. `docker-compose.https.yml` is the
-  overlay `laser` adds in that mode; `config/tls/` holds what `laser tls` writes
-  and is not tracked.
-
+- Optional HTTPS, in two modes. With the default suffix, `laser tls` downloads
+  the published certificate of `*.localdev.it` from
+  <https://localdev.it/laserstack/tls/> — a real certificate, already trusted by
+  every browser on every platform, including the Windows browser of a WSL user —
+  caches it, refreshes it within a month of its end of life, and falls back to the
+  CA of the machine when the address is unreachable.
+  `tools/issue-global-certificate.sh` issues and publishes that certificate server
+  side and `docs/tls/` holds it; its private key is public by design, the way
+  `local-ip.co` and `traefik.me` do it.
+- With a suffix of your own, `laser tls` creates a certificate authority in
+  `config/tls/ca` and issues a certificate that names every project of the
+  projects directory, because a wildcard over a suffix of one label is refused by
+  macOS and by other verifiers. `laser trust` puts that CA in the trust store of
+  the platform — the system keychain on macOS, `update-ca-certificates` or
+  `update-ca-trust` on Linux, and the Windows user store from WSL, which is the
+  store the browser of a WSL user actually reads — and `laser trust --remove`
+  takes it out again. One CA per machine covers every suffix.
+- `HTTPS=on` adds `docker-compose.https.yml`: it publishes 443 and mounts
+  `config/tls/serve` as a directory, so reissuing a certificate cannot leave the
+  container holding a stale inode. The vhost belongs to the scan driver, which
+  writes it when the mode is on and removes it when it is off, because nginx
+  refuses to start when a vhost points at a certificate that is not mounted. Port
+  80 and the http stack are untouched.
 ## [0.13.2] 2026-11-05
 
 ### Added

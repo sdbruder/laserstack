@@ -126,17 +126,11 @@ http://projecta.localdev.it      http://myapp.localdev.it      http://clientport
   elasticsearch/7.14.2/ elasticsearch.yml</code></pre>
   <p>Change a value, restart one service (<code>laser restartnginx</code>, <code>laser stop db &amp;&amp; laser up -d db</code>), review the change in a pull request. Your team gets the same php.ini and the same database settings because they are in the repository, not in somebody's Docker Desktop.</p>
 
-  <h2 id="https">HTTPS with a certificate of your machine</h2>
-  <p>Off by default. <code>HTTPS=on</code> in <code>.env</code> and <code>laser tls</code> then serve the same projects on 443, with a certificate from a certificate authority that lives in <code>config/tls/</code>; <code>laser trust</code> adds that CA to the store of the machine. One password prompt, no public certificate to renew every 90 days, and no private key handed to every install.</p>
-  <pre><code># .env
-HTTPS=on
+  <h2 id="https">HTTPS, with a certificate that is already trusted</h2>
+  <p>Two optional modes. With the default suffix, <code>HTTPS=on</code> and <code>laser tls</code> download the wildcard certificate of <code>*.localdev.it</code> from <code>localdev.it/laserstack/tls/</code>, issued and renewed on the server of the project: every browser trusts it already, macOS, Linux and <b>the Windows browser of a WSL user</b>, so no machine trusts anything and no warning page appears. Its private key is public by design, as with <code>local-ip.co</code> and <code>traefik.me</code>, so the padlock proves nothing about who answers — the name resolves to 127.0.0.1.</p>
+  <p>With a suffix of your own, no public certificate can cover it, so the stack becomes its own authority: <code>laser tls</code> creates a CA in <code>config/tls/ca</code> and a certificate that names every project, and <code>laser trust</code> puts the CA where the platform reads it — the system keychain on macOS, <code>update-ca-certificates</code> or <code>update-ca-trust</code> on Linux, and the <b>Windows user store</b> from WSL, where the browser of a WSL user actually reads it. <code>laser trust --remove</code> takes it out, and one CA per machine covers every suffix.</p>
 
-laser tls       create the CA and a certificate that names every project
-laser up -d     publish 443 and mount it
-laser trust     add the CA to the trust store</code></pre>
-  <p>The certificate names <code>&lt;SUFFIX&gt;</code>, <code>*&lt;.SUFFIX&gt;</code>, <code>localhost</code>, <code>127.0.0.1</code> and every project of the projects directory: a wildcard over a suffix of one label (<code>*.mac</code>) is refused by macOS and by other verifiers, so the names have to be in the certificate. Adding a project and running <code>laser tls</code> again reissues it, and <code>laser scan</code> writes or removes the https vhost as <code>HTTPS</code> changes.</p>
-
-  <h2>The <code>laser</code> CLI</h2>
+  <h2>The <code>laser</code> CLI</h2>  <h2>The <code>laser</code> CLI</h2>
   <p>One shell script is the whole interface. It copies <code>env.example</code> to <code>.env</code> on first use, reads it, and then:</p>
   <div class="table-scroll"><table>
     <thead><tr><th>command</th><th>what it does</th></tr></thead>
