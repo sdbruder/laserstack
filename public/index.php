@@ -178,14 +178,17 @@ $changelogHead = array_slice($changelog, 0, 24);
 @media (prefers-color-scheme: dark) { :root { --fg:#e6edf3; --muted:#8b949e; --bg:#0d1117; --card:#161b22; --line:#30363d; --ok:#3fb950; --off:#f85149; --accent:#a371f7; } }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
-main { max-width:1040px; margin:0 auto; padding:30px 20px 70px; }
+main { width:100%; padding:20px clamp(16px,2.5vw,44px) 56px; }
+header { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px 24px; }
 h1 { font-size:30px; margin:0; letter-spacing:-.02em; }
 h2 { font-size:14px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0 0 12px; }
 p.lead { color:var(--muted); margin:8px 0 0; }
-.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:16px; margin-top:24px; }
-.card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px 18px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,248px),1fr)); gap:14px; margin-top:18px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+.card.wide { grid-column:1/-1; }
 table { width:100%; border-collapse:collapse; }
-td, th { text-align:left; padding:6px 0; border-bottom:1px solid var(--line); font-size:14px; }
+td, th { text-align:left; padding:5px 0; border-bottom:1px solid var(--line); font-size:14px; vertical-align:top; }
+td:first-child { white-space:nowrap; padding-right:16px; color:var(--muted); }
 tr:last-child td { border-bottom:0; }
 code, pre { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; }
 pre { background:transparent; margin:0; white-space:pre-wrap; color:var(--muted); }
@@ -199,9 +202,8 @@ a:hover { text-decoration:underline; }
 .chip.off { color:var(--muted); opacity:.65; }
 .muted { color:var(--muted); }
 .note { color:var(--muted); font-size:13px; margin:10px 0 0; }
-ul.projects { list-style:none; margin:0; padding:0; }
-ul.projects li { display:flex; align-items:baseline; gap:8px; padding:5px 0; border-bottom:1px solid var(--line); font-size:14px; }
-ul.projects li:last-child { border-bottom:0; }
+ul.projects { list-style:none; margin:0; padding:0; columns:15rem 6; column-gap:28px; }
+ul.projects li { display:flex; align-items:baseline; gap:8px; padding:3px 0; border-bottom:1px solid var(--line); font-size:14px; break-inside:avoid; }
 .tag { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:1px 6px; }
 footer { margin-top:26px; color:var(--muted); font-size:13px; }
 </style>
@@ -275,12 +277,12 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
             <p class="note">Each name is a directory under <code>config/</code> and a version the stack can select by environment variable.</p>
         </section>
 
-        <section class="card">
+        <section class="card wide">
             <h2>Projects served</h2>
             <ul class="projects">
                 <?php foreach ($projects as $project): ?>
                     <li>
-                        <a href="<?= e('//' . $project['name'] . '.' . $suffix . '/') ?>"><?= e($project['name']) ?></a>
+                        <a href="<?= e('//' . $project['name'] . '.' . $suffix . '/') ?>" target="_blank" rel="noopener noreferrer"><?= e($project['name']) ?></a>
                         <?php if ($project['self']): ?><span class="tag">this page</span><?php endif; ?>
                         <?php if (!$project['public']): ?><span class="tag">no public/</span><?php endif; ?>
                         <?php if ($project['vhost']): ?><span class="tag">own vhost</span><?php endif; ?>
@@ -299,16 +301,16 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
             </div>
         </section>
 
-        <section class="card">
+        <section class="card wide">
             <h2>What is new</h2>
             <pre><?= e(implode("\n", $changelogHead)) ?></pre>
         </section>
     </div>
 
     <footer>
-        <a href="https://localdev.it/laserstack/">Documentation</a> &middot;
-        <a href="https://github.com/sdbruder/laserstack">Repository</a> &middot;
-        <a href="https://localdev.it/laserstack/compare.html">Comparison</a>
+        <a href="https://localdev.it/laserstack/" target="_blank" rel="noopener noreferrer">Documentation</a> &middot;
+        <a href="https://github.com/sdbruder/laserstack" target="_blank" rel="noopener noreferrer">Repository</a> &middot;
+        <a href="https://localdev.it/laserstack/compare.html" target="_blank" rel="noopener noreferrer">Comparison</a>
         <p class="note">Read-only status page: it reads the checkout, opens a socket to each service and nothing else.</p>
     </footer>
 </main>
