@@ -8,8 +8,13 @@
  * other project: the catch-all vhost needs only public/index.php to exist.
  *
  * The page is read-only. It writes nothing, runs no command and prints no
- * credential: it reports the PHP it runs on, the projects the stack serves, the
- * services of the profile that answer, and the versions this checkout supports.
+ * credential: it reports the PHP it runs on, the projects the stack serves (each
+ * one asked for its front page), the services of the profile that answer, and
+ * the versions this checkout supports.
+ *
+ * A render that arrives with the header X-Laserstack-Probe asks no project: this
+ * page is one of the projects, so a probe of itself would render the page again
+ * and fan out.
  */
 
 declare(strict_types=1);

@@ -128,22 +128,21 @@ http://projecta.localdev.it      http://myapp.localdev.it      http://clientport
 
   <h2 id="dashboard">A dashboard, served like any project</h2>
   <p>The checkout is one of the projects of the projects directory, so the stack serves a dashboard for itself on <code>laserstack.&lt;SUFFIX&gt;</code>. The multi-project vhost serves any <code>public/index.php</code>, so no second vhost and no second container are involved: the page is there as soon as <code>laser up -d</code> runs, and <code>laser dashboard</code> opens it in your browser.</p>
-  <pre><code>PHP 8.2.35            config/php82            suffix mac
+  <pre><code>PHP 8.2.35            config/php82            suffix mac            sapi fpm-fcgi
 
-services              MySQL db:3306 up 0 ms      MariaDB mariadb:3306 up 0 ms
-                      PostgreSQL no answer         redis no answer
+services              MySQL not running          MariaDB mariadb:3306 up 1 ms
+                      PostgreSQL no answer       redis not running
 
-projects served       30days   aesweb   app   laserstack   …
+projects served       30days laravel        app own vhost 200      blog no public/
+                      laserstack this page 200    symfony-demo symfony 200
 versions              PHP 7.4-8.6, mysql 8.0-26.10, mariadb 10.11-13.0, redis 7.4-8.10</code></pre>
-  <p>It is read-only and it answers from inside the container: the PHP series it runs on, the projects of the projects directory with their vhosts, one socket test per service of the active profiles, the server version of the database, the version directories of <code>config/</code>, the extensions of the image and the head of the CHANGELOG. It writes nothing, runs no command and prints no credential.</p>
-
-  <h2>The <code>laser</code> CLI</h2>
+  <p>It is read-only and it answers from inside the container: the PHP series it runs on, the projects of the projects directory — each with the driver <code>laser scan</code> found, whether laserstack serves it through a vhost of its own and the code its front page answered with — one socket test per service of the active profiles, the server version of the database, the version directories of <code>config/</code>, the extensions of the image and the head of the CHANGELOG. It writes nothing, runs no command, prints no credential and asks each project for its front page.</p>
 
   <h2 id="https">HTTPS, with a certificate that is already trusted</h2>
   <p>Two optional modes. With the default suffix, <code>HTTPS=on</code> and <code>laser tls</code> download the wildcard certificate of <code>*.localdev.it</code> from <code>localdev.it/laserstack/tls/</code>, issued and renewed on the server of the project: every browser trusts it already, macOS, Linux and <b>the Windows browser of a WSL user</b>, so no machine trusts anything and no warning page appears. Its private key is public by design, as with <code>local-ip.co</code> and <code>traefik.me</code>, so the padlock proves nothing about who answers — the name resolves to 127.0.0.1.</p>
   <p>With a suffix of your own, no public certificate can cover it, so the stack becomes its own authority: <code>laser tls</code> creates a CA in <code>config/tls/ca</code> and a certificate that names every project, and <code>laser trust</code> puts the CA where the platform reads it — the system keychain on macOS, <code>update-ca-certificates</code> or <code>update-ca-trust</code> on Linux, and the <b>Windows user store</b> from WSL, where the browser of a WSL user actually reads it. <code>laser trust --remove</code> takes it out, and one CA per machine covers every suffix.</p>
 
-  <h2>The <code>laser</code> CLI</h2>  <h2>The <code>laser</code> CLI</h2>
+  <h2>The <code>laser</code> CLI</h2>
   <p>One shell script is the whole interface. It copies <code>env.example</code> to <code>.env</code> on first use, reads it, and then:</p>
   <div class="table-scroll"><table>
     <thead><tr><th>command</th><th>what it does</th></tr></thead>
@@ -155,6 +154,7 @@ versions              PHP 7.4-8.6, mysql 8.0-26.10, mariadb 10.11-13.0, redis 7.
       <tr><td><code>laser shell</code></td><td>a bash in the app container, in that project</td></tr>
       <tr><td><code>laser appexec &lt;cmd&gt;</code></td><td>any command in the app container (from the repository root: the container itself)</td></tr>
       <tr><td><code>laser mysql</code> / <code>laser psql</code></td><td>a client for the database of the profile, with the credentials of <code>.env</code></td></tr>
+      <tr><td><code>laser dashboard</code></td><td>opens the dashboard of the stack in the browser of the machine, over https when <code>HTTPS=on</code></td></tr>
       <tr><td><code>laser share</code></td><td>an ngrok tunnel to that project</td></tr>
       <tr><td><code>laser new / list / stats / restartnginx</code></td><td>scaffold a project, list the served URLs, docker stats, reload nginx</td></tr>
       <tr><td><code>laser update</code></td><td>pulls the newest code and the newest images and restarts only what changed; <code>laser update --check</code> stops after the download</td></tr>

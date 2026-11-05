@@ -171,6 +171,11 @@ for version in $versions; do
     "$(echo "$dashboard" | grep -q '<title>Laser Stack</title>' && echo 0 || echo 1)"
   check "the dashboard lists the projects directory ($smoke_project)" \
     "$(echo "$dashboard" | grep -q "$smoke_project" && echo 0 || echo 1)"
+  # the tile of the project carries the code its front page answered with, which
+  # exercises the probe: the dashboard asks every servable project for its front
+  # page in the same render
+  check "the dashboard reports the code of the project ($smoke_project)" \
+    "$(echo "$dashboard" | grep -q 'the front page answers 200' && echo 0 || echo 1)"
 
   ini_md5=$(echo "$body" | sed -n 's/.*inimd5=\([0-9a-f]*\).*/\1/p')
   ini_known=$(md5_of config/php*/php.ini 2>/dev/null | grep -c "^$ini_md5$")

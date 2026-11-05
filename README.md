@@ -242,16 +242,32 @@ file, its image takes the settings as command flags.
 
 ## Other frameworks support
 
-Out of the box Laser Stack supports multiple Laravel projects. There is
-additional drivers supporting Wordpress and particular nginx configs.
+Laser Stack serves Laravel, Symfony, WordPress and any other PHP project.
+`laser scan` decides what each directory of the projects directory is: it asks
+every driver in `libs/` about the directory, and the first one that recognises it
+writes the vhost of that project.
 
-To configure a particular nginx config for a project, create a
-`laserstack-nginx.conf` file in your project root directory and call
-`laser scan`. Laser Stack will copy it as `YOURPROJECTDIRECTORY.conf`. in the app
-your project will be in `/var/www/YOURPROJECTDIRECTORY`.
+| driver | the project carries | how it is served |
+|---|---|---|
+| `laravel` | an `artisan` file and `public/index.php` | the multi-project vhost |
+| `symfony` | a `symfony.lock` and `public/index.php` | the multi-project vhost |
+| `wordpress` | a `wp-config.php` (or `-sample.php`) | its own vhost, rooted at the project |
+| `generic` | a `laserstack-nginx.conf` | its own vhost: that file, copied |
 
-Every time you add or remove a non-Laravel project, you need to call
-`laser scan` to allow Laser Stack to adjust its nginx config.
+A project of no driver is served by the multi-project vhost when it has a
+`public/index.php`. Two ways to give one project a vhost of its own:
+
+- **through the driver**: put a `laserstack-nginx.conf` in the project root.
+  `laser scan` copies it to `config/nginx/http.d/<project>.conf`, and the project
+  is identified as `generic`;
+- **by hand**: write `config/nginx/http.d/<project>.conf` yourself, for a project
+  no driver claims. `laser scan` writes nothing for such a project, so the file
+  is yours and survives every scan.
+
+Either way the project is served from `/var/www/<project>`, answers on its own
+name and on `*.<project>.<SUFFIX>`, and the dashboard marks it `own vhost`. Run
+`laser scan` after adding or removing a project: it restarts nginx only when the
+vhosts really changed.
 
 ## DNS resolution
 

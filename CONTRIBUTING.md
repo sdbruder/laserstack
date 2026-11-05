@@ -166,8 +166,10 @@ profile. It checks:
 
 - stage `app`, per version: nginx and php-fpm are RUNNING, no nginx emergency
   in the log, php-fpm runs the workers as `laser`, PHP loads the php.ini of the
-  repository, a project answers over http with the requested version, and the
-  run writes nothing into `config/nginx/http.d`;
+  repository, a project answers over http with the requested version, the
+  dashboard of the checkout answers on `laserstack.<SUFFIX>`, lists the projects
+  directory and reports the code the project answered with, and the run writes
+  nothing into `config/nginx/http.d`;
 - stage `database`, per database profile and version: `laser mysql` or
   `laser psql` answers with the server of the profile, and PHP of the app
   container reaches that server with PDO, under the host name a project uses
@@ -235,6 +237,43 @@ Override every variable of that connection: Laravel merges the shell environment
 over the `.env` of the project one variable at a time, so a variable that is not
 overridden keeps the value of the project, and a cached configuration
 (`bootstrap/cache/config.php`) ignores the overrides altogether.
+
+## The dashboard
+
+`public/index.php` is the dashboard, and it is also one of the projects the stack
+serves: the multi-project vhost reaches it through `public/index.php`, so it needs
+no vhost of its own, no container and no framework — one file and the standard
+library of PHP. Its rules:
+
+- it writes nothing, runs no command and prints no credential: a shell or a
+  command in it would make it a remote control, not a status page;
+- every card answers a question about *now*: the PHP of the container, the
+  projects of the projects directory, the services of the active profiles, the
+  version directories of `config/`;
+- a tile is the link, the driver `laser scan` identifies (green), the code the
+  front page of the project answered with (green from 200 to 399, red from 400
+  up, grey `no answer` when nothing answered within a second) and the flags the
+  driver does not already describe: `no public/` when no driver claims the project
+  and it has no `public/` directory, `own vhost` when laserstack serves it through
+  a vhost of its own;
+- it asks each servable project for its front page: one HEAD request per project,
+  in parallel with `curl_multi`, capped at 0.8 s, which is why the page reloads
+  itself every thirty seconds by default and not every ten;
+- the container resolves no `*.<SUFFIX>` name — the resolver of the suffix lives
+  on the host — so the probe sends the request to the nginx of the container on
+  `127.0.0.1` and the `Host` header picks the vhost, the way `test/smoke.sh`
+  fetches the page;
+- the probe sends `X-Laserstack-Probe: 1`, and a render that sees that header asks
+  nobody. Keep that guard: the dashboard is one of the projects, so a probe of
+  itself renders the page again, and without the header those renders fan out
+  until php-fpm runs out of workers (the symptom is FastCGI hanging while static
+  files still answer; `docker restart laserstack-app-1` clears it);
+- `laser dashboard` opens the page in the browser of the machine.
+
+A new laser subcommand is a function in `laser`, a line in `lasercommands()` and a
+case in the dispatch at the end of the file, as `dashboard` shows. The user-facing
+description lives in `README.md` (`## The dashboard`, `## Other frameworks
+support`) and in `docs/features.html`.
 
 ## Shell in this repository
 
