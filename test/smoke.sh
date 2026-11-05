@@ -53,7 +53,8 @@ laser_dir=$(cd -P -- "$(dirname -- "$0")/.." && pwd -P)
 cd "$laser_dir" || exit 1
 laser="$laser_dir/laser"
 versions="${*:-7.4 8.0 8.1 8.2 8.3 8.4 8.5 8.6}"
-db_profiles="${SMOKE_DB_PROFILES:-mysql mariadb postgres}"
+# an explicit empty value skips the whole stage, so a run can test one stage only
+db_profiles="${SMOKE_DB_PROFILES-mysql mariadb postgres}"
 # the server version to test per profile. An empty value keeps the version of
 # the .env under test, and the compose default when that file has none.
 smoke_mysql_version="${SMOKE_MYSQL_VERSION:-}"
