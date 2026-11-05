@@ -75,6 +75,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `laser tls` never writes, instead of `config/tls/serve/laserstack.pem`, the
   file docker-compose.https.yml mounts. Found while serving the stack over
   https on the default suffix.
+- The certificate workflow installed lego from `lego_$version_linux_amd64.tar.gz`:
+  the shell read that as a single variable name, so the step stopped on the
+  unset variable and lego was never installed. It reads `${version}` now.
 
 ## [0.13.2] 2026-11-05
 

@@ -269,6 +269,19 @@ name and on `*.<project>.<SUFFIX>`, and the dashboard marks it `own vhost`. Run
 `laser scan` after adding or removing a project: it restarts nginx only when the
 vhosts really changed.
 
+With `HTTPS=on`, the multi-project vhost serves the projects that have a
+`public/index.php` on 443, and nothing else: a project served from the root of the
+project needs its own block on 443. The wordpress driver writes one, so
+`laser scan` is enough for WordPress; a vhost you write by hand needs one too —
+same `server` block, with `listen 443 ssl;` and
+
+```
+ssl_certificate     /etc/nginx/tls/laserstack.pem;
+ssl_certificate_key /etc/nginx/tls/laserstack-key.pem;
+```
+
+which is the directory `laser tls` fills in `config/tls/serve`.
+
 ## DNS resolution
 
 Nothing to do: `env.example` defaults `SUFFIX` to `localdev.it`, and every name

@@ -75,7 +75,7 @@ jobs:
           echo "lego $version"
           plain="${version#v}"
           base="https://github.com/go-acme/lego/releases/download/$version"
-          tarball="lego_$version_linux_amd64.tar.gz"
+          tarball="lego_${version}_linux_amd64.tar.gz"
           curl -fsSL -o "/tmp/$tarball" "$base/$tarball"
           # the checksums asset is named without the leading v, and it is a
           # convenience: a release that renames it must not break a renewal
