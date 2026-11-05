@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] 2026-11-05
+
 ### Added
+
+- The overview and the documentation say the images carry no `sshd` and no `ssh`
+  client, so the OpenSSH-on-musl authentication bypass (CVE-2026-123158, fixed in
+  10.6p2 on 2026-11-05) has no target in them, and that the nightly rebuild carries
+  a fix without anyone doing anything.
 
 - The dashboard says what https gives you and what it takes: a card with the mode,
   the certificate the container serves (subject, issuer, the names it covers, the
@@ -81,6 +88,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the certificate, so a fresh runner renews only when 30 days are left
   instead of issuing a new certificate on every run. The run fails when the
   certificate ends up within two weeks of its expiry.
+
+### Changed
+
+- https is on by default. `laser up` provisions the certificate when a stack
+  has never had one — the published one for the default suffix, the authority of
+  this machine for a suffix of your own, where `laser trust` is still yours to
+  run — and `HTTPS=off` in `.env` serves http on port 80 only. `env.example`
+  ships `HTTPS=on`, and the smoke test asserts that a project answers over https
+  with a certificate the container trusts, which is the default path now.
 
 ### Fixed
 

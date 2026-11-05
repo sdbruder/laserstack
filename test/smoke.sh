@@ -177,6 +177,19 @@ for version in $versions; do
   check "the dashboard reports the code of the project ($smoke_project)" \
     "$(echo "$dashboard" | grep -q 'the front page answers 200' && echo 0 || echo 1)"
 
+  # https is on by default: the same project answers on 443 with a certificate
+  # the container trusts. A certificate of the machine itself (an own suffix, or
+  # a stack that provisioned one without the network) needs -k, and the line
+  # says which of the two it got.
+  https_body=$("$laser" appexec curl -sS -m 10 --resolve "$smoke_project.$SUFFIX:443:127.0.0.1" "https://$smoke_project.$SUFFIX/" 2>/dev/null)
+  if echo "$https_body" | grep -q "php=$version\."; then
+    check "the project answers over https with a trusted certificate" 0
+  else
+    https_body=$("$laser" appexec curl -ksS -m 10 --resolve "$smoke_project.$SUFFIX:443:127.0.0.1" "https://$smoke_project.$SUFFIX/" 2>/dev/null)
+    check "the project answers over https (certificate not trusted here: the CA of the machine)" \
+      "$(echo "$https_body" | grep -q "php=$version\." && echo 0 || echo 1)"
+  fi
+
   ini_md5=$(echo "$body" | sed -n 's/.*inimd5=\([0-9a-f]*\).*/\1/p')
   ini_known=$(md5_of config/php*/php.ini 2>/dev/null | grep -c "^$ini_md5$")
   check "PHP loads a php.ini of the repository ($ini_md5)" \

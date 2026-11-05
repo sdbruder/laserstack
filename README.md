@@ -330,8 +330,9 @@ front page. It writes nothing, runs no command and never prints a credential.
 
 ## HTTPS
 
-Two optional modes serve the projects over https. Until `.env` says otherwise,
-the stack is the http stack it always was.
+https is on by default: every project answers on 443 as well as on 80, with a
+certificate a browser already trusts. `laser up` provisions the certificate when
+the stack has never had one, and `HTTPS=off` in `.env` goes back to http only.
 
 ```
 # in .env

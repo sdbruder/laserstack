@@ -52,9 +52,13 @@ function dc() {
 
 function up() {
   # laser tls writes the certificate the container serves into config/tls/serve,
-  # which is the directory docker-compose.https.yml mounts
+  # which is the directory docker-compose.https.yml mounts. HTTPS is on unless
+  # .env says otherwise, so a stack that never had a certificate gets one here:
+  # the published one for the default suffix, the authority of this machine for
+  # a suffix of your own, where laser trust is still yours to run.
   if [ "$HTTPS" == "on" ] && [ ! -f config/tls/serve/laserstack.pem ]; then
-    warning_message "HTTPS=on needs a certificate: run laser tls first."
+    echo "TLS: HTTPS is on and this stack has no certificate yet, provisioning one."
+    tls
   fi
   dc up -d
 }
@@ -690,8 +694,9 @@ else
   source ./.env
 fi
 POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-postgres}"
-# off unless .env turns it on, so an older .env behaves exactly as before
-HTTPS="${HTTPS:-off}"
+# on unless .env turns it off: https is what the stack serves by default, and
+# laser up provisions the certificate when the stack has never had one
+HTTPS="${HTTPS:-on}"
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
 POSTGRES_DB="${POSTGRES_DB:-postgres}"
 export PHPV=$(echo $PHP_VERSION | sed 's/\.//g')
