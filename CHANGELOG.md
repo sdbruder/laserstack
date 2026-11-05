@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The comparison page, <https://localdev.it/laserstack/compare.html>: Valet, Herd,
+  Sail, DDEV, Lando, Laradock and lerd on the axis that decides the bill — one
+  stack for every project, or one container set per project. The facts come from
+  each project's own documentation, dated, and the page gives as much room to when
+  to choose something else as to where Laser Stack wins. It is in the navigation
+  of every page, on the overview cards and in the README.
+- A 16-second terminal demo of the real flow — `laser up -d`, `laser scan` over 17
+  projects, a project answering 200, and the two containers that serve them all —
+  at `docs/demo.gif`, on the overview page and in the README.
+
 ## [0.13.1] 2026-11-05
 
 ### Added

@@ -17,6 +17,8 @@ Install it next to your projects with one line, or clone it yourself (see
 curl -fsSL https://localdev.it/laserstack/install | bash
 ```
 
+![Terminal recording: laser up -d starts two containers, laser scan identifies every project of the projects directory, one project answers 200, and the same two containers serve them all](docs/demo.gif)
+
 Laser has a shell script around docker-compose as an interface to it, it exposes
 all docker-compose commands and extends it with its own subcommands.
 

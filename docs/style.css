@@ -145,3 +145,6 @@ footer.site ul { list-style: none; margin: 0; padding: 0; }
 footer.site li { margin-bottom: .35rem; }
 footer.site .fine { border-top: 1px solid var(--line); padding-top: 1.2rem; display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; }
 @media (max-width: 640px) { .hero { padding-top: 3rem; } }
+
+/* demo gif */
+.demo { display: block; width: 100%; max-width: 62.5rem; height: auto; margin: 2.2rem 0 0; border: 1px solid var(--line); border-radius: 10px; }
