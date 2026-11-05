@@ -26,6 +26,8 @@ running it. For the project itself, its test and its releases, read
 
 The website is <https://localdev.it/laserstack/>: the same material in a
 browsable form, with the measured numbers of the stack and copy-paste examples.
+How it compares with Valet, Herd, Sail, DDEV, Lando and Laradock is on
+<https://localdev.it/laserstack/compare.html>.
 
 ## Inspiration
 

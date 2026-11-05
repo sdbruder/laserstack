@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it compares — Laser Stack</title>
+<meta name="description" content="Valet, Herd, Sail, DDEV, Lando, Laradock and lerd, on the axis that decides the bill: one stack for all of your projects, or one container set per project. Checked against each project's own documentation.">
+<link rel="canonical" href="https://localdev.it/laserstack/compare.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How it compares — Laser Stack">
+<meta property="og:description" content="One stack for all projects, or one per project: the axis that decides how much memory local development costs, for Laser Stack and the seven tools next to it.">
+<meta property="og:image" content="https://localdev.it/laserstack/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0a0c10">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230a0c10'/%3E%3Cpath d='M4 19 L20 5' stroke='%234ade80' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <a class="brand" href="./"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 19.5 L20 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 4.5h11M3.5 20v-9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/><circle cx="18.4" cy="5.6" r="2.2" fill="#4ade80"/></svg>laserstack</a>
+  <nav class="site">
+    <a href="./">Overview</a><a href="features.html">Features</a><a href="compare.html" aria-current="page">Compare</a><a href="benchmarks.html">Numbers</a><a href="docs.html">Docs</a><a href="examples.html">Examples</a><a href="roadmap.html">Roadmap</a><a href="https://github.com/sdbruder/laserstack">GitHub ↗</a>
+  </nav>
+</div></header>
+<main>
+
+<section class="hero"><div class="wrap">
+  <p class="eyebrow">How it compares</p>
+  <h1>One stack for all projects,<br>or one per project?</h1>
+  <p class="lede">That is the axis that decides what local development costs you. Two stacks that serve the same project can differ by an order of magnitude in memory, because one amortises its containers over every project you own and the other does not. Everything below is checked against the documentation of each project on <strong>2026-11-05</strong>, with the links, so you can check it again.</p>
+</div></section>
+
+<section><div class="wrap prose">
+  <h2>The axis</h2>
+  <div class="table-scroll"><table>
+    <thead><tr><th></th><th>application container</th><th>project URL</th><th>PHP versions</th><th>database and services</th><th>cost</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Laser Stack</strong></td>
+        <td>one stack for every project (nginx + PHP-FPM in one container)</td>
+        <td><code>projecta.localdev.it</code> by default, no hosts file and no DNS server for anyone</td>
+        <td>one per stack, chosen by variable: 7.4–8.6</td>
+        <td>one per engine, chosen by variable: mysql, mariadb, postgres, redis, memcached, elasticsearch</td>
+        <td>free, BSD-3-Clause, macOS · Linux · WSL2</td>
+      </tr>
+      <tr>
+        <td><a href="https://laravel.com/docs/12.x/valet">Laravel Valet</a></td>
+        <td>none: nginx runs on the host, roughly 7 MB of RAM</td>
+        <td><code>projecta.test</code> through dnsmasq</td>
+        <td>one at a time on the machine; per site with <code>valet isolate</code></td>
+        <td>none shipped: the host, or DBngin for MySQL/Postgres/Redis</td>
+        <td>free, MIT, first-party, macOS only</td>
+      </tr>
+      <tr>
+        <td><a href="https://herd.laravel.com/">Laravel Herd</a></td>
+        <td>none: a native shared stack of PHP, nginx, dnsmasq and Node</td>
+        <td><code>projecta.test</code>, automatic on macOS and Windows</td>
+        <td>one global, per site with <code>herd isolate</code></td>
+        <td>versioned services matrix, on the paid tier</td>
+        <td>free tier; Pro $99/year; macOS 14.6+ Apple Silicon and Windows; its documentation lists no Linux</td>
+      </tr>
+      <tr>
+        <td><a href="https://laravel.com/docs/12.x/sail">Laravel Sail</a></td>
+        <td>one per project</td>
+        <td><code>http://localhost</code>, no automatic name and no automatic TLS</td>
+        <td>one per project, 8.0–8.5, default 8.5</td>
+        <td>one per project, in <code>compose.yaml</code></td>
+        <td>free, MIT, first-party, macOS · Linux · WSL2</td>
+      </tr>
+      <tr>
+        <td><a href="https://ddev.com/">DDEV</a></td>
+        <td>one per project, behind a shared Traefik router</td>
+        <td><code>projecta.ddev.site</code>, DNS and HTTPS out of the box</td>
+        <td>one per project, in <code>.ddev/config.yaml</code></td>
+        <td>one per project</td>
+        <td>free, Apache-2.0, macOS 14+ · Linux · WSL2 · Codespaces</td>
+      </tr>
+      <tr>
+        <td><a href="https://lando.dev/">Lando</a></td>
+        <td>one per project, behind a proxy</td>
+        <td><code>projecta.lndo.site</code></td>
+        <td>one per project, in the Landofile</td>
+        <td>one per project, in the Landofile</td>
+        <td>free, MIT, macOS 12+ · Windows 10 21H2+ · Linux; their requirements start at 4 GB of RAM</td>
+      </tr>
+      <tr>
+        <td><a href="https://laradock.io/">Laradock</a></td>
+        <td>one per project by default; the documentation also describes one stack shared by several projects</td>
+        <td><code>http://localhost</code>, Traefik optional</td>
+        <td>one per stack, <code>PHP_VERSION</code> in <code>.env</code></td>
+        <td>one per stack, 100+ service definitions</td>
+        <td>free, MIT, Linux · macOS · Windows</td>
+      </tr>
+      <tr>
+        <td><a href="https://lerd.sh/">lerd</a></td>
+        <td>one shared stack on rootless Podman: one nginx, one PHP-FPM container per version</td>
+        <td><code>projecta.test</code> through its own DNS server</td>
+        <td>one container per version, pinned per project with <code>lerd isolate</code></td>
+        <td>about 40 presets, shared by every site</td>
+        <td>free, MIT, Linux · macOS · WSL2; one <code>sudo</code> at install for the resolver</td>
+      </tr>
+    </tbody>
+  </table></div>
+  <p class="note">Valet, Herd and lerd put their stack on the host or in one shared container set; Sail, DDEV and Lando give every project its own application containers. Laradock does both. Laser Stack is a third shape: one container set, in docker, serving every project of a directory — 17 Laravel projects in two containers, measured on the <a href="benchmarks.html">numbers page</a>.</p>
+
+  <h2>In short</h2>
+  <ul>
+    <li><strong><a href="https://laravel.com/docs/12.x/valet">Valet</a></strong> is the lightest option that can work: no containers, no VM, sites resolved by dnsmasq. Its own documentation is clear that it "only serves one PHP version at a time", its database is whatever the host provides, and it is macOS only.</li>
+    <li><strong><a href="https://herd.laravel.com/">Herd</a></strong> is Valet's polished successor and the fastest thing on Apple Silicon: one native stack, a GUI, one-click PHP versions, and a service matrix on the paid tier. macOS on Apple Silicon and Windows, with no Linux in its documentation, and the services you would want locally (MySQL, Postgres, Redis, Meilisearch) are behind the $99/year licence.</li>
+    <li><strong><a href="https://laravel.com/docs/12.x/sail">Sail</a></strong> ships with every new Laravel application and gives each project its own container set. It is the least surprising choice for a single project; it is also the one whose memory grows linearly with the number of projects you keep around.</li>
+    <li><strong><a href="https://ddev.com/">DDEV</a></strong> is the most complete third-party option: per-project containers, a shared router, DNS and HTTPS, config committed with the project, and a long list of PHP and database versions to choose per project. It is heavier, and changing the database version means exporting and re-importing the data.</li>
+    <li><strong><a href="https://lando.dev/">Lando</a></strong> offers the widest set of recipes and puts its config in the repository, at the price of resource use: their own requirements start at 4 GB of RAM and 2 cores, recommended 16 GB and 8.</li>
+    <li><strong><a href="https://laradock.io/">Laradock</a></strong> is per-project by default but documents one stack shared by several projects as well, with 100+ service definitions and the version chosen in <code>.env</code>. A per-project copy carries the whole folder.</li>
+    <li><strong><a href="https://lerd.sh/">lerd</a></strong> is the closest in shape to Laser Stack and the one to look at on Linux: a shared stack, one PHP-FPM container per version, shared service presets, automatic <code>.test</code> DNS, on rootless Podman instead of Docker.</li>
+  </ul>
+
+  <h2>When to choose something else</h2>
+  <ul>
+    <li><strong>You want to install no container runtime at all:</strong> Valet on macOS, or Herd if you also want the GUI and the version matrix.</li>
+    <li><strong>You work on Windows without WSL2:</strong> Herd.</li>
+    <li><strong>You want one project fully isolated, with Laravel's own defaults:</strong> Sail. It is already in the project.</li>
+    <li><strong>Each project needs a different PHP or database version:</strong> DDEV (or Lando, or a stack per project). Laser Stack runs one PHP version per stack today; per-project versions are the <a href="roadmap.html">next item on the roadmap</a>.</li>
+    <li><strong>You are on Linux and would rather not run Docker:</strong> lerd, on Podman.</li>
+    <li><strong>You need a GUI, a mail catcher and a database browser in one window:</strong> Herd Studio or DDEV's add-ons, not this.</li>
+  </ul>
+
+  <h2>Where Laser Stack differs, and what that costs</h2>
+  <ul>
+    <li><strong>One stack, not one per project.</strong> All projects of the projects directory are served by the same nginx and PHP-FPM container, next to one database container. That is where the 607 MB and the ~113 MiB idle come from, whatever the number of projects.</li>
+    <li><strong>The price of sharing:</strong> one PHP version per stack. The version is a variable, and the same is true for every database engine, but it is a property of the stack, not of a project.</li>
+    <li><strong>Names that need no setup.</strong> <code>SUFFIX</code> defaults to <code>localdev.it</code>, a domain where every name — any depth, IPv4 and IPv6 — resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone. No hosts file, no dnsmasq, no daemon. A suffix of your own needs <code>/etc/hosts</code>, and a change of suffix needs <code>laser up -d</code> before <code>laser scan</code>.</li>
+    <li><strong>Config in the repository, per version.</strong> <code>config/&lt;engine&gt;/&lt;version&gt;/</code> holds the settings of each supported version, so a version is a variable and a directory, not an edit of the compose file.</li>
+    <li><strong>Reproducible by design:</strong> two <code>git</code> repositories, one <code>docker-compose.yml</code>, no build step, no VM, no system package, no daemon of its own. The app images are rebuilt nightly, and <code>laser update</code> moves a running stack to the newest patch.</li>
+    <li><strong>What it does not have:</strong> a GUI, Windows without WSL2, per-project PHP versions (planned), and a <code>memcached</code> PHP extension in the app images (the profile serves the server, not the client). A data volume belongs to the server version that created it, so changing a database version means starting from an empty volume or upgrading that server.</li>
+  </ul>
+
+  <h2>Try it</h2>
+  <pre><code>curl -fsSL https://localdev.it/laserstack/install | bash
+<span class="out"># then, in the checkout:</span>
+laser up -d
+laser scan
+<span class="out"># http://projecta.localdev.it and http://projectb.localdev.it answer</span></code></pre>
+  <p>Three commands, two containers, and the <a href="benchmarks.html">numbers page</a> has the method behind every figure. If something on this page is out of date, the links above are the source of truth and an <a href="https://github.com/sdbruder/laserstack/issues">issue</a> is welcome.</p>
+</div></section>
+
+</main>
+
+<footer class="site"><div class="wrap">
+  <div class="cols">
+    <div><h4>Project</h4><ul>
+      <li><a href="https://github.com/sdbruder/laserstack">GitHub repository</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/releases">Releases</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/CHANGELOG.md">Changelog</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack_app">App images</a></li>
+    </ul></div>
+    <div><h4>Documentation</h4><ul>
+      <li><a href="docs.html">Site reference</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/README.md">README</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/CONTRIBUTING.md">Working on Laser Stack</a></li>
+      <li><a href="roadmap.html">Roadmap</a></li>
+    </ul></div>
+    <div><h4>Community</h4><ul>
+      <li><a href="https://github.com/sdbruder/laserstack/issues">Issues and ideas</a></li>
+      <li><a href="https://twitter.com/laserstack_sdb">@laserstack_sdb</a></li>
+      <li><a href="https://github.com/sdbruder/laserstack/blob/master/LICENSE.md">BSD-3-Clause license</a></li>
+    </ul></div>
+  </div>
+  <div class="fine"><span>Laser Stack is open source software under the BSD-3-Clause license.</span><span>No telemetry, no account, no VM.</span><span>This site is static HTML and one CSS file.</span></div>
+</div></footer>
+</body>
+</html>
