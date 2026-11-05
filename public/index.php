@@ -20,6 +20,9 @@ $suffix = suffix();
 $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
 $self = basename($root);
 
+// the page reloads itself every this many seconds; ?refresh=0 turns it off
+$refreshSeconds = 10;
+
 function e(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
@@ -153,7 +156,7 @@ $phpVersion = PHP_VERSION;
 $phpDir = php_config_dir($phpVersion);
 $phpSeries = array_values(array_filter(
     versions($root . '/config'),
-    static fn (string $name): bool => str_starts_with($name, 'php')
+    static fn (string $name): bool => strpos($name, 'php') === 0
 ));
 $engines = [];
 foreach (['mysql', 'mariadb', 'postgres', 'redis', 'elasticsearch'] as $engine) {
@@ -186,6 +189,10 @@ p.lead { color:var(--muted); margin:8px 0 0; }
 .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,248px),1fr)); gap:14px; margin-top:18px; }
 .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
 .card.wide { grid-column:1/-1; }
+.card.wide2 { grid-column:span 2; }
+@media (max-width:860px) { .card.wide2 { grid-column:auto; } }
+.up, .down { white-space:nowrap; }
+td code { overflow-wrap:anywhere; }
 table { width:100%; border-collapse:collapse; }
 td, th { text-align:left; padding:5px 0; border-bottom:1px solid var(--line); font-size:14px; vertical-align:top; }
 td:first-child { white-space:nowrap; padding-right:16px; color:var(--muted); }
@@ -202,8 +209,10 @@ a:hover { text-decoration:underline; }
 .chip.off { color:var(--muted); opacity:.65; }
 .muted { color:var(--muted); }
 .note { color:var(--muted); font-size:13px; margin:10px 0 0; }
-ul.projects { list-style:none; margin:0; padding:0; columns:15rem 6; column-gap:28px; }
-ul.projects li { display:flex; align-items:baseline; gap:8px; padding:3px 0; border-bottom:1px solid var(--line); font-size:14px; break-inside:avoid; }
+ul.projects { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(10.5rem,1fr)); gap:6px; }
+ul.projects li { display:flex; align-items:baseline; gap:6px; padding:4px 9px; border:1px solid var(--line); border-radius:8px; font-size:14px; min-width:0; }
+ul.projects li a { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+ul.projects li .tag { flex:0 0 auto; }
 .tag { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:1px 6px; }
 footer { margin-top:26px; color:var(--muted); font-size:13px; }
 </style>
@@ -231,7 +240,7 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
             <p class="note">The PHP series is the image tag <code>PHP_VERSION</code>: edit <code>.env</code> and run <code>laser up -d</code> to change it.</p>
         </section>
 
-        <section class="card">
+        <section class="card wide2">
             <h2>Services</h2>
             <table>
                 <?php foreach ($services as [$label, $serviceHost, $port]): ?>
@@ -277,6 +286,15 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
             <p class="note">Each name is a directory under <code>config/</code> and a version the stack can select by environment variable.</p>
         </section>
 
+        <section class="card">
+            <h2>PHP extensions</h2>
+            <div class="chips">
+                <?php foreach ($extensions as $extension): ?>
+                    <span class="chip <?= extension_loaded($extension) ? 'on' : 'off' ?>"><?= e($extension) ?></span>
+                <?php endforeach; ?>
+            </div>
+        </section>
+
         <section class="card wide">
             <h2>Projects served</h2>
             <ul class="projects">
@@ -292,15 +310,6 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
             <p class="note"><code><?= e($projectsDir) ?></code>, <code>PROJECTS_DIRECTORY</code> in <code>.env</code>. Add a directory with a <code>public/index.php</code>, run <code>laser scan</code>, and it answers on its own name.</p>
         </section>
 
-        <section class="card">
-            <h2>PHP extensions</h2>
-            <div class="chips">
-                <?php foreach ($extensions as $extension): ?>
-                    <span class="chip <?= extension_loaded($extension) ? 'on' : 'off' ?>"><?= e($extension) ?></span>
-                <?php endforeach; ?>
-            </div>
-        </section>
-
         <section class="card wide">
             <h2>What is new</h2>
             <pre><?= e(implode("\n", $changelogHead)) ?></pre>
@@ -311,8 +320,24 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
         <a href="https://localdev.it/laserstack/" target="_blank" rel="noopener noreferrer">Documentation</a> &middot;
         <a href="https://github.com/sdbruder/laserstack" target="_blank" rel="noopener noreferrer">Repository</a> &middot;
         <a href="https://localdev.it/laserstack/compare.html" target="_blank" rel="noopener noreferrer">Comparison</a>
-        <p class="note">Read-only status page: it reads the checkout, opens a socket to each service and nothing else.</p>
+        <p class="note">Read-only status page: it reads the checkout, opens a socket to each service and nothing else. It reloads itself every <span id="refresh-every">few</span> seconds, keeping your place on the page; append <code>?refresh=0</code> to stop that.</p>
     </footer>
 </main>
+<script>
+  (function () {
+    var seconds = Number(new URLSearchParams(location.search).get('refresh') || <?= (int) $refreshSeconds ?>);
+    var label = document.getElementById('refresh-every');
+    if (label) { label.textContent = seconds ? String(seconds) : '0'; }
+    if (!seconds || seconds < 2) { return; }
+    var key = 'laserstack-dashboard-scroll';
+    var saved = sessionStorage.getItem(key);
+    if (saved !== null) { window.scrollTo(0, Number(saved)); sessionStorage.removeItem(key); }
+    setInterval(function () {
+      if (document.hidden) { return; }
+      sessionStorage.setItem(key, String(window.scrollY));
+      location.reload();
+    }, seconds * 1000);
+  })();
+</script>
 </body>
 </html>
