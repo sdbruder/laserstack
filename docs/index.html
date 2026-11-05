@@ -29,7 +29,7 @@
 <section class="hero"><div class="wrap">
   <p class="eyebrow">the localdev.it stack · macOS · Linux · WSL2 · docker-compose · one shell script · BSD-3-Clause</p>
   <h1>Many PHP projects.<br>One small stack.</h1>
-  <p class="lede">Laser Stack serves all of your Laravel, Symfony and WordPress projects from a single set of Alpine containers — one nginx, one PHP-FPM, one database server — with the PHP and database versions chosen by a variable. No VM, no per-project containers, no dashboard application to install. https on every project, from a certificate your browser already trusts.</p>
+  <p class="lede">Laser Stack serves all of your Laravel, Symfony and WordPress projects from a single set of Alpine containers — one nginx, one PHP-FPM, one database server — with the PHP and database versions chosen by a variable. No VM, no per-project containers, no dashboard application to install.</p>
   <div class="actions">
     <a class="btn primary" href="#quickstart">Quick start</a>
     <a class="btn" href="benchmarks.html">Measured numbers</a>
@@ -63,6 +63,17 @@ $ <span class="ok"># http://projecta.localdev.it and http://projectb.localdev.it
 </div></section>
 
 <section><div class="wrap">
+  <h2>https, out of the box</h2>
+  <p class="section-lede">Every project answers on 443 as well as on 80, from a wildcard certificate a browser already trusts — no CA to install, no warning page, no browser exception.</p>
+  <div class="grid">
+    <div class="card"><h3>Nothing to install, nothing to trust</h3><p>No mkcert step, no CA in the keychain, no re-trust after an update. The certificate is a real one, it covers every name under the suffix — including the project you create tomorrow — and <code>HTTPS=off</code> is one line if you want plain http back.</p></div>
+    <div class="card"><h3>A secure context, because it is not <code>localhost</code></h3><p>Service workers, <code>Secure</code> cookies, <code>SameSite=None</code>, <code>navigator.clipboard</code>, WebAuthn and camera or microphone permissions all require a secure context. <code>projecta.localdev.it</code> is not <code>localhost</code>, so over http they refuse — here they work, on 443, by default.</p></div>
+    <div class="card"><h3>What your tools and your CI expect</h3><p>curl, Postman, PHP, node and the browser validate the chain normally: no <code>-k</code>, no <code>--insecure</code>, no exception to remember. OAuth, SAML and payment callbacks that demand an <code>https</code> redirect URI work locally without a tunnel.</p></div>
+  </div>
+  <p class="section-lede"><a href="features.html#https">How https works here, and what a certificate of your own suffix takes →</a></p>
+</div></section>
+
+<section><div class="wrap">
   <h2>What it costs</h2>
   <p class="section-lede">Measured on a MacBook (Docker 29, arm64), warm images and data volumes — the state you are in from the second day. The method is on the <a href="benchmarks.html">numbers page</a>.</p>
   <div class="stats">
@@ -88,7 +99,6 @@ $ <span class="ok"># http://projecta.localdev.it and http://projectb.localdev.it
     <div class="card"><h3>Tested, not vibes</h3><p><code>test/smoke.sh</code> starts the stack once per PHP version and once per database profile and checks nginx, php-fpm, the php.ini of the repository, an HTTP response, an https response with a trusted certificate, and the PDO path from the app container to the server. The 0.13.0 release was verified against every version of every engine; 0.14.0 was verified on PHP 8.4 with mysql 8.0, mariadb 10.11 and postgres 15.1.</p></div>
     <div class="card"><h3>Always up to date</h3><p>The app images are rebuilt every night, so <code>laserstack/app:8.4</code> always carries the newest PHP 8.4 patch and a newer series appears as its own tag. <code>laser update</code> pulls the newest code and images and restarts only what changed.</p></div>
     <div class="card"><h3>Project names with no DNS setup</h3><p><code>localdev.it</code> is the default suffix, so every project answers as <code>projecta.localdev.it</code>: every name under that domain already resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone. No hosts file, no dnsmasq, nothing to install.</p></div>
-    <div class="card"><h3>https on by default, with a certificate that is already trusted</h3><p>Every project answers on 443 as well as on 80, from a real wildcard certificate: no CA to install, no warning page, no browser exception, and a project created tomorrow is covered the moment <code>laser scan</code> sees it. Service workers, <code>Secure</code> cookies and the clipboard work, because they require a secure context and <code>projecta.localdev.it</code> is not <code>localhost</code>.</p></div>
     <div class="card"><h3>No sshd, so nothing to log into</h3><p>The containers run nginx and php-fpm under supervisord and nothing else: no <code>sshd</code> and no <code>ssh</code> client, in any image. That is why the OpenSSH-on-musl authentication bypass (<a href="https://github.com/sdbruder/laserstack_app/blob/master/SECURITY-2026-11-openssh-musl.md">CVE-2026-123158</a>, fixed upstream in 10.6p2 on 2026-11-05) has no target here, and why the images are rebuilt every night from Alpine rather than patched by hand.</p></div>
     <div class="card"><h3>No magic, no lock-in</h3><p>Nothing rewrites your compose file and nothing guesses. When a container is missing you get docker's own error, which is the error you can act on.</p></div>
     <div class="card"><h3>macOS, Linux, WSL2</h3><p>Official support for macOS (Intel and Apple silicon), Linux and WSL2/WSLg, with Docker Desktop, OrbStack, Colima or the docker engine. The projects directory is bind-mounted, so your editor keeps working on your own files.</p></div>

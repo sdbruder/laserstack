@@ -31,6 +31,13 @@
 </div></section>
 
 <section><div class="wrap prose">
+  <h2 id="https">https, out of the box, with a certificate that is already trusted</h2>
+  <p>On by default: <code>laser up</code> provisions the certificate when this stack has never had one, and every project answers on 443 as well as on 80. With the default suffix <code>laser tls</code> downloads the wildcard certificate of <code>*.localdev.it</code> from <code>localdev.it/laserstack/tls/</code>, renewed and republished by the project itself: every browser trusts it already, macOS, Linux and <b>the Windows browser of a WSL user</b>, so no machine trusts anything and no warning page appears. Its private key is public by design, as with <code>local-ip.co</code> and <code>traefik.me</code>, so the padlock proves nothing about who answers — the name resolves to 127.0.0.1.</p>
+  <p>A secure context is not a detail: service workers, <code>Secure</code> cookies, <code>SameSite=None</code>, <code>navigator.clipboard</code>, WebAuthn and camera or microphone permissions all require one, and <code>projecta.localdev.it</code> is not <code>localhost</code>. OAuth and payment callbacks that demand an <code>https</code> redirect URI work here without a tunnel, and no tool needs <code>-k</code>.</p>
+  <p>With a suffix of your own, no public certificate can cover it, so the stack becomes its own authority: <code>laser tls</code> creates a CA in <code>config/tls/ca</code> and a certificate that names every project, and <code>laser trust</code> puts the CA where the platform reads it — the system keychain on macOS, <code>update-ca-certificates</code> or <code>update-ca-trust</code> on Linux, and the <b>Windows user store</b> from WSL, where the browser of a WSL user actually reads it. <code>laser trust --remove</code> takes it out, and one CA per machine covers every suffix.</p>
+</div></section>
+
+<section><div class="wrap prose">
   <h2>Many projects at once</h2>
   <p>Laser Stack mounts one directory — <code>PROJECTS_DIRECTORY</code>, the directory that holds your checkouts — into a single app container at <code>/var/www</code>. Every subdirectory with a <code>public/</code> directory becomes a site:</p>
   <ul>
@@ -138,9 +145,6 @@ projects served       30days laravel        app own vhost 200      blog no publi
 versions              PHP 7.4-8.6, mysql 8.0-26.10, mariadb 10.11-13.0, redis 7.4-8.10</code></pre>
   <p>It is read-only and it answers from inside the container: the PHP series it runs on, the projects of the projects directory — each with the driver <code>laser scan</code> found, whether laserstack serves it through a vhost of its own and the code its front page answered with — one socket test per service of the active profiles, the server version of the database, the version directories of <code>config/</code>, the extensions of the image and the head of the CHANGELOG. It writes nothing, runs no command, prints no credential and asks each project for its front page.</p>
 
-  <h2 id="https">HTTPS, with a certificate that is already trusted</h2>
-  <p>On by default: <code>laser up</code> provisions the certificate, and every project answers on 443 as well as on 80. With the default suffix <code>laser tls</code> downloads the wildcard certificate of <code>*.localdev.it</code> from <code>localdev.it/laserstack/tls/</code>, renewed and republished by the project itself: every browser trusts it already, macOS, Linux and <b>the Windows browser of a WSL user</b>, so no machine trusts anything and no warning page appears. Its private key is public by design, as with <code>local-ip.co</code> and <code>traefik.me</code>, so the padlock proves nothing about who answers — the name resolves to 127.0.0.1.</p>
-  <p>With a suffix of your own, no public certificate can cover it, so the stack becomes its own authority: <code>laser tls</code> creates a CA in <code>config/tls/ca</code> and a certificate that names every project, and <code>laser trust</code> puts the CA where the platform reads it — the system keychain on macOS, <code>update-ca-certificates</code> or <code>update-ca-trust</code> on Linux, and the <b>Windows user store</b> from WSL, where the browser of a WSL user actually reads it. <code>laser trust --remove</code> takes it out, and one CA per machine covers every suffix.</p>
 
   <h2>The <code>laser</code> CLI</h2>
   <p>One shell script is the whole interface. It copies <code>env.example</code> to <code>.env</code> on first use, reads it, and then:</p>
