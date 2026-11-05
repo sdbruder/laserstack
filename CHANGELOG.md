@@ -17,7 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   own vhosts, one socket test per service of the active profiles, the server
   version of the database, the version directories of `config/`, the extensions
   of the image and the head of this changelog. It writes nothing, runs no
-  command and never prints a credential.
+  command and never prints a credential. The projects are tiles that fill the
+  width, every link opens in its own tab, and the page reloads itself every ten
+  seconds while the tab is visible — keeping your place on the page — unless the
+  URL asks for another interval or for none (`?refresh=30`, `?refresh=0`).
 - Optional HTTPS, in two modes. With the default suffix, `laser tls` downloads
   the published certificate of `*.localdev.it` from
   <https://localdev.it/laserstack/tls/> — a real certificate, already trusted by
