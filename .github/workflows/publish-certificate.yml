@@ -5,20 +5,30 @@ name: publish the certificate of *.localdev.it
 # https://localdev.it/laserstack/tls/. An install refreshes its copy on the next
 # laser tls, and anyone can force it with laser tls --global.
 #
-# Two repository settings are needed:
-#   secret    CLOUD_DNS_SERVICE_ACCOUNT  the JSON of a service account of the
-#                                        Cloud DNS zone of localdev.it with
-#                                        roles/dns.admin. DNS-01 is the only
-#                                        challenge that can issue a wildcard.
+# DNS-01 is the only challenge that can issue a wildcard, so the zone needs a
+# provider with an API. The repository settings, by the provider in LEGO_DNS:
+#   variable  LEGO_DNS                   optional: gcloud by default, for the
+#                                        Cloud DNS zone of localdev.it, or
+#                                        cloudflare for a zone behind
+#                                        Cloudflare. A registrar without an API,
+#                                        like Squarespace Domains, which took
+#                                        over the Google Domains registrations in
+#                                        2023, cannot be renewed here: issue that
+#                                        certificate by hand with
+#                                        LEGO_DNS=manual ./tools/issue-global-certificate.sh
 #   variable  LETSENCRYPT_EMAIL          the address the certificate authority
 #                                        contacts about this certificate
-#   variable  CLOUD_DNS_PROJECT          optional: the project of the zone, read
-#                                        from the service account when it is unset
+#   secret    CLOUD_DNS_SERVICE_ACCOUNT  gcloud: the JSON of a service account of
+#                                        the zone with roles/dns.admin
+#   variable  CLOUD_DNS_PROJECT          gcloud, optional: the project of the zone,
+#                                        read from the service account when unset
+#   secret    CF_DNS_API_TOKEN           cloudflare: an API token with DNS:Edit
+#                                        on the zone
 #   variable  LEGO_VERSION               optional: a lego release tag, latest by
 #                                        default
 #
-# Until the secret exists the run says so and stops: there is nothing to issue
-# yet, and every install then serves the CA of its own machine.
+# Until the credential exists the run says so and stops: there is nothing to
+# issue yet, and every install then serves the CA of its own machine.
 
 on:
   schedule:
@@ -46,9 +56,27 @@ jobs:
     steps:
       - name: Is the workflow configured?
         id: settings
+        env:
+          LEGO_DNS: ${{ vars.LEGO_DNS }}
+          SERVICE_ACCOUNT: ${{ secrets.CLOUD_DNS_SERVICE_ACCOUNT }}
+          CF_TOKEN: ${{ secrets.CF_DNS_API_TOKEN }}
         run: |
-          if [ -z "${{ secrets.CLOUD_DNS_SERVICE_ACCOUNT }}" ]; then
-            echo "::notice title=The certificate workflow is not configured::Add the repository secret CLOUD_DNS_SERVICE_ACCOUNT, the JSON of a service account of the Cloud DNS zone of localdev.it with roles/dns.admin, and the repository variable LETSENCRYPT_EMAIL. Until then every install serves the CA of its own machine."
+          set -euo pipefail
+          provider="${LEGO_DNS:-gcloud}"
+          echo "provider=$provider" >>"$GITHUB_OUTPUT"
+          case "$provider" in
+            gcloud)
+              [ -n "$SERVICE_ACCOUNT" ] || fail="Add the repository secret CLOUD_DNS_SERVICE_ACCOUNT, the JSON of a service account of the Cloud DNS zone of localdev.it with roles/dns.admin, and the repository variable LETSENCRYPT_EMAIL."
+              ;;
+            cloudflare)
+              [ -n "$CF_TOKEN" ] || fail="Add the repository secret CF_DNS_API_TOKEN, an API token with DNS:Edit on the zone of localdev.it, and the repository variable LETSENCRYPT_EMAIL."
+              ;;
+            *)
+              fail="LEGO_DNS is $provider, which this workflow cannot run: only gcloud and cloudflare write a challenge record without asking a human."
+              ;;
+          esac
+          if [ -n "${fail:-}" ]; then
+            echo "::notice title=The certificate workflow is not configured::$fail Until then every install serves the CA of its own machine."
             echo "configured=false" >>"$GITHUB_OUTPUT"
           else
             echo "configured=true" >>"$GITHUB_OUTPUT"
@@ -92,17 +120,21 @@ jobs:
         if: steps.settings.outputs.configured == 'true'
         env:
           LEGO_EMAIL: ${{ vars.LETSENCRYPT_EMAIL }}
+          LEGO_DNS: ${{ steps.settings.outputs.provider }}
           CLOUD_DNS_PROJECT: ${{ vars.CLOUD_DNS_PROJECT }}
           SERVICE_ACCOUNT: ${{ secrets.CLOUD_DNS_SERVICE_ACCOUNT }}
+          CF_DNS_API_TOKEN: ${{ secrets.CF_DNS_API_TOKEN }}
           GCE_SERVICE_ACCOUNT_FILE: ${{ runner.temp }}/cloud-dns.json
         run: |
           set -euo pipefail
           umask 077
-          printf '%s' "$SERVICE_ACCOUNT" >"$GCE_SERVICE_ACCOUNT_FILE"
-          if [ -z "${CLOUD_DNS_PROJECT:-}" ]; then
-            export GCE_PROJECT=$(jq -r '.project_id // empty' "$GCE_SERVICE_ACCOUNT_FILE")
-          else
-            export GCE_PROJECT="$CLOUD_DNS_PROJECT"
+          if [ "${LEGO_DNS:-gcloud}" == "gcloud" ]; then
+            printf '%s' "$SERVICE_ACCOUNT" >"$GCE_SERVICE_ACCOUNT_FILE"
+            if [ -z "${CLOUD_DNS_PROJECT:-}" ]; then
+              export GCE_PROJECT=$(jq -r '.project_id // empty' "$GCE_SERVICE_ACCOUNT_FILE")
+            else
+              export GCE_PROJECT="$CLOUD_DNS_PROJECT"
+            fi
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

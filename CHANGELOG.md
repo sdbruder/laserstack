@@ -58,9 +58,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   80 and the http stack are untouched.
 - `.github/workflows/publish-certificate.yml` renews the published certificate
   of `*.localdev.it` every Monday and republishes it, so no machine ever has to do
-  it by hand; it stops with a notice while the repository secret of the Cloud DNS
-  service account is missing, and it fails the run when the certificate ends up
-  within two weeks of its expiry.
+  it by hand. The provider that writes the challenge record comes from the
+  repository variable `LEGO_DNS` — `gcloud` by default, `cloudflare` for a zone
+  behind Cloudflare — and each one reads its credential from its own repository
+  secret; while that credential is missing the run stops with a notice. A registrar
+  with no DNS API, like Squarespace Domains, which took over the Google Domains
+  registrations in 2023, cannot be renewed from a workflow at all: there
+  `LEGO_DNS=manual ./tools/issue-global-certificate.sh --commit` prints the TXT
+  record to add and waits for an enter, and publishes the result the same way. The
+  run fails when the certificate ends up within two weeks of its expiry.
 
 ### Fixed
 

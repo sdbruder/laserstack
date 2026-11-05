@@ -16,8 +16,14 @@
 #   - lego (https://github.com/go-acme/lego): one binary, DNS-01, which is the
 #     only challenge that can issue a wildcard. certbot with its gcloud plugin
 #     does the same job if you prefer it.
-#   - a service account of the Cloud DNS zone of localdev.it with the role
-#     roles/dns.admin, and the path of its JSON in GCE_SERVICE_ACCOUNT_FILE.
+#   - the credential of the provider that serves the zone, in LEGO_DNS:
+#       gcloud      a zone on Google Cloud DNS, credential in
+#                   GCE_SERVICE_ACCOUNT_FILE: the JSON of a service account with
+#                   roles/dns.admin (or GCE_ACCESS_TOKEN)
+#       cloudflare  a zone behind Cloudflare, credential in CF_DNS_API_TOKEN
+#       manual      a zone with no API at all: lego prints the TXT record, you
+#                   add it in the panel of the registrar and press enter
+#     `lego dnshelp -c <provider>` prints what each one reads.
 #
 # Usage:
 #   LEGO_EMAIL=you@example.com GCE_SERVICE_ACCOUNT_FILE=/path/sa.json \
@@ -27,6 +33,11 @@
 # Weekly from cron, on the machine that holds the credentials:
 #   17 4 * * 1 cd /path/to/laserstack && LEGO_EMAIL=you@example.com \
 #     GCE_SERVICE_ACCOUNT_FILE=/path/sa.json ./tools/issue-global-certificate.sh --commit
+#
+# A zone whose registrar offers no API, like Squarespace Domains, which took over
+# the Google Domains registrations in 2023, cannot be renewed by the workflow:
+# issue it by hand, add the record it asks for, and let Pages serve the result.
+#   LEGO_DNS=manual LEGO_EMAIL=you@example.com ./tools/issue-global-certificate.sh --commit
 #
 # Every install picks the new certificate up on its next laser tls, which also
 # runs when the cached one is about to expire.
@@ -39,7 +50,13 @@ cd "$laser_dir"
 domain="localdev.it"
 target="docs/tls"
 : "${LEGO_EMAIL:?set LEGO_EMAIL to the address the certificate authority contacts}"
-: "${GCE_SERVICE_ACCOUNT_FILE:?set GCE_SERVICE_ACCOUNT_FILE to the JSON of the DNS service account}"
+
+# The provider that writes the _acme-challenge TXT record of the zone. lego names
+# each one, and each reads its own environment.
+LEGO_DNS=${LEGO_DNS:-gcloud}
+if [ "$LEGO_DNS" == "gcloud" ]; then
+  : "${GCE_SERVICE_ACCOUNT_FILE:?set GCE_SERVICE_ACCOUNT_FILE to the JSON of the DNS service account, or LEGO_DNS to another provider}"
+fi
 
 if ! command -v lego >/dev/null 2>&1; then
   echo "lego is not installed: https://github.com/go-acme/lego#install" >&2
@@ -49,7 +66,7 @@ fi
 mkdir -p "$target"
 store="$laser_dir/config/tls/lego"
 mkdir -p "$store"
-lego_args=(--email "$LEGO_EMAIL" --dns gcloud --accept-tos --path "$store" --domains "*.$domain")
+lego_args=(--email "$LEGO_EMAIL" --dns "$LEGO_DNS" --accept-tos --path "$store" --domains "*.$domain")
 
 # lego 5 merged the two commands: run issues and renews, and --renew-days is a
 # flag of run. lego 4 still has renew --days, so both are accepted here.

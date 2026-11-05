@@ -403,6 +403,17 @@ Port 80 keeps serving the projects, and 443 is published only while `HTTPS=on`.
 `config/tls/` is not tracked; the published certificate of the site is, and
 `.github/workflows/publish-certificate.yml` renews and republishes it every week
 (`tools/issue-global-certificate.sh` does the same job by hand).
+
+The renewal needs a zone whose provider has an API: the workflow reads the
+repository variable `LEGO_DNS` — `gcloud` by default, `cloudflare` for a zone
+behind Cloudflare — and the credential of that provider from its repository
+secret. The zone of the default suffix is on Squarespace Domains today, which has
+no API, so that certificate is renewed by hand; the script prints the record to
+add and waits for an enter:
+
+```
+LEGO_DNS=manual LEGO_EMAIL=you@example.com ./tools/issue-global-certificate.sh --commit
+```
 ## Contributing
 
 The development documentation lives in [CONTRIBUTING.md](CONTRIBUTING.md): the
