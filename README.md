@@ -400,22 +400,13 @@ curl --cacert config/tls/ca/laserstack-local-ca.pem \
 ```
 
 Port 80 keeps serving the projects, and 443 is published only while `HTTPS=on`.
-`config/tls/` is not tracked; the published certificate of the site is, and
-`.github/workflows/publish-certificate.yml` renews and republishes it every week
-(`tools/issue-global-certificate.sh` does the same job by hand).
+`config/tls/` is not tracked; the published certificate of the site is.
 
-The renewal needs a zone whose provider has an API: the workflow reads the
-repository variable `LEGO_DNS` — `gcloud` by default, `cloudflare` for a zone
-behind Cloudflare — and the credential of that provider from its repository
-secret. The zone of the default suffix is on Cloudflare, so that certificate
-renews itself every week with nothing to do. A registrar with no DNS API — like
-Squarespace Domains, which took over the Google Domains registrations in 2023, or
-the zone as it was before the move — needs the record by hand: the script prints
-it and waits for an enter:
+The certificate is renewed and republished by the project itself, so an install
+never has to: `laser tls` fetches the published copy, caches it and refreshes it
+within a month of its end of life, and falls back to the CA of the machine when
+the address is unreachable.
 
-```
-LEGO_DNS=manual LEGO_EMAIL=you@example.com ./tools/issue-global-certificate.sh --commit
-```
 ## Contributing
 
 The development documentation lives in [CONTRIBUTING.md](CONTRIBUTING.md): the

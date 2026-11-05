@@ -58,14 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   80 and the http stack are untouched.
 - `.github/workflows/publish-certificate.yml` renews the published certificate
   of `*.localdev.it` every Monday and republishes it, so no machine ever has to do
-  it by hand. The provider that writes the challenge record comes from the
-  repository variable `LEGO_DNS` — `gcloud` by default, `cloudflare` for a zone
-  behind Cloudflare — and each one reads its credential from its own repository
-  secret; while that credential is missing the run stops with a notice. A registrar
-  with no DNS API, like Squarespace Domains, which took over the Google Domains
-  registrations in 2023, cannot be renewed from a workflow at all: there
-  `LEGO_DNS=manual ./tools/issue-global-certificate.sh --commit` prints the TXT
-  record to add and waits for an enter, and publishes the result the same way. The
+  it by hand. The provider that writes the challenge record comes from a repository
+  variable, and each provider reads its own credential from a repository secret;
+  while that credential is missing the run stops with a notice. A zone whose
+  registrar offers no DNS API cannot be renewed from a workflow at all: the script
+  then prints the challenge record to add and waits for an enter, and publishes the
+  result the same way. The
   run caches `config/tls/lego`, the untracked store that holds the ACME account
   and the certificate, so a fresh runner renews only when 30 days are left
   instead of issuing a new certificate on every run. The run fails when the
@@ -77,8 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolvers of the machine. On a GitHub runner that is the `systemd-resolved`
   stub, which serves an RRset for its whole TTL: the record of this challenge
   lives 120 seconds, so a retry read the answer of the attempt before it and the
-  run failed on a record that no longer existed. The check now asks
-  `1.1.1.1:53`, overridable with `LEGO_RESOLVERS`.
+  run failed on a record that no longer existed. The check now asks a public
+  resolver, overridable with `LEGO_RESOLVERS`.
 
 - `tools/issue-global-certificate.sh` handed lego `--email`, `--dns`,
   `--accept-tos`, `--path` and `--domains` as global flags. lego 5 keeps only

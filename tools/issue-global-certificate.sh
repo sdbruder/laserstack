@@ -38,9 +38,8 @@
 #   17 4 * * 1 cd /path/to/laserstack && LEGO_EMAIL=you@example.com \
 #     GCE_SERVICE_ACCOUNT_FILE=/path/sa.json ./tools/issue-global-certificate.sh --commit
 #
-# A zone whose registrar offers no API, like Squarespace Domains, which took over
-# the Google Domains registrations in 2023, cannot be renewed by the workflow:
-# issue it by hand, add the record it asks for, and let Pages serve the result.
+# A zone whose registrar offers no DNS API cannot be renewed from a workflow:
+# issue it by hand, add the record it asks for, and let the site serve the result.
 #   LEGO_DNS=manual LEGO_EMAIL=you@example.com ./tools/issue-global-certificate.sh --commit
 #
 # Every install picks the new certificate up on its next laser tls, which also

@@ -26,35 +26,13 @@ Two consequences worth knowing before you use it:
 
 ## Renewing
 
-`.github/workflows/publish-certificate.yml` renews it every Monday and publishes
-the result: it installs lego, hands the credential of the provider that writes
-the challenge record to `tools/issue-global-certificate.sh --commit`, and fails
-the run when the certificate ends up within two weeks of its expiry, so a broken
-renewal sends the mail a failed run sends. It also caches the store of the
-account and the certificate, so a run renews only when 30 days are left instead
-of issuing a new certificate every week. Start it by hand from the Actions tab
-when you want it now, and tick `use_this_ref` there to test a change of the
-script from a branch before it reaches the default branch.
+The certificate is renewed and republished by the project itself, so an install
+never has to. `laser tls` fetches whatever is published here, caches it in
+`config/tls/serve/`, and refreshes that copy when it is within a month of its
+end of life; `laser tls --global` forces the fetch.
 
-The provider is the one the zone can be written through, and each one reads its
-own credential. The run says so and stops while the credential is missing:
-
-| setting | what it is |
-|---|---|
-| variable `LEGO_DNS` | optional: `gcloud` (the default) for a zone on Cloud DNS, `cloudflare` for a zone behind Cloudflare |
-| secret `CF_DNS_API_TOKEN` | cloudflare: an API token with `Zone.DNS:Edit` on the zone |
-| secret `CLOUD_DNS_SERVICE_ACCOUNT` | gcloud: the JSON of a service account of the zone with `roles/dns.admin` |
-| variable `LETSENCRYPT_EMAIL` | the address the certificate authority contacts |
-| variable `CLOUD_DNS_PROJECT` | gcloud, optional: the project of the zone, read from the service account when unset |
-| variable `LEGO_RESOLVERS` | optional: the resolver the propagation check asks, `1.1.1.1:53` by default |
-| variable `LEGO_VERSION` | optional, a lego release tag: the latest release is used when unset |
-
-The zone of `localdev.it` is on Cloudflare, so the weekly run needs no manual
-step. A registrar with no DNS API cannot be renewed from a workflow at all:
-issue that certificate by hand, the script prints the record to add and waits
-for an enter.
-
-Without the workflow, `tools/issue-global-certificate.sh --commit` does the same
-job by hand; put it in cron if you prefer. Each install refreshes its copy on the
-next `laser tls`, and `laser tls --global` forces it.
-
+If the published copy ever looks absent or expired, `laser tls` falls back to a
+certificate authority of the machine, and `laser trust` puts that authority in
+the trust store of the platform. How the project renews and publishes this
+certificate is deliberately not described here: it is the part that is nobody
+else's business.
