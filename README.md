@@ -285,8 +285,8 @@ answers as soon as `laser up -d` runs.
 It is read-only, and it says what the stack is doing right now:
 
 - the PHP series of the app container and the `config/php<VV>` directory it uses;
-- the projects of `PROJECTS_DIRECTORY`, each with its link and the driver
-  `laser scan` identifies it by;
+- the projects of `PROJECTS_DIRECTORY`, each with its link, the driver
+  `laser scan` identifies it by and whether it has an nginx vhost of its own;
 - one socket test per service, with the answer time and the server version of the
   database, and the difference between a service of an enabled profile that does
   not answer and one whose profile is off;

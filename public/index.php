@@ -203,6 +203,7 @@ foreach (scandir($projectsDir) ?: [] as $entry) {
         'name' => $entry,
         'index' => is_file($path . '/public/index.php'),
         'public' => is_dir($path . '/public'),
+        'vhost' => is_file('/etc/nginx/http.d/' . $entry . '.conf'),
         'driver' => driver($path),
         'self' => $entry === $self,
     ];
@@ -377,7 +378,9 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                         <a href="<?= e('//' . $project['name'] . '.' . $suffix . '/') ?>" target="_blank" rel="noopener noreferrer" title="<?= e($project['name'] . '.' . $suffix) ?>"><?= e($project['name']) ?></a>
                         <?php if ($project['driver'] !== null): ?><span class="pill on" title="laser scan writes the vhost of this project with the <?= e($project['driver']) ?> driver"><?= e($project['driver']) ?></span><?php endif; ?>
                         <?php if ($project['self']): ?><span class="pill dim">this page</span><?php endif; ?>
+                        <?php // the flags of a project the driver does not already describe: no public directory under no driver, and a vhost written outside the driver ?>
                         <?php if ($project['driver'] === null && !$project['public']): ?><span class="pill dim" title="no public directory and no driver: the multi-project vhost cannot serve it">no public/</span><?php endif; ?>
+                        <?php if ($project['vhost'] && !in_array($project['driver'], ['wordpress', 'generic'], true)): ?><span class="pill dim" title="an nginx vhost of its own, which its driver does not write">own vhost</span><?php endif; ?>
                     </li>
                 <?php endforeach; ?>
             </ul>
