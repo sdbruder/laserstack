@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Roadmap — Laser Stack</title>
-<meta name="description" content="What Laser Stack ships next: several PHP versions and database servers at the same time, and a local DNS that maintains itself. Plus what just shipped in 0.13.1.">
+<meta name="description" content="What Laser Stack ships next: several PHP versions and database servers at the same time, and a local DNS that maintains itself. Plus what just shipped in 0.13.2.">
 <link rel="canonical" href="https://localdev.it/laserstack/roadmap.html">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Roadmap — Laser Stack">
@@ -55,6 +55,14 @@
   <p><strong>Mostly moot, and worth saying:</strong> the domain <code>localdev.it</code> already does this without any daemon. Every name under it resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone, so <code>SUFFIX=localdev.it</code> gives every project a working name with nothing installed and nothing to maintain — which is why it is the default of <code>env.example</code> now, and a project needs no DNS step at all. What remains above is the convenience of a suffix of the user's own.</p>
 
   <hr>
+
+  <h2>Just shipped — 0.13.2, 2026-11-05</h2>
+  <ul>
+    <li><strong>Each database version keeps its own data volume.</strong> The volume name carries the version, so switching <code>MYSQL_VERSION</code>, <code>MARIADB_VERSION</code> or <code>POSTGRES_VERSION</code> starts that version with its own data directory and leaves the data of the others alone: a version change needs no <code>laser down -v</code> and loses nothing. Before this, one volume per engine was shared by every version of it, which is what made a version switch fail on a downgrade or destroy data;</li>
+    <li><strong>Upgrading from an earlier release:</strong> the databases now live under the versioned names, so a stack that ran before starts with a fresh volume unless you copy the old one across — the README has the two commands, and the old volume is left untouched either way;</li>
+    <li><strong>A comparison page</strong>: Valet, Herd, Sail, DDEV, Lando, Laradock and lerd, on the axis that decides the bill — one stack for every project, or one container set per project — with every claim sourced from the project's own documentation;</li>
+    <li><strong>A terminal demo</strong> of the real flow, on the overview page and in the README: two containers, seventeen projects, one request answering 200.</li>
+  </ul>
 
   <h2>Just shipped — 0.13.1, 2026-11-05</h2>
   <ul>
