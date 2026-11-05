@@ -274,6 +274,27 @@ Stack can identify which project you are trying to access. `SUFFIX` comes from
 You can add a dnsmasq config to resolve every `*.<SUFFIX>` to 127.0.0.1
 automatically, but that's beyond the scope of this introduction.
 
+## The dashboard
+
+The checkout is one of the projects the stack serves, so Laser Stack has a
+dashboard on `laserstack.<SUFFIX>` — `http://laserstack.localdev.it/` with the
+default suffix. It needs no vhost and no extra container: the multi-project
+vhost serves any `public/index.php` of the projects directory, so the page
+answers as soon as `laser up -d` runs.
+
+It is read-only, and it says what the stack is doing right now:
+
+- the PHP series of the app container and the `config/php<VV>` directory it uses;
+- the projects of `PROJECTS_DIRECTORY`, each with its link and whether it has an
+  nginx vhost of its own;
+- one socket test per service of the active profiles, with the answer time, and
+  the server version of the database;
+- the version directories of `config/`, the extensions of the image and the head
+  of the CHANGELOG.
+
+It reads the checkout, opens a socket to each service and nothing else: it writes
+nothing, runs no command and never prints a credential.
+
 ## Contributing
 
 The development documentation lives in [CONTRIBUTING.md](CONTRIBUTING.md): the

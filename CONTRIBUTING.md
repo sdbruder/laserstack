@@ -10,6 +10,7 @@ release. The documentation for *using* the stack is in the
 ```
 docker-compose.yml    the app service and one service per database profile
 laser                 the shell script around docker-compose, the user interface
+public/index.php      the dashboard, served by the stack as one more project
 env.example           the documented .env; laser copies it when .env is absent
 config/               the config of every image version, mounted per service
   php<VV>/            php.ini, php-fpm.conf and php-fpm.d of one PHP series

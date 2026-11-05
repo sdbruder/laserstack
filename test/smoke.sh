@@ -9,6 +9,8 @@
 #   - php-fpm runs its workers as the "laser" user
 #   - the php.ini of the repository is the file that PHP loads
 #   - a project answers over http with the expected PHP version
+#   - the dashboard of the checkout answers on laserstack.<SUFFIX> and lists the
+#     projects directory
 #   - the run writes nothing into config/nginx/http.d of the repository
 #
 # Stage "database", for every database profile (mysql, mariadb, postgres) and
@@ -161,6 +163,14 @@ for version in $versions; do
   body=$("$laser" appexec curl -sS -m 10 -H "Host: $smoke_project.$SUFFIX" http://127.0.0.1/ 2>/dev/null)
   check "the project answers with PHP $version ($body)" \
     "$(echo "$body" | grep -q "php=$version\." && echo 0 || echo 1)"
+
+  # the checkout is one of the projects, so the catch-all vhost serves the
+  # dashboard without a vhost of its own
+  dashboard=$("$laser" appexec curl -sS -m 10 -H "Host: laserstack.$SUFFIX" http://127.0.0.1/ 2>/dev/null)
+  check "the dashboard of the checkout answers" \
+    "$(echo "$dashboard" | grep -q '<title>Laser Stack</title>' && echo 0 || echo 1)"
+  check "the dashboard lists the projects directory ($smoke_project)" \
+    "$(echo "$dashboard" | grep -q "$smoke_project" && echo 0 || echo 1)"
 
   ini_md5=$(echo "$body" | sed -n 's/.*inimd5=\([0-9a-f]*\).*/\1/p')
   ini_known=$(md5_of config/php*/php.ini 2>/dev/null | grep -c "^$ini_md5$")

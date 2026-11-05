@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The Laser Stack dashboard, `public/index.php`. The checkout is one of the
+  projects the stack serves, so the catch-all vhost answers for it on
+  `laserstack.<SUFFIX>` as soon as `laser up -d` runs — no extra vhost, no extra
+  container. It is a read-only page: the PHP series and the config directory of
+  the container, the projects of `PROJECTS_DIRECTORY` with their links and their
+  own vhosts, one socket test per service of the active profiles, the server
+  version of the database, the version directories of `config/`, the extensions
+  of the image and the head of this changelog. It writes nothing, runs no
+  command and never prints a credential.
+
+### Fixed
+
+- The php-fpm pool of every PHP series cleared the environment, so no project
+  could read `SUFFIX` or the `MYSQL_*` values the `app` service already sets in
+  `docker-compose.yml`. The pools now carry `clear_env = no`, which is what makes
+  those variables visible to PHP. They were already visible to any `docker exec`
+  in the container, so this changes nothing about who can read them.
+
 ## [0.13.2] 2026-11-05
 
 ### Added

@@ -126,6 +126,17 @@ http://projecta.localdev.it      http://myapp.localdev.it      http://clientport
   elasticsearch/7.14.2/ elasticsearch.yml</code></pre>
   <p>Change a value, restart one service (<code>laser restartnginx</code>, <code>laser stop db &amp;&amp; laser up -d db</code>), review the change in a pull request. Your team gets the same php.ini and the same database settings because they are in the repository, not in somebody's Docker Desktop.</p>
 
+  <h2 id="dashboard">A dashboard, served like any project</h2>
+  <p>The checkout is one of the projects of the projects directory, so the stack serves a dashboard for itself on <code>laserstack.&lt;SUFFIX&gt;</code>. The multi-project vhost serves any <code>public/index.php</code>, so no second vhost and no second container are involved: the page is there as soon as <code>laser up -d</code> runs.</p>
+  <pre><code>PHP 8.2.35            config/php82            suffix mac
+
+services              MySQL db:3306 up 0 ms      MariaDB mariadb:3306 up 0 ms
+                      PostgreSQL no answer         redis no answer
+
+projects served       30days   aesweb   app   laserstack   …
+versions              PHP 7.4-8.6, mysql 8.0-26.10, mariadb 10.11-13.0, redis 7.4-8.10</code></pre>
+  <p>It is read-only and it answers from inside the container: the PHP series it runs on, the projects of the projects directory with their vhosts, one socket test per service of the active profiles, the server version of the database, the version directories of <code>config/</code>, the extensions of the image and the head of the CHANGELOG. It writes nothing, runs no command and prints no credential.</p>
+
   <h2>The <code>laser</code> CLI</h2>
   <p>One shell script is the whole interface. It copies <code>env.example</code> to <code>.env</code> on first use, reads it, and then:</p>
   <div class="table-scroll"><table>
@@ -148,7 +159,7 @@ http://projecta.localdev.it      http://myapp.localdev.it      http://clientport
   <h2>Tested on every version</h2>
   <p><code>test/smoke.sh</code> is part of the repository, and it starts the stack for real:</p>
   <ul>
-    <li><strong>app stage, per PHP version:</strong> nginx and php-fpm reach RUNNING, no nginx emergency in the log, the workers run as the <code>laser</code> user, PHP loads the php.ini of the repository, a project answers over HTTP with the requested version, and the run writes nothing into the repository's nginx config directory;</li>
+    <li><strong>app stage, per PHP version:</strong> nginx and php-fpm reach RUNNING, no nginx emergency in the log, the workers run as the <code>laser</code> user, PHP loads the php.ini of the repository, a project answers over HTTP with the requested version, the <a href="#dashboard">dashboard</a> answers on <code>laserstack.&lt;SUFFIX&gt;</code> and lists the projects directory, and the run writes nothing into the repository's nginx config directory;</li>
     <li><strong>database stage, per profile:</strong> <code>laser mysql</code> or <code>laser psql</code> answers with the server of the profile, and PDO from the app container reaches that server under the host name a project uses.</li>
   </ul>
   <p>A version variable drives it: <code>SMOKE_MYSQL_VERSION=9.7 SMOKE_DB_PROFILES=mysql test/smoke.sh 8.5</code>. The 0.13.0 release was verified that way for mysql 8.0/8.4/9.7/26.10, mariadb 10.11–13.0, postgres 15.1–18, redis 7.4–8.10, memcached 1.6 and elasticsearch 7.14.2/8.19.23/9.5.5, plus a Laravel 12 application reaching every engine through <code>artisan</code>.</p>
