@@ -109,8 +109,15 @@ version variable that selects the image tag and the config directory
 | memcached     | `MEMCACHED_VERSION`     | `memcached:1.6-alpine` | none                              | none, the image has no config file                 |
 | Elasticsearch | `ELASTICSEARCH_VERSION` | `elasticsearch:7.14.2` | `8.19.23`, `9.5.5`                | `config/elasticsearch/<version>/elasticsearch.yml` |
 
-A data volume belongs to the server version that created it, so a version change
-needs `laser down -v` (or the server upgrade of that engine) before `laser up`.
+Each database engine keeps one data volume per version,
+`<project>_dbdata_<version>`, `<project>_mariadata_<version>` and
+`<project>_pgdata_<version>`, so switching a version starts it with its own data
+directory and leaves the other versions' data untouched: a version change needs no
+`laser down -v` and loses nothing. A data directory is still readable only by the
+server version that created it, which is why the version is part of the name.
+Stacks that ran an older release keep their data in the old, unversioned volume:
+`docker volume create <project>_dbdata_<version>` and a `cp -a` between the two
+volumes moves it.
 The accounts of MySQL `8.4`, `9.7` and `26.10` use `caching_sha2_password`
 (MySQL 9.0 removed `mysql_native_password`), which is why `laser mysql` runs the
 client of the database container, not the client of the app container. The

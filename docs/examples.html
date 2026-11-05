@@ -99,8 +99,7 @@ cd ~/src/myapp &amp;&amp; laser artisan migrate</code></pre>
   <h2>5 · Try the database version you are about to deploy on</h2>
   <pre><code>cd ~/src/laserstack
 sed -i '' 's/^MYSQL_VERSION=.*/MYSQL_VERSION=9.7/' .env
-laser down -v          <span class="out"># a data volume belongs to the server that created it</span>
-laser up -d
+laser up -d            <span class="out"># 9.7 gets its own data volume, 8.0 keeps its data</span>
 laser mysql -e 'select version()'
 <span class="out">9.7.4</span>
 cd ~/src/myapp &amp;&amp; laser artisan migrate &amp;&amp; laser test</code></pre>

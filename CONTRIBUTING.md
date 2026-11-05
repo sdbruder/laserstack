@@ -181,8 +181,8 @@ SMOKE_PULL=0 test/smoke.sh 8.4                # use the local images
 The test pulls the image of every version it starts, so an old image of an
 earlier run cannot fail the test. `SMOKE_PULL=0` keeps the local images. A run
 with `SMOKE_MYSQL_VERSION`, `SMOKE_MARIADB_VERSION` or `SMOKE_POSTGRES_VERSION`
-drops the volumes first, because a data volume belongs to the server version
-that created it.
+runs that version against its own data volume, so the test never removes a volume
+and the data of the other profiles survives the run.
 
 The test stops the stack at the end and leaves `.env` as it was. The database
 volumes stay, and the first run pulls the images of the database profiles.
@@ -270,8 +270,8 @@ changed and how it was verified.
 - `docker-compose --profile <profile> config` prints what compose makes of the
   files: the resolved image tags, the mount sources, the commands and the values
   of every `${VAR:-default}`;
-- a change of the version of a database needs `laser down -v`, because the data
-  volume belongs to the server version that created it;
+- a change of the version of a database switches to the data volume of that
+  version (`<project>_<engine>data_<version>`), so nothing else has to be reset;
 - there is no validation layer. A path that the version does not have, an image
   tag that does not exist, or a variable in a config file that the server does
   not know all end as the raw docker or server error, and that error is the

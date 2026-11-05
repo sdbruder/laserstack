@@ -150,11 +150,19 @@ services:
       - full
 
 volumes:
+  # One volume per server version, not one per engine: the name carries the
+  # version, so another MYSQL_VERSION starts that version with its own data
+  # directory and leaves the data of the other versions alone. A data directory
+  # is only readable by the server version that created it, so the version has
+  # to be part of the name.
   dbdata:
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_dbdata_${MYSQL_VERSION:-8.0}"
     driver: local
   pgdata:
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_pgdata_${POSTGRES_VERSION:-15.1}"
     driver: local
   mariadata:
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_mariadata_${MARIADB_VERSION:-10.11}"
     driver: local
 networks:
   laser:

@@ -257,9 +257,9 @@ for profile in $db_profiles; do
     sed -e "s/^PHP_VERSION=.*/PHP_VERSION=$version/" -e "s/^PROFILES=.*/PROFILES=$profile/" "$env_backup" >.env
     setenv SUFFIX "$SUFFIX"
     setenv "$db_var" "$db_ver"
-    # a data volume belongs to the server version that created it, so an
-    # explicit version of the test starts from an empty one
-    [ -n "$smoke_mysql_version$smoke_mariadb_version$smoke_postgres_version" ] && "$laser" down -v >/dev/null 2>&1
+    # the data volume of a database carries its version in the name, so a run
+    # with another version gets its own data directory: this test never has to
+    # remove a volume, which would destroy the data of the other profiles
     [ "$pull_images" == "1" ] && { "$laser" pull >/dev/null 2>&1 || echo "  --   the pull failed, the local images are used"; }
     "$laser" up >/dev/null 2>&1
     dbcheck "$profile" "$version"

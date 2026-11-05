@@ -19,6 +19,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   projects, a project answering 200, and the two containers that serve them all —
   at `docs/demo.gif`, on the overview page and in the README.
 
+### Changed
+
+- Each database engine keeps one data volume **per version**:
+  `<project>_dbdata_<version>`, `<project>_mariadata_<version>` and
+  `<project>_pgdata_<version>`. Switching `MYSQL_VERSION` — or the mariadb or
+  postgres one — now starts that version with its own data directory and leaves
+  the data of every other version untouched, so a version change no longer needs
+  `laser down -v`. `test/smoke.sh` drops no volume either, where before a run with
+  `SMOKE_MYSQL_VERSION` and the like destroyed the data of the other profiles.
+  Migration: a stack that ran an older release keeps its data in the old,
+  unversioned volume (`<project>_dbdata`). `docker volume create
+  <project>_dbdata_<version>` plus a `cp -a` from the old volume to the new one
+  moves it, otherwise that version starts from an empty database.
+
 ## [0.13.1] 2026-11-05
 
 ### Added

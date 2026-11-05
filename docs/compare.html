@@ -131,7 +131,7 @@
     <li><strong>Names that need no setup.</strong> <code>SUFFIX</code> defaults to <code>localdev.it</code>, a domain where every name — any depth, IPv4 and IPv6 — resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone. No hosts file, no dnsmasq, no daemon. A suffix of your own needs <code>/etc/hosts</code>, and a change of suffix needs <code>laser up -d</code> before <code>laser scan</code>.</li>
     <li><strong>Config in the repository, per version.</strong> <code>config/&lt;engine&gt;/&lt;version&gt;/</code> holds the settings of each supported version, so a version is a variable and a directory, not an edit of the compose file.</li>
     <li><strong>Reproducible by design:</strong> two <code>git</code> repositories, one <code>docker-compose.yml</code>, no build step, no VM, no system package, no daemon of its own. The app images are rebuilt nightly, and <code>laser update</code> moves a running stack to the newest patch.</li>
-    <li><strong>What it does not have:</strong> a GUI, Windows without WSL2, per-project PHP versions (planned), and a <code>memcached</code> PHP extension in the app images (the profile serves the server, not the client). A data volume belongs to the server version that created it, so changing a database version means starting from an empty volume or upgrading that server.</li>
+    <li><strong>What it does not have:</strong> a GUI, Windows without WSL2, per-project PHP versions (planned), and a <code>memcached</code> PHP extension in the app images (the profile serves the server, not the client). Each database version keeps its own data volume, so changing a version keeps the data of the others and loses nothing.</li>
   </ul>
 
   <h2>Try it</h2>
