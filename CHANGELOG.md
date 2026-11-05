@@ -66,7 +66,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   registrations in 2023, cannot be renewed from a workflow at all: there
   `LEGO_DNS=manual ./tools/issue-global-certificate.sh --commit` prints the TXT
   record to add and waits for an enter, and publishes the result the same way. The
-  run fails when the certificate ends up within two weeks of its expiry.
+  run caches `config/tls/lego`, the untracked store that holds the ACME account
+  and the certificate, so a fresh runner renews only when 30 days are left
+  instead of issuing a new certificate on every run. The run fails when the
+  certificate ends up within two weeks of its expiry.
 
 ### Fixed
 
