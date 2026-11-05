@@ -70,6 +70,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `tools/issue-global-certificate.sh` handed lego `--email`, `--dns`,
+  `--accept-tos`, `--path` and `--domains` as global flags. lego 5 keeps only
+  the log and config flags global and takes the rest on the command, so a lego 5
+  stopped with `flag provided but not defined: -email`. The script now decides by
+  the major version: lego 5 gets the flags on `run --renew-days 30`, lego 4 keeps
+  `renew --days 30`.
 - The php-fpm pool of every PHP series cleared the environment, so no project
   could read `SUFFIX` or the `MYSQL_*` values the `app` service already sets in
   `docker-compose.yml`. The pools now carry `clear_env = no`, which is what makes

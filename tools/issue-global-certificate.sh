@@ -66,14 +66,17 @@ fi
 mkdir -p "$target"
 store="$laser_dir/config/tls/lego"
 mkdir -p "$store"
-lego_args=(--email "$LEGO_EMAIL" --dns "$LEGO_DNS" --accept-tos --path "$store" --domains "*.$domain")
-
-# lego 5 merged the two commands: run issues and renews, and --renew-days is a
-# flag of run. lego 4 still has renew --days, so both are accepted here.
+# lego 5 moved every flag of the request onto the command, where lego 4 took
+# them globally, and moved renewal into run: --renew-days is the window it renews
+# in. lego 4 still has renew --days. The flags of a lego 4 cannot be handed to a
+# lego 5 (--email there is "flag provided but not defined"), so the major version
+# decides the form.
 lego_major=$(lego --version 2>/dev/null | awk '{print $3}' | cut -d. -f1)
 if [ "${lego_major:-4}" -ge 5 ] 2>/dev/null; then
-  lego "${lego_args[@]}" run --renew-days 30
+  lego run --email "$LEGO_EMAIL" --dns "$LEGO_DNS" --accept-tos --path "$store" \
+    --domains "*.$domain" --renew-days 30
 else
+  lego_args=(--email "$LEGO_EMAIL" --dns "$LEGO_DNS" --accept-tos --path "$store" --domains "*.$domain")
   lego "${lego_args[@]}" renew --days 30 || lego "${lego_args[@]}" run
 fi
 
