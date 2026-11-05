@@ -149,7 +149,7 @@ laser update            <span class="out"># the same, then restart the container
     <li><strong>one PHP version per stack.</strong> Every project of a stack shares the app container. Per-project PHP versions are planned;</li>
     <li><strong>one version per database engine.</strong> mysql, mariadb, postgres, redis, memcached and elasticsearch can run side by side, but each engine runs the version you selected;</li>
     <li><strong>a suffix of your own needs <code>/etc/hosts</code></strong>. The default suffix, <code>localdev.it</code>, resolves every name under it to loopback for anyone, so it needs nothing at all; a local dnsmasq that <code>laser</code> installs and maintains, for a suffix of your own, is planned;</li>
-    <li><strong>memcached is server only:</strong> the app images carry no <code>memcached</code> PHP extension, so it cannot be a Laravel cache store;</li>
+    <li><strong>memcached is a cache store from 7.4 to 8.5:</strong> the images carry the <code>memcached</code> extension there. PHP 8.6 is a release candidate and has neither an Alpine package nor a pecl build of the extension yet, so that series has the server without the client;</li>
     <li><strong>no Windows-native support:</strong> use WSL2. macOS and Linux run as they are;</li>
     <li><strong>no environment validation:</strong> by design. A missing image, an unknown config path or a stopped container gives you docker's own error.</li>
   </ul>

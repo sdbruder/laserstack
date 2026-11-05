@@ -123,12 +123,11 @@ first image of a *new* series is work.
    SMOKE_POSTGRES_VERSION=18 SMOKE_DB_PROFILES=postgres test/smoke.sh 8.5
    ```
 
-4. for redis, memcached and elasticsearch there is no smoke stage: start the
-   profile and probe it, for example
-   `laser appexec php -r '$r=new Redis();$r->connect("redis",6379);echo $r->ping();'`
-   for redis and `laser appexec curl -sS http://elasticsearch:9200` for
-   elasticsearch. The app images have no `Memcached` class, so probe memcached
-   with its protocol: `printf 'version\r\n' | nc 127.0.0.1 11211` on the host.
+4. redis and memcached are covered by the `cache` stage: it starts the profile
+   and asserts that the extension of the app image writes a value through the
+   server and reads it back, so a version override is enough. elasticsearch has
+   no stage: start the profile and probe it,
+   `laser appexec curl -sS http://elasticsearch:9200`.
 
 Things the current list taught us, in case the new version behaves the same way:
 
@@ -195,8 +194,11 @@ and the data of the other profiles survives the run.
 The test stops the stack at the end and leaves `.env` as it was. The database
 volumes stay, and the first run pulls the images of the database profiles.
 
-redis, memcached and elasticsearch have no stage in the test: start the profile
-and probe it by hand, see [Add a database version](#add-a-database-version).
+elasticsearch has no stage in the test: start the profile and probe it by hand,
+see [Add a database version](#add-a-database-version). redis and memcached run
+in the `cache` stage, one `laser up` per profile and PHP version, and the check
+is the one a project makes: the `Redis` or `Memcached` class of the image sets a
+value on the server and reads it back.
 
 A sweep over every supported server version is a loop around the test, driven by
 the config directories, so no version list has to be kept in sync:

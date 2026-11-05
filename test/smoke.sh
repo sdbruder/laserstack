@@ -21,6 +21,13 @@
 #   - PHP of the app container reaches the server with PDO, with the host name
 #     a project uses (db, mariadb, postgres)
 #
+# Stage "cache", for every cache profile (redis, memcached) and every version
+# it checks:
+#
+#   - the client extension is in the app image (the Redis and Memcached classes)
+#   - PHP of the app container writes a value through the server and reads it
+#     back, which is what a Laravel cache store does
+#
 # The test does not use port 80 of the host, because another web server (Valet,
 # Herd) may hold it. The http check calls curl inside the app container.
 #
@@ -36,6 +43,8 @@
 #        SMOKE_MYSQL_VERSION=9.7 SMOKE_DB_PROFILES=mysql test/smoke.sh 8.5
 #        SMOKE_MARIADB_VERSION=11.8 SMOKE_DB_PROFILES=mariadb test/smoke.sh 8.5
 #        SMOKE_POSTGRES_VERSION=18 SMOKE_DB_PROFILES=postgres test/smoke.sh 8.5
+#        SMOKE_CACHE_PROFILES=memcached test/smoke.sh 8.4
+#        SMOKE_CACHE_PROFILES="" test/smoke.sh 8.4      (skip the cache stage)
 #        SMOKE_PULL=0 test/smoke.sh 8.4
 
 set -u
@@ -50,6 +59,13 @@ db_profiles="${SMOKE_DB_PROFILES:-mysql mariadb postgres}"
 smoke_mysql_version="${SMOKE_MYSQL_VERSION:-}"
 smoke_mariadb_version="${SMOKE_MARIADB_VERSION:-}"
 smoke_postgres_version="${SMOKE_POSTGRES_VERSION:-}"
+# the cache profiles to test against the client extensions of the image. An
+# explicit empty value skips the whole stage.
+cache_profiles="${SMOKE_CACHE_PROFILES-redis memcached}"
+# versions whose image has no client for the cache profiles, so there is
+# nothing to test. 8.6 is a release candidate: Alpine has no package for the
+# memcached extension and the pecl build does not compile against it.
+cache_skip_versions="${SMOKE_CACHE_SKIP_VERSIONS-8.6}"
 # the test pulls the images of the version it starts, so a stale image of an
 # older run cannot fail the test. SMOKE_PULL=0 keeps the local images.
 pull_images="${SMOKE_PULL:-1}"
@@ -124,8 +140,8 @@ $ini = php_ini_loaded_file();
 echo 'php=', PHP_VERSION, ' ini=', $ini, ' inimd5=', md5_file($ini), ' euid=', $uid[1], "\n";
 PHP
 
-echo "smoke test: versions [$versions], database profiles [$db_profiles]"
-echo "the first run pulls the images of the database profiles"
+echo "smoke test: versions [$versions], database profiles [$db_profiles], cache profiles [${cache_profiles:-none}]"
+echo "the first run pulls the images of the profiles"
 
 say "stage app"
 for version in $versions; do
@@ -291,6 +307,58 @@ for profile in $db_profiles; do
     [ "$pull_images" == "1" ] && { "$laser" pull >/dev/null 2>&1 || echo "  --   the pull failed, the local images are used"; }
     "$laser" up >/dev/null 2>&1
     dbcheck "$profile" "$version"
+    [ "$fails" -gt "$fails_before" ] && failed_items="$failed_items $profile:$version"
+    "$laser" stop >/dev/null 2>&1
+  done
+  "$laser" down >/dev/null 2>&1
+done
+
+# cachecheck <profile>: the extension of the image talks to the server, which
+# is the whole point of the profile: a Laravel cache store needs the class.
+cachecheck() {
+  local profile="$1" out=""
+
+  case "$profile" in
+  redis)
+    for _ in $(seq "$db_wait_seconds"); do
+      out=$("$laser" appexec php -r "\$r=new Redis();\$r->connect('redis',6379);\$r->set('laser','smoke');echo \$r->get('laser');" 2>&1 | tr '\n' ' ' | tr -s ' ')
+      [ "$out" == "smoke" ] && break
+      sleep 1
+    done
+    check "PHP of the image reaches redis with the Redis class (${out:0:120})" \
+      "$([ "$out" == "smoke" ] && echo 0 || echo 1)"
+    ;;
+  memcached)
+    for _ in $(seq "$db_wait_seconds"); do
+      out=$("$laser" appexec php -r "\$m=new Memcached();\$m->addServer('memcached',11211);\$m->set('laser','smoke',30);echo \$m->get('laser');" 2>&1 | tr '\n' ' ' | tr -s ' ')
+      [ "$out" == "smoke" ] && break
+      sleep 1
+    done
+    check "PHP of the image reaches memcached with the Memcached class (${out:0:120})" \
+      "$([ "$out" == "smoke" ] && echo 0 || echo 1)"
+    ;;
+  *) echo "  --   $profile is not a cache profile of the test" ;;
+  esac
+}
+
+say "stage cache"
+for profile in $cache_profiles; do
+  say "cache $profile"
+  "$laser" down >/dev/null 2>&1
+  for version in $versions; do
+    case " $cache_skip_versions " in
+    *" $version "*)
+      echo "  -- PHP $version, profile $profile: skipped, the image has no client for it"
+      continue
+      ;;
+    esac
+    fails_before=$fails
+    echo "  -- PHP $version, profile $profile"
+    sed -e "s/^PHP_VERSION=.*/PHP_VERSION=$version/" -e "s/^PROFILES=.*/PROFILES=$profile/" "$env_backup" >.env
+    setenv SUFFIX "$SUFFIX"
+    [ "$pull_images" == "1" ] && { "$laser" pull >/dev/null 2>&1 || echo "  --   the pull failed, the local images are used"; }
+    "$laser" up >/dev/null 2>&1
+    cachecheck "$profile"
     [ "$fails" -gt "$fails_before" ] && failed_items="$failed_items $profile:$version"
     "$laser" stop >/dev/null 2>&1
   done

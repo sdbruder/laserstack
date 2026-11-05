@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The app images carry the `memcached` PHP extension from 7.4 to 8.5, so
+  `PROFILES=memcached` is a cache store for a project and not only a server: the
+  `Memcached` class sets a value and reads it back. PHP 8.6, a release candidate,
+  still has neither an Alpine package nor a pecl build of the extension.
+
+- The smoke test has a `cache` stage: for every PHP version it starts the redis
+  and the memcached profile and asserts that the client of the image writes a
+  value through the server and reads it back. `SMOKE_CACHE_PROFILES` selects the
+  profiles, an empty value skips the stage, and `SMOKE_CACHE_SKIP_VERSIONS` names
+  the series without a client (8.6 today).
+
 - The site shows the dashboard instead of only describing it: a screenshot of its
   whole page next to the section, the https card listed in the text mockup, and a card
   in the overview grid that says what the page reports and links to it.

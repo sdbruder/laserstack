@@ -137,7 +137,7 @@ laser scan          <span class="out"># writes one nginx vhost per project</span
     <div class="card"><h3>One PHP version at a time</h3><p>All projects of one stack share the app container, so they share its PHP version. Per-project PHP versions, one container per version in use, are the next feature.</p></div>
     <div class="card"><h3>One version per database engine</h3><p>You can run mysql and postgres and redis side by side, but each engine runs the version you selected. Several versions of the same engine in parallel is part of the same roadmap item.</p></div>
     <div class="card"><h3>A suffix of your own needs /etc/hosts</h3><p>The default suffix, <code>localdev.it</code>, resolves every name under it to loopback for anyone and needs nothing. A local dnsmasq that <code>laser</code> installs, configures and maintains on macOS, Linux and WSL2 is planned for a suffix of your own.</p></div>
-    <div class="card"><h3>memcached is server only</h3><p>The app images carry no <code>memcached</code> PHP extension, so the profile serves the server and the protocol, not a Laravel cache store.</p></div>
+    <div class="card"><h3>No GUI, no native Windows</h3><p>The CLI is the interface, and Windows runs through WSL2; macOS and Linux run as they are. Per-project PHP versions are planned, a desktop app is not.</p></div>
   </div>
 </div></section>
 

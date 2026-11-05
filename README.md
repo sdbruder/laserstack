@@ -56,9 +56,10 @@ Be as small, simple and fast as possible:
 - A suffix of your own needs `/etc/hosts`. The default `localdev.it` resolves
   every name under it to loopback for anyone, so it needs nothing (see
   [DNS resolution](#dns-resolution)).
-- The app images have no `memcached` PHP extension (`php -m`), so the
-  `memcached` profile serves the server only: PHP and Laravel cannot use it as a
-  cache or a session store.
+- The app images carry the `memcached` PHP extension from 7.4 to 8.5, so
+  `PROFILES=memcached` is a cache store for a project. PHP 8.6 is a release
+  candidate: pecl's `memcached` does not build against it and Alpine has no
+  package, so that series carries the server without the client.
 - The `mysql` client of a shell in the app container (`laser shell`,
   `laser appexec mysql`) is the client of the image and authenticates with
   `config/my.cnf`. It works with the mariadb profile and with mysql `8.0`. The
@@ -84,7 +85,9 @@ on the newest Alpine release that packages it:
 | `8.6`  | 8.6.0RC5 | edge   | v24.22.1  | 12.0.2  | 1.22.22 | 1.30.6 | 13.4.6  | 3.6.0alpha1  |
 
 Every image has composer 2.11.1, the mysql client and the postgres client
-(`psql`, `pg_dump`). `laser psql` uses the postgres client of the app container;
+(`psql`, `pg_dump`). The images from `7.4` to `8.5` also carry the `memcached`
+extension, which makes the memcached profile a cache store; `8.6` does not, see
+the limitations. `laser psql` uses the postgres client of the app container;
 `laser mysql` runs in the database container, see the Versions table. Under
 supervisord each image runs nginx (which serves the projects) and php-fpm. The
 images are built from the Dockerfiles in
@@ -229,7 +232,9 @@ the mysql profile reads `config/mysql/<version>/`, the container of the mariadb
 profile reads `config/mariadb/<version>/laserstack.cnf`, redis reads
 `config/redis/<version>/redis.conf` and elasticsearch
 `config/elasticsearch/<version>/elasticsearch.yml`. memcached has no config
-file, its image takes the settings as command flags.
+file, its image takes the settings as command flags. The app images carry the
+`memcached` and `redis` extensions, so either profile is a cache store for the
+projects, not only a server next to them.
 
 ### PROFILES Examples
 
