@@ -96,6 +96,30 @@ function php_config_dir(string $version): string
 }
 
 /**
+ * The driver `laser scan` identifies a project by, in the order of
+ * `drivers::config`, which is the order that decides, and with the markers of
+ * libs/*Driver.sh. A project of no driver gets no vhost of its own; the
+ * multi-project vhost serves it when it has a public/index.php.
+ */
+function driver(string $path): ?string
+{
+    if (is_file($path . '/laserstack-nginx.conf')) {
+        return 'generic';
+    }
+    if (is_file($path . '/wp-config.php') || is_file($path . '/wp-config-sample.php')) {
+        return 'wordpress';
+    }
+    if (is_file($path . '/artisan') && is_file($path . '/public/index.php')) {
+        return 'laravel';
+    }
+    if (is_file($path . '/symfony.lock') && is_file($path . '/public/index.php')) {
+        return 'symfony';
+    }
+
+    return null;
+}
+
+/**
  * The profiles the .env of the checkout enables, or null when that file cannot be
  * read: a service of an enabled profile that does not answer is a fault, a
  * service of a profile that is off is simply not running.
@@ -180,6 +204,7 @@ foreach (scandir($projectsDir) ?: [] as $entry) {
         'index' => is_file($path . '/public/index.php'),
         'public' => is_dir($path . '/public'),
         'vhost' => is_file('/etc/nginx/http.d/' . $entry . '.conf'),
+        'driver' => driver($path),
         'self' => $entry === $self,
     ];
 }
@@ -218,11 +243,13 @@ header { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:spa
 h1 { font-size:30px; margin:0; letter-spacing:-.02em; }
 h2 { font-size:14px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0 0 12px; }
 p.lead { color:var(--muted); margin:8px 0 0; }
-.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,248px),1fr)); gap:14px; margin-top:18px; }
+.grid { display:grid; grid-template-columns:1fr; gap:14px; margin-top:18px; }
+@media (min-width:900px) { .grid { grid-template-columns:repeat(3,1fr); } }
+@media (min-width:1500px) { .grid { grid-template-columns:repeat(6,1fr); } }
 .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
 .card.wide { grid-column:1/-1; }
 .card.wide2 { grid-column:span 2; }
-@media (max-width:860px) { .card.wide2 { grid-column:auto; } }
+@media (max-width:899px) { .card.wide2 { grid-column:auto; } }
 .up, .down { white-space:nowrap; }
 td code { overflow-wrap:anywhere; }
 table { width:100%; border-collapse:collapse; }
@@ -242,10 +269,10 @@ a:hover { text-decoration:underline; }
 .muted { color:var(--muted); }
 .note { color:var(--muted); font-size:13px; margin:10px 0 0; }
 ul.projects { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(11.5rem,1fr)); gap:6px; }
-ul.projects li { display:flex; align-items:baseline; gap:6px; padding:4px 9px; border:1px solid var(--line); border-radius:8px; font-size:14px; min-width:0; }
-ul.projects li a { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-ul.projects li .tag { flex:0 0 auto; }
-.tag { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:1px 6px; }
+ul.projects li { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 6px; padding:4px 9px; border:1px solid var(--line); border-radius:8px; font-size:14px; min-width:0; }
+ul.projects li a { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pill { flex:0 0 auto; border:1px solid var(--line); border-radius:999px; padding:1px 8px; font-size:11px; letter-spacing:.02em; white-space:nowrap; }
+.pill.dim { color:var(--muted); }
 footer { margin-top:26px; color:var(--muted); font-size:13px; }
 </style>
 </head>
@@ -266,7 +293,6 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                 <tr><td>PHP</td><td><strong><?= e($phpVersion) ?></strong></td></tr>
                 <tr><td>Config directory</td><td><code>config/<?= e($phpDir) ?></code><?= in_array($phpDir, $phpSeries, true) ? '' : ' <span class="muted">(not in the checkout)</span>' ?></td></tr>
                 <tr><td>SAPI</td><td><?= e(PHP_SAPI) ?></td></tr>
-                <tr><td>Checkout</td><td><code><?= e($root) ?></code></td></tr>
                 <tr><td>Suffix</td><td><code><?= e($suffix) ?></code></td></tr>
             </table>
             <p class="note">The PHP series is the image tag <code>PHP_VERSION</code>: edit <code>.env</code> and run <code>laser up -d</code> to change it.</p>
@@ -309,13 +335,16 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                     <tr><td>Server</td><td><strong><?= e($serverVersion) ?></strong></td></tr>
                     <tr><td>Client</td><td><code><?= e($clientVersion ?? 'pdo_mysql') ?></code></td></tr>
                 </table>
+            <?php elseif ($profiles === null || in_array('mysql', $profiles, true) || in_array('mariadb', $profiles, true)): ?>
+                <p class="down">The profile is enabled and the server does not answer.</p>
+                <p class="note"><?= e($serverError ?? 'laser up -d, and check the log of the container') ?></p>
             <?php else: ?>
-                <p class="muted">No database answers. <?= e($serverError ?? '') ?></p>
-                <p class="note">That is expected when the profile of this stack has no database.</p>
+                <p class="muted">No SQL engine is running: neither <code>mysql</code> nor <code>mariadb</code> is in <code>PROFILES</code>.</p>
+                <p class="note">That is expected with the profile this stack has. Add <code>mysql</code> or <code>mariadb</code> to <code>PROFILES</code> in <code>.env</code>, then <code>laser up -d</code>.</p>
             <?php endif; ?>
         </section>
 
-        <section class="card">
+        <section class="card wide2">
             <h2>Version directories</h2>
             <table>
                 <tr><td>PHP</td><td><code><?= e(implode(', ', $phpSeries)) ?></code></td></tr>
@@ -342,13 +371,14 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                 <?php foreach ($projects as $project): ?>
                     <li>
                         <a href="<?= e('//' . $project['name'] . '.' . $suffix . '/') ?>" target="_blank" rel="noopener noreferrer" title="<?= e($project['name'] . '.' . $suffix) ?>"><?= e($project['name']) ?></a>
-                        <?php if ($project['self']): ?><span class="tag">this page</span><?php endif; ?>
-                        <?php if (!$project['public']): ?><span class="tag">no public/</span><?php endif; ?>
-                        <?php if ($project['vhost']): ?><span class="tag">own vhost</span><?php endif; ?>
+                        <?php if ($project['driver'] !== null): ?><span class="pill" title="laser scan writes the vhost of this project with the <?= e($project['driver']) ?> driver"><?= e($project['driver']) ?></span><?php endif; ?>
+                        <?php if ($project['self']): ?><span class="pill dim">this page</span><?php endif; ?>
+                        <?php if (!$project['public']): ?><span class="pill dim" title="the project has no public directory">no public/</span><?php endif; ?>
+                        <?php if ($project['vhost']): ?><span class="pill dim" title="the project has an nginx vhost of its own">own vhost</span><?php endif; ?>
                     </li>
                 <?php endforeach; ?>
             </ul>
-            <p class="note"><code><?= e($projectsDir) ?></code>, <code>PROJECTS_DIRECTORY</code> in <code>.env</code>. Add a directory with a <code>public/index.php</code>, run <code>laser scan</code>, and it answers on its own name.</p>
+            <p class="note"><code><?= e($projectsDir) ?></code>, <code>PROJECTS_DIRECTORY</code> in <code>.env</code>. Add a directory with a <code>public/index.php</code>, run <code>laser scan</code>, and it answers on its own name. The first pill is the driver <code>laser scan</code> finds: <code>laravel</code> carries an <code>artisan</code>, <code>symfony</code> a <code>symfony.lock</code>, <code>wordpress</code> a <code>wp-config.php</code>, <code>generic</code> a <code>laserstack-nginx.conf</code>, and a project of no driver is served by the multi-project vhost.</p>
         </section>
 
         <section class="card wide">
@@ -361,7 +391,7 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
         <a href="https://localdev.it/laserstack/" target="_blank" rel="noopener noreferrer">Documentation</a> &middot;
         <a href="https://github.com/sdbruder/laserstack" target="_blank" rel="noopener noreferrer">Repository</a> &middot;
         <a href="https://localdev.it/laserstack/compare.html" target="_blank" rel="noopener noreferrer">Comparison</a>
-        <p class="note">Read-only status page: it reads the checkout, opens a socket to each service and nothing else. It reloads itself every <span id="refresh-every">few</span> seconds, keeping your place on the page; append <code>?refresh=0</code> to stop that.</p>
+        <p class="note">Running from <code><?= e($root) ?></code>. Read-only status page: it reads the checkout, opens a socket to each service and nothing else. It reloads itself every <span id="refresh-every">few</span> seconds, keeping your place on the page; append <code>?refresh=0</code> to stop that.</p>
     </footer>
 </main>
 <script>
