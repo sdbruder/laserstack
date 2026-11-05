@@ -70,6 +70,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   those variables visible to PHP. They were already visible to any `docker exec`
   in the container, so this changes nothing about who can read them.
 
+### Fixed
+
+- `laser up` warned that `HTTPS=on` needed a certificate even when the
+  certificate was in place: it looked at `config/tls/laserstack.pem`, a path
+  `laser tls` never writes, instead of `config/tls/serve/laserstack.pem`, the
+  file docker-compose.https.yml mounts. Found while serving the stack over
+  https on the default suffix.
+
 ## [0.13.2] 2026-11-05
 
 ### Added

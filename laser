@@ -51,7 +51,9 @@ function dc() {
 }
 
 function up() {
-  if [ "$HTTPS" == "on" ] && [ ! -f config/tls/laserstack.pem ]; then
+  # laser tls writes the certificate the container serves into config/tls/serve,
+  # which is the directory docker-compose.https.yml mounts
+  if [ "$HTTPS" == "on" ] && [ ! -f config/tls/serve/laserstack.pem ]; then
     warning_message "HTTPS=on needs a certificate: run laser tls first."
   fi
   dc up -d
