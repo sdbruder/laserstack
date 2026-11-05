@@ -280,7 +280,8 @@ The checkout is one of the projects the stack serves, so Laser Stack has a
 dashboard on `laserstack.<SUFFIX>` — `http://laserstack.localdev.it/` with the
 default suffix. It needs no vhost and no extra container: the multi-project
 vhost serves any `public/index.php` of the projects directory, so the page
-answers as soon as `laser up -d` runs.
+answers as soon as `laser up -d` runs, and `laser dashboard` opens it in the
+browser of the machine that runs the stack.
 
 It is read-only, and it says what the stack is doing right now:
 

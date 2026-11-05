@@ -64,6 +64,7 @@ function lasercommands() {
   fi
   echo "  artisan            Execute composer commands"
   echo "  composer           Execute composer"
+  echo "  dashboard          Open the dashboard of the stack in your browser"
   echo "  dockerhelp         List docker-compose and laser commands"
   echo "  help               List laser commands"
   echo "  mysql              Execute mysql in the database container"
@@ -111,6 +112,38 @@ function dockerhelp() {
 function list() {
   cd $projects_dir
   for project in *; do ls $project/public/*.php 2>/dev/null; done | sed "s|/.*$||g;s|^|http://|g;s|$|.$SUFFIX|g"
+}
+
+# Opens a URL in the browser of the machine that runs the stack. The WSL
+# browser runs on Windows, so it takes the Windows opener; everything else is
+# open on macOS and xdg-open on Linux.
+function openurl() {
+  local url=${1}
+  if [ -n "$WSL" ]; then
+    if command -v wslview >/dev/null 2>&1; then
+      wslview "$url"
+    else
+      powershell.exe -Command "Start-Process '$url'"
+    fi
+  elif command -v open >/dev/null 2>&1; then
+    open "$url"
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$url"
+  else
+    echo "DASHBOARD: open this address in your browser: $url"
+  fi
+}
+
+# The dashboard of the stack: the checkout is one of the projects the stack
+# serves, so the page answers on its own name and needs no vhost of its own.
+function dashboard() {
+  local scheme=http
+  if [ "$HTTPS" == "on" ]; then
+    scheme=https
+  fi
+  local url="$scheme://laserstack.${SUFFIX:-localdev.it}/"
+  echo "DASHBOARD: $url"
+  openurl "$url"
 }
 
 function stats() {
@@ -720,6 +753,9 @@ mysql)
   ;;
 psql)
   psql "$@"
+  ;;
+dashboard)
+  dashboard "$@"
   ;;
 scan)
   scan "$@"

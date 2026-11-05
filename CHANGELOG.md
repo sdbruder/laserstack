@@ -27,7 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   project laserstack serves through a vhost of its own. The page reloads itself
   every thirty seconds while the tab is visible — keeping your place on the page —
   unless the URL asks for another interval or for none (`?refresh=10`,
-  `?refresh=0`).
+  `?refresh=0`). `laser dashboard` opens the page in the browser of the machine
+  that runs the stack, over https when `HTTPS=on`.
   The services card says which of MySQL and MariaDB the stack actually started —
   they share the `db` alias, so the one that answers to its own name is the one
   running — and it tells a service of an enabled profile that does not answer
