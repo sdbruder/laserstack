@@ -9,6 +9,9 @@ release. The documentation for *using* the stack is in the
 
 ```
 docker-compose.yml    the app service and one service per database profile
+docker-compose.https.yml  the overlay laser adds when HTTPS=on: port 443 and the certificate
+tools/issue-global-certificate.sh  issues and publishes the certificate of *.localdev.it
+.github/workflows/    the scheduled job that renews that certificate
 laser                 the shell script around docker-compose, the user interface
 public/index.php      the dashboard, served by the stack as one more project
 env.example           the documented .env; laser copies it when .env is absent
@@ -18,6 +21,8 @@ config/               the config of every image version, mounted per service
   nginx/              nginx.conf and the vhosts of the app container
   my.cnf              the client config of a shell in the app container
   <engine>/<version>/ the config of one database version, one directory each
+  tls/                written by laser tls and not tracked: the local CA and the certificate
+docs/tls/             the published certificate of *.localdev.it, fetched by laser tls
 libs/                 the nginx config drivers behind `laser scan`
 test/smoke.sh         the smoke test, one run per PHP and database version
 docker/app/           the older local build context of the app image

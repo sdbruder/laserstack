@@ -1,0 +1,40 @@
+# The HTTPS vhost of the stack. `laser tls` renders this file into
+# multiProjectLaravelHttps.conf next to it, with the suffix of .env, and that
+# directory is mounted at /etc/nginx/http.d, so nginx includes the result.
+#
+# It is additive: the multi-project vhost of the image keeps serving the same
+# projects on port 80, this one serves them on 443 with the certificate under
+# config/tls. Two default servers cannot share a port, which is why this file
+# listens on 443 only.
+server {
+    listen 443 ssl default_server;
+    http2 on;
+
+    server_name "~^([^.]*\.){0,}(?P<project>[^.]+)\.__SUFFIX__$";
+    root /var/www/$project/public;
+
+    ssl_certificate     /etc/nginx/tls/laserstack.pem;
+    ssl_certificate_key /etc/nginx/tls/laserstack-key.pem;
+
+    index index.php index.html;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include fastcgi.conf;
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+        fastcgi_split_path_info ^(.+.php)(/.+)$;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    location ~* .(ico|jpg|png|gif|jpeg|css|swf|js|woff|woff2)$ {
+        access_log off;
+        gzip_static on;
+        gzip_comp_level 5;
+        expires 1M;
+        add_header Cache-Control private;
+    }
+}

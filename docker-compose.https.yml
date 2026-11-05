@@ -1,0 +1,13 @@
+# HTTPS mode. `laser` adds this file to the docker-compose calls when .env
+# carries HTTPS=on: it publishes 443 and mounts the certificate that
+# `laser tls` writes into config/tls. Without HTTPS=on nothing here is used and
+# the stack is exactly the http stack it was.
+services:
+  app:
+    ports:
+      - "443:443"
+    volumes:
+      # a directory, not single files: reissuing the certificate must not leave
+      # the container with a stale inode. The CA of the machine stays in
+      # config/tls/ca and is never mounted.
+      - ./config/tls/serve:/etc/nginx/tls:ro
