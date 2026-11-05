@@ -127,7 +127,7 @@ http://projecta.localdev.it      http://myapp.localdev.it      http://clientport
   <p>Change a value, restart one service (<code>laser restartnginx</code>, <code>laser stop db &amp;&amp; laser up -d db</code>), review the change in a pull request. Your team gets the same php.ini and the same database settings because they are in the repository, not in somebody's Docker Desktop.</p>
 
   <h2 id="dashboard">A dashboard, served like any project</h2>
-  <p>The checkout is one of the projects of the projects directory, so the stack serves a dashboard for itself on <code>laserstack.&lt;SUFFIX&gt;</code>. The multi-project vhost serves any <code>public/index.php</code>, so no second vhost and no second container are involved: the page is there as soon as <code>laser up -d</code> runs.</p>
+  <p>The checkout is one of the projects of the projects directory, so the stack serves a dashboard for itself on <code>laserstack.&lt;SUFFIX&gt;</code>. The multi-project vhost serves any <code>public/index.php</code>, so no second vhost and no second container are involved: the page is there as soon as <code>laser up -d</code> runs, and <code>laser dashboard</code> opens it in your browser.</p>
   <pre><code>PHP 8.2.35            config/php82            suffix mac
 
 services              MySQL db:3306 up 0 ms      MariaDB mariadb:3306 up 0 ms

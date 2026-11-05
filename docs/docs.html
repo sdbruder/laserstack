@@ -48,6 +48,7 @@ cp env.example .env          <span class="out"># laser also copies it on first u
 <span class="out"># edit .env: PROJECTS_DIRECTORY, PHP_VERSION, PROFILES, credentials, SUFFIX</span>
 laser up -d
 laser scan
+laser dashboard              <span class="out"># the stack in your browser</span>
 laser help                   <span class="out"># the commands; laser dockerhelp for the compose ones</span></code></pre>
   <p>Make <code>laser</code> reachable from your projects: an alias or a <code>$PATH</code> entry to the cloned directory. <code>laser</code> always works from its own directory, so a project can call <code>laser artisan migrate</code> from anywhere.</p>
 
