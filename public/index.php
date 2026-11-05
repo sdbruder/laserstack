@@ -234,8 +234,8 @@ $changelogHead = array_slice($changelog, 0, 24);
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Laser Stack</title>
 <style>
-:root { --fg:#1b1f23; --muted:#6a737d; --bg:#f6f7f9; --card:#fff; --line:#e1e4e8; --ok:#1a7f37; --off:#b42318; --accent:#6f42c1; }
-@media (prefers-color-scheme: dark) { :root { --fg:#e6edf3; --muted:#8b949e; --bg:#0d1117; --card:#161b22; --line:#30363d; --ok:#3fb950; --off:#f85149; --accent:#a371f7; } }
+:root { --fg:#1b1f23; --muted:#6a737d; --dim:#57606a; --bg:#f6f7f9; --card:#fff; --line:#e1e4e8; --pill-line:#9aa4ae; --ok:#1a7f37; --off:#b42318; --accent:#6f42c1; }
+@media (prefers-color-scheme: dark) { :root { --fg:#e6edf3; --muted:#8b949e; --dim:#b9c2cc; --bg:#0d1117; --card:#161b22; --line:#30363d; --pill-line:#57626d; --ok:#3fb950; --off:#f85149; --accent:#a371f7; } }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
 main { width:100%; padding:20px clamp(16px,2.5vw,44px) 56px; }
@@ -269,10 +269,15 @@ a:hover { text-decoration:underline; }
 .muted { color:var(--muted); }
 .note { color:var(--muted); font-size:13px; margin:10px 0 0; }
 ul.projects { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(11.5rem,1fr)); gap:6px; }
+/* six columns is the widest a tile stays one line for a long project name;
+   auto-fill would add a seventh at 1434px and keep going, so the count stops
+   here, where it already stands at six */
+@media (min-width:1420px) { ul.projects { grid-template-columns:repeat(6,1fr); } }
 ul.projects li { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 6px; padding:4px 9px; border:1px solid var(--line); border-radius:8px; font-size:14px; min-width:0; }
 ul.projects li a { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.pill { flex:0 0 auto; border:1px solid var(--line); border-radius:999px; padding:1px 8px; font-size:11px; letter-spacing:.02em; white-space:nowrap; }
-.pill.dim { color:var(--muted); }
+.pill { flex:0 0 auto; border:1px solid var(--pill-line); border-radius:999px; padding:1px 8px; font-size:11px; letter-spacing:.02em; white-space:nowrap; }
+.pill.on { color:var(--ok); border-color:var(--ok); }
+.pill.dim { color:var(--dim); }
 footer { margin-top:26px; color:var(--muted); font-size:13px; }
 </style>
 </head>
@@ -371,7 +376,7 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                 <?php foreach ($projects as $project): ?>
                     <li>
                         <a href="<?= e('//' . $project['name'] . '.' . $suffix . '/') ?>" target="_blank" rel="noopener noreferrer" title="<?= e($project['name'] . '.' . $suffix) ?>"><?= e($project['name']) ?></a>
-                        <?php if ($project['driver'] !== null): ?><span class="pill" title="laser scan writes the vhost of this project with the <?= e($project['driver']) ?> driver"><?= e($project['driver']) ?></span><?php endif; ?>
+                        <?php if ($project['driver'] !== null): ?><span class="pill on" title="laser scan writes the vhost of this project with the <?= e($project['driver']) ?> driver"><?= e($project['driver']) ?></span><?php endif; ?>
                         <?php if ($project['self']): ?><span class="pill dim">this page</span><?php endif; ?>
                         <?php if (!$project['public']): ?><span class="pill dim" title="the project has no public directory">no public/</span><?php endif; ?>
                         <?php if ($project['vhost']): ?><span class="pill dim" title="the project has an nginx vhost of its own">own vhost</span><?php endif; ?>
