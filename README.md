@@ -407,9 +407,11 @@ Port 80 keeps serving the projects, and 443 is published only while `HTTPS=on`.
 The renewal needs a zone whose provider has an API: the workflow reads the
 repository variable `LEGO_DNS` — `gcloud` by default, `cloudflare` for a zone
 behind Cloudflare — and the credential of that provider from its repository
-secret. The zone of the default suffix is on Squarespace Domains today, which has
-no API, so that certificate is renewed by hand; the script prints the record to
-add and waits for an enter:
+secret. The zone of the default suffix is on Cloudflare, so that certificate
+renews itself every week with nothing to do. A registrar with no DNS API — like
+Squarespace Domains, which took over the Google Domains registrations in 2023, or
+the zone as it was before the move — needs the record by hand: the script prints
+it and waits for an enter:
 
 ```
 LEGO_DNS=manual LEGO_EMAIL=you@example.com ./tools/issue-global-certificate.sh --commit
