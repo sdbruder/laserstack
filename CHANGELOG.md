@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The site shows the dashboard instead of only describing it: a screenshot of its
+  https card next to the section, the card listed in the text mockup, and a card
+  in the overview grid that says what the page reports and links to it.
+
 ### Changed
 
 - https is where you can see it: a line in the hero on the overview, the three
