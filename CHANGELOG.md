@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   width, every link opens in its own tab, and the page reloads itself every ten
   seconds while the tab is visible — keeping your place on the page — unless the
   URL asks for another interval or for none (`?refresh=30`, `?refresh=0`).
+  The services card says which of MySQL and MariaDB the stack actually started —
+  they share the `db` alias, so the one that answers to its own name is the one
+  running — and it tells a service of an enabled profile that does not answer
+  (`no answer`) from a service whose profile is off (`not running`).
 - Optional HTTPS, in two modes. With the default suffix, `laser tls` downloads
   the published certificate of `*.localdev.it` from
   <https://localdev.it/laserstack/tls/> — a real certificate, already trusted by

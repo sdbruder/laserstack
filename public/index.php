@@ -95,14 +95,41 @@ function php_config_dir(string $version): string
     return 'php' . $digits;
 }
 
+/**
+ * The profiles the .env of the checkout enables, or null when that file cannot be
+ * read: a service of an enabled profile that does not answer is a fault, a
+ * service of a profile that is off is simply not running.
+ */
+function enabledProfiles(string $envFile): ?array
+{
+    $file = @file_get_contents($envFile);
+    if ($file === false) {
+        return null;
+    }
+    if (preg_match('/^PROFILES=(.*)$/m', $file, $match) !== 1) {
+        return [];
+    }
+    $names = [];
+    foreach (explode(',', trim($match[1], " \t\"'")) as $name) {
+        $name = trim($name);
+        if ($name !== '') {
+            $names[] = $name;
+        }
+    }
+
+    return $names;
+}
+
 $services = [
-    ['MySQL', 'db', 3306, 'mysql'],
-    ['MariaDB', 'mariadb', 3306, 'mariadb'],
-    ['PostgreSQL', 'postgres', 5432, null],
-    ['redis', 'redis', 6379, null],
-    ['memcached', 'memcached', 11211, null],
-    ['Elasticsearch', 'elasticsearch', 9200, null],
+    ['label' => 'MySQL', 'host' => 'db', 'port' => 3306, 'engine' => 'mysql', 'profile' => 'mysql'],
+    ['label' => 'MariaDB', 'host' => 'mariadb', 'port' => 3306, 'engine' => 'mariadb', 'profile' => 'mariadb'],
+    ['label' => 'PostgreSQL', 'host' => 'postgres', 'port' => 5432, 'engine' => null, 'profile' => 'postgres'],
+    ['label' => 'redis', 'host' => 'redis', 'port' => 6379, 'engine' => null, 'profile' => 'redis'],
+    ['label' => 'memcached', 'host' => 'memcached', 'port' => 11211, 'engine' => null, 'profile' => 'memcached'],
+    ['label' => 'Elasticsearch', 'host' => 'elasticsearch', 'port' => 9200, 'engine' => null, 'profile' => 'elasticsearch'],
 ];
+
+$profiles = enabledProfiles($root . '/.env');
 
 // MySQL and MariaDB share the db alias, so a port that answers does not say
 // which engine is behind it. The mariadb service is the only one that answers to
@@ -248,29 +275,31 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
         <section class="card wide2">
             <h2>Services</h2>
             <table>
-                <?php foreach ($services as [$label, $serviceHost, $port, $engine]): ?>
+                <?php foreach ($services as $service): ?>
                     <?php
-                    $state = probe($serviceHost, $port);
+                    $state = probe($service['host'], $service['port']);
                     // the two SQL engines share the db alias: only the one the
                     // stack started is running, whatever the port says
-                    $running = $engine === null ? $state['up'] : $sqlEngine === $engine;
+                    $up = $service['engine'] === null ? $state['up'] : $sqlEngine === $service['engine'];
+                    // the checkout says whether it should be running at all
+                    $expected = $profiles === null || in_array($service['profile'], $profiles, true);
                     ?>
                     <tr>
-                        <td><?= e($label) ?></td>
-                        <td><code><?= e($serviceHost . ':' . $port) ?></code></td>
+                        <td><?= e($service['label']) ?></td>
+                        <td><code><?= e($service['host'] . ':' . $service['port']) ?></code></td>
                         <td>
-                            <?php if ($running): ?>
+                            <?php if ($up): ?>
                                 <span class="up">up</span> <span class="muted"><?= e((string) $state['ms']) ?> ms</span>
-                            <?php elseif ($engine !== null): ?>
-                                <span class="muted">not running</span>
-                            <?php else: ?>
+                            <?php elseif ($expected): ?>
                                 <span class="down">no answer</span>
+                            <?php else: ?>
+                                <span class="muted">not running</span>
                             <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
             </table>
-            <p class="note">Only the services of the profiles in <code>PROFILES</code> run. MySQL and MariaDB share the <code>db</code> alias, so the one that answers to its own name is the one running.</p>
+            <p class="note">A service of a profile in <code>PROFILES</code> that does not answer reads <span class="down">no answer</span>; a service whose profile is off reads <span class="muted">not running</span>. MySQL and MariaDB share the <code>db</code> alias, so the one that answers to its own name is the one running.</p>
         </section>
 
         <section class="card">
