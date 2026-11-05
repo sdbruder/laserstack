@@ -39,9 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   every browser on every platform, including the Windows browser of a WSL user —
   caches it, refreshes it within a month of its end of life, and falls back to the
   CA of the machine when the address is unreachable.
-  `tools/issue-global-certificate.sh` issues and publishes that certificate server
-  side and `docs/tls/` holds it; its private key is public by design, the way
-  `local-ip.co` and `traefik.me` do it.
+  `tools/issue-global-certificate.sh` issues and publishes that certificate and
+  `docs/tls/` holds it; its private key is public by design, the way `local-ip.co`
+  and `traefik.me` do it.
 - With a suffix of your own, `laser tls` creates a certificate authority in
   `config/tls/ca` and issues a certificate that names every project of the
   projects directory, because a wildcard over a suffix of one label is refused by

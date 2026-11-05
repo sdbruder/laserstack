@@ -346,12 +346,11 @@ laser up -d    # publish 443 and mount it
 ```
 
 <https://localdev.it/laserstack/tls/> publishes a wildcard certificate for
-`*.localdev.it`, issued by a public certificate authority on the server of the
-project and renewed there. `laser tls` downloads it into `config/tls/serve/` and
-downloads it again when the copy is within a month of its end of life. Every
-browser already trusts it — macOS, Linux, and **the Windows browser of a WSL
-user** — so there is no `laser trust` step, no warning page, and nothing to
-install on a phone.
+`*.localdev.it`, issued by a public certificate authority and renewed for you.
+`laser tls` downloads it into `config/tls/serve/` and downloads it again when the
+copy is within a month of its end of life. Every browser already trusts it —
+macOS, Linux, and **the Windows browser of a WSL user** — so there is no
+`laser trust` step, no warning page, and nothing to install on a phone.
 
 The key is public on purpose: the stack terminates TLS on your machine, so the
 key has to be there, exactly as with `local-ip.co` and `traefik.me`. Two things
