@@ -24,6 +24,10 @@
 #       manual      a zone with no API at all: lego prints the TXT record, you
 #                   add it in the panel of the registrar and press enter
 #     `lego dnshelp -c <provider>` prints what each one reads.
+#   - the propagation check asks the resolvers of the machine. LEGO_RESOLVERS
+#     replaces them, and defaults to 1.1.1.1:53, because a CI runner answers from
+#     a stub that caches an RRset for its TTL and then misses a record that was
+#     just created.
 #
 # Usage:
 #   LEGO_EMAIL=you@example.com GCE_SERVICE_ACCOUNT_FILE=/path/sa.json \
@@ -73,7 +77,13 @@ mkdir -p "$store"
 # decides the form.
 lego_major=$(lego --version 2>/dev/null | awk '{print $3}' | cut -d. -f1)
 if [ "${lego_major:-4}" -ge 5 ] 2>/dev/null; then
+  # The propagation check asks the resolvers of the machine, and a CI runner
+  # answers from a stub that holds an RRset for its whole TTL. The challenge of
+  # this record lives 120 seconds, so a retry is served the answer of the attempt
+  # before it and fails on a record that no longer exists. Ask a public resolver,
+  # which sees the record the moment the provider publishes it.
   lego run --email "$LEGO_EMAIL" --dns "$LEGO_DNS" --accept-tos --path "$store" \
+    --dns.resolvers "${LEGO_RESOLVERS:-1.1.1.1:53}" \
     --domains "*.$domain" --renew-days 30
 else
   lego_args=(--email "$LEGO_EMAIL" --dns "$LEGO_DNS" --accept-tos --path "$store" --domains "*.$domain")

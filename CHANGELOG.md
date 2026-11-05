@@ -70,6 +70,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The DNS-01 propagation check of `tools/issue-global-certificate.sh` asked the
+  resolvers of the machine. On a GitHub runner that is the `systemd-resolved`
+  stub, which serves an RRset for its whole TTL: the record of this challenge
+  lives 120 seconds, so a retry read the answer of the attempt before it and the
+  run failed on a record that no longer existed. The check now asks
+  `1.1.1.1:53`, overridable with `LEGO_RESOLVERS`.
+
 - `tools/issue-global-certificate.sh` handed lego `--email`, `--dns`,
   `--accept-tos`, `--path` and `--domains` as global flags. lego 5 keeps only
   the log and config flags global and takes the rest on the command, so a lego 5
