@@ -61,6 +61,41 @@ function suffix(): string
     return 'localdev.it';
 }
 
+/**
+ * The certificate the container serves. HTTPS is a mode of the compose call, so
+ * the mount answers for it: config/tls/serve is mounted at /etc/nginx/tls while
+ * the mode is on, and the checkout writes `source` beside the certificate. The
+ * key is never read: nothing here needs it, and nothing here prints it.
+ */
+function tlsState(): array
+{
+    $state = ['on' => false, 'source' => null, 'certificate' => null, 'error' => null];
+    $certificate = '/etc/nginx/tls/laserstack.pem';
+    if (!is_file($certificate)) {
+        return $state;
+    }
+    $state['on'] = true;
+    $source = @file_get_contents('/etc/nginx/tls/source');
+    $state['source'] = $source === false ? null : trim((string) $source);
+    $pem = @file_get_contents($certificate);
+    $parsed = $pem === false ? false : @openssl_x509_parse($pem);
+    if ($parsed === false) {
+        $state['error'] = $pem === false ? 'the file cannot be read' : 'the certificate cannot be parsed';
+
+        return $state;
+    }
+    $state['certificate'] = [
+        'subject' => (string) ($parsed['subject']['CN'] ?? '(no common name)'),
+        'issuer' => (string) ($parsed['issuer']['CN'] ?? '(no common name)'),
+        'issuerOrg' => isset($parsed['issuer']['O']) ? (string) $parsed['issuer']['O'] : null,
+        'from' => isset($parsed['validFrom_time_t']) ? (int) $parsed['validFrom_time_t'] : null,
+        'to' => isset($parsed['validTo_time_t']) ? (int) $parsed['validTo_time_t'] : null,
+        'names' => isset($parsed['extensions']['subjectAltName']) ? (string) $parsed['extensions']['subjectAltName'] : null,
+    ];
+
+    return $state;
+}
+
 /** One TCP connect: the cheapest proof that a service of the profile is up. */
 function probe(string $host, int $port, float $timeout = 0.4): array
 {
@@ -422,6 +457,31 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
             <?php else: ?>
                 <p class="muted">No SQL engine is running: neither <code>mysql</code> nor <code>mariadb</code> is in <code>PROFILES</code>.</p>
                 <p class="note">That is expected with the profile this stack has. Add <code>mysql</code> or <code>mariadb</code> to <code>PROFILES</code> in <code>.env</code>, then <code>laser up -d</code>.</p>
+            <?php endif; ?>
+        </section>
+
+        <section class="card">
+            <h2>HTTPS</h2>
+            <?php $tls = tlsState(); ?>
+            <?php if (!$tls['on']): ?>
+                <p class="muted">Off: the container serves http only.</p>
+                <p class="note">Turn it on with <code>HTTPS=on</code> in <code>.env</code>, then <code>laser tls</code> and <code>laser up -d</code>.</p>
+            <?php elseif ($tls['certificate'] === null): ?>
+                <p class="down">On, and the certificate is not usable: <?= e($tls['error'] ?? 'unknown') ?></p>
+                <p class="note">Run <code>laser tls</code>, then reload the container.</p>
+            <?php else: ?>
+                <?php
+                $cert = $tls['certificate'];
+                $left = $cert['to'] === null ? null : (int) floor(($cert['to'] - time()) / 86400);
+                $issuer = $cert['issuerOrg'] === null ? $cert['issuer'] : $cert['issuerOrg'] . ' ' . $cert['issuer'];
+                ?>
+                <table>
+                    <tr><td>Certificate</td><td><strong><?= e($cert['subject']) ?></strong> <span class="muted">by <?= e($issuer) ?></span></td></tr>
+                    <?php if ($cert['names'] !== null): ?><tr><td>Names</td><td><code><?= e($cert['names']) ?></code></td></tr><?php endif; ?>
+                    <tr><td>Valid</td><td><?= e(gmdate('Y-m-d', (int) $cert['from'])) ?> → <?= e(gmdate('Y-m-d', (int) $cert['to'])) ?><?php if ($left !== null): ?> <span class="<?= $left < 30 ? 'down' : 'muted' ?>"><?= $left < 0 ? 'expired' : '(' . (int) $left . ' days)' ?></span><?php endif; ?></td></tr>
+                    <tr><td>Source</td><td><?= $tls['source'] === 'global' ? 'the published certificate' : 'the certificate authority of this machine' ?></td></tr>
+                </table>
+                <p class="note">443 is published and nginx serves this certificate. <code>laser tls</code> refreshes the copy; <code>laser tls --global</code> forces the published one.</p>
             <?php endif; ?>
         </section>
 

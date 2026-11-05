@@ -38,7 +38,7 @@
       <tr>
         <td><strong>Laser Stack</strong></td>
         <td>one stack for every project (nginx + PHP-FPM in one container)</td>
-        <td><code>projecta.localdev.it</code> by default, no hosts file and no DNS server for anyone</td>
+        <td><code>projecta.localdev.it</code> by default, no hosts file and no DNS server for anyone; https from a wildcard certificate every browser already trusts, for every project at once</td>
         <td>one per stack, chosen by variable: 7.4–8.6</td>
         <td>one per engine, chosen by variable: mysql, mariadb, postgres, redis, memcached, elasticsearch</td>
         <td>free, BSD-3-Clause, macOS · Linux · WSL2</td>
@@ -46,7 +46,7 @@
       <tr>
         <td><a href="https://laravel.com/docs/12.x/valet">Laravel Valet</a></td>
         <td>none: nginx runs on the host, roughly 7 MB of RAM</td>
-        <td><code>projecta.test</code> through dnsmasq</td>
+        <td><code>projecta.test</code> through dnsmasq; http by default, <code>valet secure</code> per site, signed by its own CA</td>
         <td>one at a time on the machine; per site with <code>valet isolate</code></td>
         <td>none shipped: the host, or DBngin for MySQL/Postgres/Redis</td>
         <td>free, MIT, first-party, macOS only</td>
@@ -54,7 +54,7 @@
       <tr>
         <td><a href="https://herd.laravel.com/">Laravel Herd</a></td>
         <td>none: a native shared stack of PHP, nginx, dnsmasq and Node</td>
-        <td><code>projecta.test</code>, automatic on macOS and Windows</td>
+        <td><code>projecta.test</code>, automatic on macOS and Windows; http by default, <code>herd secure</code> per site, signed by a root CA it creates</td>
         <td>one global, per site with <code>herd isolate</code></td>
         <td>versioned services matrix, on the paid tier</td>
         <td>free tier; Pro $99/year; macOS 14.6+ Apple Silicon and Windows; its documentation lists no Linux</td>
@@ -78,7 +78,7 @@
       <tr>
         <td><a href="https://lando.dev/">Lando</a></td>
         <td>one per project, behind a proxy</td>
-        <td><code>projecta.lndo.site</code></td>
+        <td><code>projecta.lndo.site</code>; https through its proxy, signed by a CA you trust on the host yourself</td>
         <td>one per project, in the Landofile</td>
         <td>one per project, in the Landofile</td>
         <td>free, MIT, macOS 12+ · Windows 10 21H2+ · Linux; their requirements start at 4 GB of RAM</td>
@@ -94,13 +94,14 @@
       <tr>
         <td><a href="https://lerd.sh/">lerd</a></td>
         <td>one shared stack on rootless Podman: one nginx, one PHP-FPM container per version</td>
-        <td><code>projecta.test</code> through its own DNS server</td>
+        <td><code>projecta.test</code> through its own DNS server; https for every site from its own CA, registered by <code>lerd install</code></td>
         <td>one container per version, pinned per project with <code>lerd isolate</code></td>
         <td>about 40 presets, shared by every site</td>
         <td>free, MIT, Linux · macOS · WSL2; one <code>sudo</code> at install for the resolver</td>
       </tr>
     </tbody>
   </table></div>
+  <p class="note">On https the difference is not whether it can be done but what it costs you: Valet, Herd, Lando and lerd secure one site at a time and create a certificate authority of their own that the machine has to trust, while DDEV puts https in its site setup. Laser Stack has no per-site step for the default suffix and nothing to trust: the wildcard certificate it serves is already trusted by every browser, on macOS, Linux and the Windows browser of a WSL user.</p>
   <p class="note">Valet, Herd and lerd put their stack on the host or in one shared container set; Sail, DDEV and Lando give every project its own application containers. Laradock does both. Laser Stack is a third shape: one container set, in docker, serving every project of a directory — 17 Laravel projects in two containers, measured on the <a href="benchmarks.html">numbers page</a>.</p>
 
   <h2>In short</h2>

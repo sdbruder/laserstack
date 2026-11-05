@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The dashboard says what https gives you and what it takes: a card with the mode,
+  the certificate the container serves (subject, issuer, the names it covers, the
+  validity window and the days left) and whether that copy is the published one or
+  the CA of this machine. It reads the mounted certificate and never the key, runs
+  no command and prints no credential; when the mode is off it names the two
+  commands that turn it on.
+- The overview grid and the comparison table carry the certificate story: a feature
+  card on https from a certificate every browser already trusts (and what a secure
+  context unlocks — service workers, `Secure` cookies, the clipboard — where
+  `localhost` is not the name), and, in the project URL column, how each
+  alternative gets to https: a per-site command and a CA of its own for Valet, Herd,
+  Lando and lerd, https in the site setup for DDEV, nothing per site here.
+
 - The Laser Stack dashboard, `public/index.php`. The checkout is one of the
   projects the stack serves, so the catch-all vhost answers for it on
   `laserstack.<SUFFIX>` as soon as `laser up -d` runs — no extra vhost, no extra
