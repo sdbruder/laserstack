@@ -347,7 +347,8 @@ curl --cacert config/tls/ca/laserstack-local-ca.pem \
 
 Port 80 keeps serving the projects, and 443 is published only while `HTTPS=on`.
 `config/tls/` is not tracked; the published certificate of the site is, and
-`tools/issue-global-certificate.sh` renews it.
+`.github/workflows/publish-certificate.yml` renews and republishes it every week
+(`tools/issue-global-certificate.sh` does the same job by hand).
 ## Contributing
 
 The development documentation lives in [CONTRIBUTING.md](CONTRIBUTING.md): the

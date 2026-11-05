@@ -26,7 +26,25 @@ Two consequences worth knowing before you use it:
 
 ## Renewing
 
-`tools/issue-global-certificate.sh --commit` renews when 30 days are left and
-publishes the result. Run it weekly from cron on the machine that holds the DNS
-credentials. Each install refreshes on its next `laser tls`, and anyone can force
-it with `laser tls --global`.
+`.github/workflows/publish-certificate.yml` renews it every Monday and publishes
+the result: it installs lego, writes the service account of the repository
+secret into a file, runs `tools/issue-global-certificate.sh --commit`, and fails
+the run when the certificate ends up within two weeks of its expiry, so a broken
+renewal sends the mail a failed run sends. Start it by hand from the Actions tab
+when you want it now, and tick `use_this_ref` there to test a change of the
+script from a branch before it reaches the default branch.
+
+It needs two repository settings, and it says so and stops while they are
+missing:
+
+| setting | what it is |
+|---|---|
+| secret `CLOUD_DNS_SERVICE_ACCOUNT` | the JSON of a service account of the Cloud DNS zone of `localdev.it` with `roles/dns.admin` |
+| variable `LETSENCRYPT_EMAIL` | the address the certificate authority contacts |
+| variable `CLOUD_DNS_PROJECT` | optional, the project of the zone: read from the service account when unset |
+| variable `LEGO_VERSION` | optional, a lego release tag: the latest release is used when unset |
+
+Without the workflow, `tools/issue-global-certificate.sh --commit` does the same
+job by hand; put it in cron if you prefer. Each install refreshes its copy on the
+next `laser tls`, and `laser tls --global` forces it.
+

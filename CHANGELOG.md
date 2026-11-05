@@ -32,6 +32,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   writes it when the mode is on and removes it when it is off, because nginx
   refuses to start when a vhost points at a certificate that is not mounted. Port
   80 and the http stack are untouched.
+- `.github/workflows/publish-certificate.yml` renews the published certificate
+  of `*.localdev.it` every Monday and republishes it, so no machine ever has to do
+  it by hand; it stops with a notice while the repository secret of the Cloud DNS
+  service account is missing, and it fails the run when the certificate ends up
+  within two weeks of its expiry.
+
 ## [0.13.2] 2026-11-05
 
 ### Added

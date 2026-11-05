@@ -1,0 +1,125 @@
+name: publish the certificate of *.localdev.it
+
+# Renews the wildcard certificate that every Laser Stack install downloads, and
+# publishes it into docs/tls, which GitHub Pages serves at
+# https://localdev.it/laserstack/tls/. An install refreshes its copy on the next
+# laser tls, and anyone can force it with laser tls --global.
+#
+# Two repository settings are needed:
+#   secret    CLOUD_DNS_SERVICE_ACCOUNT  the JSON of a service account of the
+#                                        Cloud DNS zone of localdev.it with
+#                                        roles/dns.admin. DNS-01 is the only
+#                                        challenge that can issue a wildcard.
+#   variable  LETSENCRYPT_EMAIL          the address the certificate authority
+#                                        contacts about this certificate
+#   variable  CLOUD_DNS_PROJECT          optional: the project of the zone, read
+#                                        from the service account when it is unset
+#   variable  LEGO_VERSION               optional: a lego release tag, latest by
+#                                        default
+#
+# Until the secret exists the run says so and stops: there is nothing to issue
+# yet, and every install then serves the CA of its own machine.
+
+on:
+  schedule:
+    # weekly, and lego renews only when 30 days or less are left
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+    inputs:
+      use_this_ref:
+        description: "Test the script of this ref instead of the default branch"
+        type: boolean
+        default: false
+
+concurrency:
+  group: publish-certificate
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    # a fork has neither the zone nor the secret
+    if: github.repository == 'sdbruder/laserstack'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Is the workflow configured?
+        id: settings
+        run: |
+          if [ -z "${{ secrets.CLOUD_DNS_SERVICE_ACCOUNT }}" ]; then
+            echo "::notice title=The certificate workflow is not configured::Add the repository secret CLOUD_DNS_SERVICE_ACCOUNT, the JSON of a service account of the Cloud DNS zone of localdev.it with roles/dns.admin, and the repository variable LETSENCRYPT_EMAIL. Until then every install serves the CA of its own machine."
+            echo "configured=false" >>"$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >>"$GITHUB_OUTPUT"
+          fi
+
+      - name: Check out
+        if: steps.settings.outputs.configured == 'true'
+        uses: actions/checkout@v4
+        with:
+          # the certificate has to land where Pages serves it, so the default
+          # branch, unless this was started by hand to test a change of the script
+          ref: ${{ inputs.use_this_ref && github.ref || github.event.repository.default_branch }}
+
+      - name: Install lego
+        if: steps.settings.outputs.configured == 'true'
+        env:
+          LEGO_VERSION: ${{ vars.LEGO_VERSION }}
+        run: |
+          set -euo pipefail
+          version="${LEGO_VERSION:-}"
+          if [ -z "$version" ] || [ "$version" = "latest" ]; then
+            version=$(curl -fsSL https://api.github.com/repos/go-acme/lego/releases/latest | jq -r .tag_name)
+          fi
+          echo "lego $version"
+          plain="${version#v}"
+          base="https://github.com/go-acme/lego/releases/download/$version"
+          tarball="lego_$version_linux_amd64.tar.gz"
+          curl -fsSL -o "/tmp/$tarball" "$base/$tarball"
+          # the checksums asset is named without the leading v, and it is a
+          # convenience: a release that renames it must not break a renewal
+          if curl -fsSL -o /tmp/lego.checksums "$base/lego_${plain}_checksums.txt"; then
+            (cd /tmp && grep 'linux_amd64.tar.gz' lego.checksums | grep -v sbom | sha256sum -c -) ||
+              echo "::warning::the checksum of the lego archive did not match"
+          fi
+          mkdir -p /tmp/lego-extract
+          tar -xzf "/tmp/$tarball" -C /tmp/lego-extract
+          sudo install -m 755 "$(find /tmp/lego-extract -type f -name lego | head -1)" /usr/local/bin/lego
+          lego --version
+
+      - name: Issue or renew, and publish
+        if: steps.settings.outputs.configured == 'true'
+        env:
+          LEGO_EMAIL: ${{ vars.LETSENCRYPT_EMAIL }}
+          CLOUD_DNS_PROJECT: ${{ vars.CLOUD_DNS_PROJECT }}
+          SERVICE_ACCOUNT: ${{ secrets.CLOUD_DNS_SERVICE_ACCOUNT }}
+          GCE_SERVICE_ACCOUNT_FILE: ${{ runner.temp }}/cloud-dns.json
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$SERVICE_ACCOUNT" >"$GCE_SERVICE_ACCOUNT_FILE"
+          if [ -z "${CLOUD_DNS_PROJECT:-}" ]; then
+            export GCE_PROJECT=$(jq -r '.project_id // empty' "$GCE_SERVICE_ACCOUNT_FILE")
+          else
+            export GCE_PROJECT="$CLOUD_DNS_PROJECT"
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          ./tools/issue-global-certificate.sh --commit
+
+      - name: Report
+        if: steps.settings.outputs.configured == 'true'
+        run: |
+          set -euo pipefail
+          {
+            echo "### The published certificate"
+            echo "<pre>"
+            openssl x509 -in docs/tls/fullchain.pem -noout -subject -dates -ext subjectAltName
+            echo "</pre>"
+            git log -1 --format='published by %h on %ad: %s' --date=short -- docs/tls
+          } >>"$GITHUB_STEP_SUMMARY"
+          # a certificate close to its end that was not renewed deserves the mail
+          # a failed run sends
+          openssl x509 -in docs/tls/fullchain.pem -noout -checkend 1209600 ||
+            { echo "::error::the published certificate expires within two weeks"; exit 1; }

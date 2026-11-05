@@ -46,22 +46,35 @@ if ! command -v lego >/dev/null 2>&1; then
   exit 1
 fi
 
-mkdir -p "$target" config/tls/lego
-lego --email "$LEGO_EMAIL" --dns gcloud --accept-tos \
-  --path "$laser_dir/config/tls/lego" \
-  --domains "*.$domain" \
-  renew --days 30 ||
-  lego --email "$LEGO_EMAIL" --dns gcloud --accept-tos \
-    --path "$laser_dir/config/tls/lego" \
-    --domains "*.$domain" run
+mkdir -p "$target"
+store="$laser_dir/config/tls/lego"
+mkdir -p "$store"
+lego_args=(--email "$LEGO_EMAIL" --dns gcloud --accept-tos --path "$store" --domains "*.$domain")
 
-install -m 644 "config/tls/lego/certificates/_.$domain.crt" "$target/fullchain.pem"
-install -m 644 "config/tls/lego/certificates/_.$domain.key" "$target/privkey.pem"
+# lego 5 merged the two commands: run issues and renews, and --renew-days is a
+# flag of run. lego 4 still has renew --days, so both are accepted here.
+lego_major=$(lego --version 2>/dev/null | awk '{print $3}' | cut -d. -f1)
+if [ "${lego_major:-4}" -ge 5 ] 2>/dev/null; then
+  lego "${lego_args[@]}" run --renew-days 30
+else
+  lego "${lego_args[@]}" renew --days 30 || lego "${lego_args[@]}" run
+fi
+
+# the certificate of this domain, and not the copy of the issuer that newer lego
+# keeps beside it
+crt=$(find "$store/certificates" -name "*$domain.crt" ! -name '*.issuer.crt' 2>/dev/null | head -1)
+key=$(find "$store/certificates" -name "*$domain.key" ! -name '*.issuer.key' 2>/dev/null | head -1)
+if [ -z "$crt" ] || [ -z "$key" ]; then
+  echo "lego left no certificate for $domain in $store/certificates" >&2
+  exit 1
+fi
+install -m 644 "$crt" "$target/fullchain.pem"
+install -m 644 "$key" "$target/privkey.pem"
 echo "published: $target/fullchain.pem $target/privkey.pem"
 openssl x509 -in "$target/fullchain.pem" -noout -subject -enddate -ext subjectAltName
 
 if [ "${1:-}" == "--commit" ]; then
   git add "$target/fullchain.pem" "$target/privkey.pem"
   git commit -m "publish the wildcard certificate of *.$domain" || echo "nothing to commit"
-  git push
+  git push || git push origin HEAD
 fi
