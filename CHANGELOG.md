@@ -70,8 +70,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   those variables visible to PHP. They were already visible to any `docker exec`
   in the container, so this changes nothing about who can read them.
 
-### Fixed
-
 - `laser up` warned that `HTTPS=on` needed a certificate even when the
   certificate was in place: it looked at `config/tls/laserstack.pem`, a path
   `laser tls` never writes, instead of `config/tls/serve/laserstack.pem`, the
