@@ -96,13 +96,18 @@ function php_config_dir(string $version): string
 }
 
 $services = [
-    ['MySQL', 'db', 3306],
-    ['MariaDB', 'mariadb', 3306],
-    ['PostgreSQL', 'postgres', 5432],
-    ['redis', 'redis', 6379],
-    ['memcached', 'memcached', 11211],
-    ['Elasticsearch', 'elasticsearch', 9200],
+    ['MySQL', 'db', 3306, 'mysql'],
+    ['MariaDB', 'mariadb', 3306, 'mariadb'],
+    ['PostgreSQL', 'postgres', 5432, null],
+    ['redis', 'redis', 6379, null],
+    ['memcached', 'memcached', 11211, null],
+    ['Elasticsearch', 'elasticsearch', 9200, null],
 ];
+
+// MySQL and MariaDB share the db alias, so a port that answers does not say
+// which engine is behind it. The mariadb service is the only one that answers to
+// its own name, so that name decides which of the two the stack started.
+$sqlEngine = probe('mariadb', 3306)['up'] ? 'mariadb' : (probe('db', 3306)['up'] ? 'mysql' : null);
 
 // The server version of the profile, when one answers. The credentials come
 // from the environment of the app container and are never printed.
@@ -243,14 +248,21 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
         <section class="card wide2">
             <h2>Services</h2>
             <table>
-                <?php foreach ($services as [$label, $serviceHost, $port]): ?>
-                    <?php $state = probe($serviceHost, $port); ?>
+                <?php foreach ($services as [$label, $serviceHost, $port, $engine]): ?>
+                    <?php
+                    $state = probe($serviceHost, $port);
+                    // the two SQL engines share the db alias: only the one the
+                    // stack started is running, whatever the port says
+                    $running = $engine === null ? $state['up'] : $sqlEngine === $engine;
+                    ?>
                     <tr>
                         <td><?= e($label) ?></td>
                         <td><code><?= e($serviceHost . ':' . $port) ?></code></td>
                         <td>
-                            <?php if ($state['up']): ?>
+                            <?php if ($running): ?>
                                 <span class="up">up</span> <span class="muted"><?= e((string) $state['ms']) ?> ms</span>
+                            <?php elseif ($engine !== null): ?>
+                                <span class="muted">not running</span>
                             <?php else: ?>
                                 <span class="down">no answer</span>
                             <?php endif; ?>
@@ -258,7 +270,7 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                     </tr>
                 <?php endforeach; ?>
             </table>
-            <p class="note">Only the services of the profiles in <code>PROFILES</code> run.</p>
+            <p class="note">Only the services of the profiles in <code>PROFILES</code> run. MySQL and MariaDB share the <code>db</code> alias, so the one that answers to its own name is the one running.</p>
         </section>
 
         <section class="card">
