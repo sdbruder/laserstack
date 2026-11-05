@@ -183,7 +183,15 @@ for version in $versions; do
 
   # the checkout is one of the projects, so the catch-all vhost serves the
   # dashboard without a vhost of its own
-  dashboard=$("$laser" appexec curl -sS -m 10 -H "Host: laserstack.$SUFFIX" http://127.0.0.1/ 2>/dev/null)
+  # the first render can ask a project before its php-fpm worker answers, and the
+  # tile then says grey: a page that reloads itself every 30 s gets three tries,
+  # which is a fair question for the code its front page answers with
+  dashboard=""
+  for _ in $(seq 3); do
+    dashboard=$("$laser" appexec curl -sS -m 10 -H "Host: laserstack.$SUFFIX" http://127.0.0.1/ 2>/dev/null)
+    echo "$dashboard" | grep -q 'the front page answers 200' && break
+    sleep 2
+  done
   check "the dashboard of the checkout answers" \
     "$(echo "$dashboard" | grep -q '<title>Laser Stack</title>' && echo 0 || echo 1)"
   check "the dashboard lists the projects directory ($smoke_project)" \
