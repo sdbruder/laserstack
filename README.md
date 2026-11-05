@@ -295,8 +295,7 @@ It is read-only, and it says what the stack is doing right now:
   of the CHANGELOG.
 
 It reads the checkout, opens a socket to each service and asks each project for its
-front page: it writes
-nothing, runs no command and never prints a credential.
+front page. It writes nothing, runs no command and never prints a credential.
 
 
 ## HTTPS
