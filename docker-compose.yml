@@ -185,7 +185,14 @@ services:
       MYSQL_USER: "${DB_USERNAME}"
       MYSQL_PASSWORD: "${DB_PASSWORD}"
     networks:
-      - laser
+      laser:
+        # A project reaches this server by the name of its engine, and by the
+        # name every project of the stack uses whatever its database is: the
+        # mariadb profile carries the same db alias, so DB_HOST=db works with
+        # either profile and only one of them runs at a time.
+        aliases:
+          - mysql
+          - db
     profiles:
       - mysql
   mariadb:
@@ -203,9 +210,10 @@ services:
       MARIADB_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
     networks:
       laser:
-        # Projects created before the mariadb profile use "db" as the database
-        # host, the name of the service of the mysql profile. Do not activate
-        # both database profiles at the same time, both use port 3306.
+        # The same db alias as the mysql profile, so a project that uses db as
+        # its database host works with either profile, plus the name of the
+        # engine from the service itself. Do not activate both database profiles
+        # at the same time, both use port 3306.
         aliases:
           - db
     profiles:

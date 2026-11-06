@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The container of the mysql profile answers to `mysql` as well as to `db`, so a
+  project can name the engine it needs (`DB_HOST=mysql`) next to
+  `DB_HOST=mariadb` for the other profile, and keep `DB_HOST=db` to work with
+  either. Before this, only `db` reached the mysql container: `mysql` was not a
+  host name at all.
+
 - A project can ask for another PHP version than the one of the stack, and
   several versions run at the same time. A `.laserstack` file in the project root
   (`PHP_VERSION=8.5`, written by `laser use php 8.5`) selects it, the profile

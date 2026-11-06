@@ -230,11 +230,11 @@ run. The available profiles, each with the image `docker-compose.yml` pulls:
   php-fpm running, one profile per PHP version a project asks for, see
   [Several PHP versions at the same time](#several-php-versions-at-the-same-time))
 
-The database container of the mysql profile answers to the name `db`, the
-container of the mariadb profile to the name `mariadb` and to `db` as well.
-Projects that use `db` as the database host thus work with both profiles. Do
-not activate the mysql and the mariadb profile at the same time, both use port
-3306.
+The container of the mysql profile answers to `mysql` and to `db`, the container
+of the mariadb profile to `mariadb` and to `db` as well. A project can name the
+engine it needs (`DB_HOST=mysql`, `DB_HOST=mariadb`) or use `db` and work with
+both profiles without a change. Do not activate the mysql and the mariadb
+profile at the same time, both use port 3306.
 
 The postgres container keeps its data in the `pgdata` volume and reads the
 config directory of its version, `config/postgres/<version>/`. The container of

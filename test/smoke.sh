@@ -404,6 +404,10 @@ dbcheck() {
     # the mariadb profile answers to "db" as well, the name projects use
     [ "$profile" == "mariadb" ] && pdo "PHP reaches mariadb by the name db" \
       "mysql:host=db;dbname=$dbname" "$user" "$pass" "select version()"
+    # and both profiles answer to the name of their engine, so a project can say
+    # which one it needs
+    [ "$profile" == "mysql" ] && pdo "PHP reaches mysql by the name mysql" \
+      "mysql:host=mysql;dbname=$dbname" "$user" "$pass" "select version()"
   fi
 }
 
