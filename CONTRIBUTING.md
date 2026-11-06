@@ -342,6 +342,11 @@ changed and how it was verified.
   of every `${VAR:-default}`;
 - a change of the version of a database switches to the data volume of that
   version (`<project>_<engine>data_<version>`), so nothing else has to be reset;
+- a `laser down` removes every container of the project, whatever profile it was
+  started with. One that a plain `docker-compose down` left behind keeps the
+  network it was created in, and starting it again fails with `failed to set up
+  container networking: network ... not found`, which aborts the `up` — the app
+  container included;
 - there is no validation layer. A path that the version does not have, an image
   tag that does not exist, or a variable in a config file that the server does
   not know all end as the raw docker or server error, and that error is the

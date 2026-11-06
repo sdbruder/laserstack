@@ -854,6 +854,20 @@ update)
 dockerhelp)
   dockerhelp
   ;;
+down)
+  # Every container of the project, whatever profile it was started with, and
+  # even one whose network is gone. A container that a plain "docker-compose
+  # down" leaves behind keeps the network it was created in, and starting it
+  # again then fails with "failed to set up container networking: network ...
+  # not found", which takes the whole "up" down with it — the app included.
+  # --remove-orphans alone does not cover it: a service behind a profile that is
+  # not in PROFILES is part of the project, so compose does not call it one.
+  dc down --remove-orphans "$@"
+  leftover=
+  for leftover in $(docker ps -aq --filter "label=com.docker.compose.project=$dockerproject" 2>/dev/null); do
+    docker rm -f "$leftover" >/dev/null
+  done
+  ;;
 mysql)
   mysql "$@"
   ;;

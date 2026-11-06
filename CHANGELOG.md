@@ -61,6 +61,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `laser use php off` runs a scan, so the vhost of the marker goes away with the
   marker instead of serving the project from the worker until the next scan.
 
+- `laser down` removes every container of the project, whatever profile it was
+  started with. A container that a plain `docker-compose down` leaves behind
+  keeps the network it was created in, and a later `laser up` of that profile
+  then failed with `failed to set up container networking: network ... not
+  found`, which took the whole `up` down with it — the app container included.
+
 - The app images carry the `memcached` PHP extension from 7.4 to 8.5, so
   `PROFILES=memcached` is a cache store for a project and not only a server: the
   `Memcached` class sets a value and reads it back. PHP 8.6, a release candidate,
