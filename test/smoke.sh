@@ -125,6 +125,26 @@ setenv() {
   fi
 }
 
+# The state that the silence of "laser up" hides, printed only when a check of
+# the version under test failed: every container of the project, including the
+# ones that exited, the log of any of those, and the last lines of the app log,
+# which is where an nginx that refused to start says why.
+state() {
+  local project name
+  project=$(basename "$laser_dir")
+  echo "  --   .env says: $(sed -n 's/^PHP_VERSION=/PHP_VERSION=/p;s/^PROFILES=/PROFILES=/p' .env | tr '\n' ' ')"
+  echo "  --   the containers of the project, exited ones too:"
+  docker ps -a --filter "label=com.docker.compose.project=$project" \
+    --format '  --   {{.Names}}  {{.Status}}  {{.Image}}' 2>&1
+  for name in $(docker ps -a --filter "label=com.docker.compose.project=$project" \
+    --filter "status=exited" --format '{{.Names}}' 2>/dev/null); do
+    echo "  --   the log of the exited $name:"
+    docker logs --tail 12 "$name" 2>&1 | sed 's/^/  --   /'
+  done
+  echo "  --   laser logs --tail 20 app:"
+  "$laser" logs --tail 20 app 2>&1 | tail -20 | sed 's/^/  --   /'
+}
+
 cleanup() {
   rm -rf "$projects_dir/$smoke_project" "$projects_dir/$worker_project"
   if [ -n "${env_backup:-}" ]; then
@@ -249,6 +269,7 @@ for version in $versions; do
     "$([ "$httpd_before" == "$(ls config/nginx/http.d)" ] && echo 0 || echo 1)"
 
   [ "$fails" -gt "$fails_before" ] && failed_items="$failed_items app:$version"
+  [ "$fails" -gt "$fails_before" ] && state
   "$laser" stop >/dev/null 2>&1
 done
 
@@ -269,6 +290,10 @@ for version in $versions; do
   worker="php$(echo "$partner" | tr -d '.')"
   say "PHP $version with a worker of $partner"
   fails_before=$fails
+  # a clean start per version: a container that an earlier stage stopped keeps
+  # the network it was created in, and a worker of it may not come back, which
+  # has nothing to do with the version under test
+  "$laser" down >/dev/null 2>&1
   sed -e "s/^PHP_VERSION=.*/PHP_VERSION=$version/" -e "s/^PROFILES=.*/PROFILES=$worker/" "$env_backup" >.env
   setenv SUFFIX "$SUFFIX"
   printf 'PHP_VERSION=%s\n' "$partner" >"$projects_dir/$worker_project/.laserstack"
@@ -307,6 +332,7 @@ for version in $versions; do
     "$([ -f "config/nginx/http.d/$worker_project.conf" ] && echo 0 || echo 1)"
 
   [ "$fails" -gt "$fails_before" ] && failed_items="$failed_items php:$version+$partner"
+  [ "$fails" -gt "$fails_before" ] && state
   # the marker leaves with the stage, and the scan removes its vhost again
   rm -f "$projects_dir/$worker_project/.laserstack"
   "$laser" scan >/dev/null 2>&1
@@ -403,6 +429,7 @@ for profile in $db_profiles; do
     "$laser" up >/dev/null 2>&1
     dbcheck "$profile" "$version"
     [ "$fails" -gt "$fails_before" ] && failed_items="$failed_items $profile:$version"
+    [ "$fails" -gt "$fails_before" ] && state
     "$laser" stop >/dev/null 2>&1
   done
   "$laser" down >/dev/null 2>&1
@@ -455,6 +482,7 @@ for profile in $cache_profiles; do
     "$laser" up >/dev/null 2>&1
     cachecheck "$profile"
     [ "$fails" -gt "$fails_before" ] && failed_items="$failed_items $profile:$version"
+    [ "$fails" -gt "$fails_before" ] && state
     "$laser" stop >/dev/null 2>&1
   done
   "$laser" down >/dev/null 2>&1

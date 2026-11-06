@@ -203,6 +203,15 @@ function enabledProfiles(string $envFile): ?array
 }
 
 /**
+ * The key of a curl handle: an object from PHP 8.0 and a resource before that,
+ * and this page runs on every series of the image.
+ */
+function handle_key($handle): int
+{
+    return is_object($handle) ? spl_object_id($handle) : (int) $handle;
+}
+
+/**
  * The answer of the front page of each project: one HEAD request per project
  * through the vhost of that name. The container resolves no *.SUFFIX name (the
  * resolver of the suffix lives on the host), so the request goes to the nginx
@@ -233,7 +242,7 @@ function project_statuses(array $names, string $suffix, float $timeout = 0.8): a
             CURLOPT_TIMEOUT_MS => (int) round($timeout * 1000),
         ]);
         curl_multi_add_handle($multi, $handle);
-        $byHandle[spl_object_id($handle)] = [$name, $handle];
+        $byHandle[handle_key($handle)] = [$name, $handle];
     }
     do {
         $state = curl_multi_exec($multi, $running);
@@ -245,7 +254,7 @@ function project_statuses(array $names, string $suffix, float $timeout = 0.8): a
     $statuses = [];
     while (($info = curl_multi_info_read($multi)) !== false) {
         $handle = $info['handle'];
-        [$name] = $byHandle[spl_object_id($handle)] ?? [null, null];
+        [$name] = $byHandle[handle_key($handle)] ?? [null, null];
         $code = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
         if ($name !== null) {
             $statuses[$name] = $code > 0 ? $code : null;
@@ -545,7 +554,7 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                     </li>
                 <?php endforeach; ?>
             </ul>
-            <p class="note"><code><?= e($projectsDir) ?></code>, <code>PROJECTS_DIRECTORY</code> in <code>.env</code>. Add a directory with a <code>public/index.php</code>, run <code>laser scan</code>, and it answers on its own name. The first pill is the driver <code>laser scan</code> finds: <code>laravel</code> carries an <code>artisan</code>, <code>symfony</code> a <code>symfony.lock</code>, <code>wordpress</code> a <code>wp-config.php</code>, <code>generic</code> a <code>laserstack-nginx.conf</code>, and a project of no driver is served by the multi-project vhost. The code is the answer of the front page, one HEAD request through the vhost of that name: green from 200 to 399, red from 400 up, grey when nothing answered within a second. <code>own vhost</code> means laserstack serves the project through an nginx vhost of its own instead of the multi-project one; <code>no public/</code> means no driver claims it and the multi-project vhost cannot reach it.</p>
+            <p class="note"><code><?= e($projectsDir) ?></code>, <code>PROJECTS_DIRECTORY</code> in <code>.env</code>. A Laravel or Symfony project needs no vhost of its own: add a directory with a <code>public/index.php</code> and it answers on its own name. <code>laser scan</code> is for a project that needs one — it ships a <code>laserstack-nginx.conf</code>, it is WordPress, or it asks for another PHP version in <code>.laserstack</code>. The first pill is the driver <code>laser scan</code> finds: <code>laravel</code> carries an <code>artisan</code>, <code>symfony</code> a <code>symfony.lock</code>, <code>wordpress</code> a <code>wp-config.php</code>, <code>generic</code> a <code>laserstack-nginx.conf</code>, and a project of no driver is served by the multi-project vhost. The code is the answer of the front page, one HEAD request through the vhost of that name: green from 200 to 399, red from 400 up, grey when nothing answered within a second. <code>own vhost</code> means laserstack serves the project through an nginx vhost of its own instead of the multi-project one; <code>no public/</code> means no driver claims it and the multi-project vhost cannot reach it.</p>
         </section>
 
         <section class="card wide">

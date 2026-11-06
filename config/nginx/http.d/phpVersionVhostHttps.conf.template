@@ -4,8 +4,9 @@
 # which is where TLS is terminated: the worker only ever sees the FastCGI
 # request, so only this side of the pair carries the certificate.
 server {
-    listen 443 ssl;
-    http2 on;
+    # the http2 parameter of listen, not the http2 directive: 7.4, 8.0 and 8.1
+    # carry an nginx that does not know the directive
+    listen 443 ssl http2;
 
     server_name "~^(?:[^.]+\.)*(?<project>__PROJECT__)(?:\..+)?\.__SUFFIX__$";
 

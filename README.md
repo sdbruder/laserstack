@@ -295,9 +295,18 @@ add.
 ## Other frameworks support
 
 Laser Stack serves Laravel, Symfony, WordPress and any other PHP project.
-`laser scan` decides what each directory of the projects directory is: it asks
-every driver in `libs/` about the directory, and the first one that recognises it
-writes the vhost of that project.
+
+A Laravel or Symfony project with a `public/index.php` needs no vhost of its
+own: the multi-project vhost, which the stack renders at every nginx start,
+answers for every name under the suffix, so a directory you add is served on its
+own name at once. **`laser scan` is only needed for a project that needs a vhost
+of its own**, which means one of three things: it ships a `laserstack-nginx.conf`,
+it is WordPress (its front page is the project root, and a vhost rooted at
+`public/` cannot serve it), or it asks for another PHP version in `.laserstack`.
+
+For those, `laser scan` decides what each directory of the projects directory is:
+it asks every driver in `libs/` about the directory, and the first one that
+recognises it writes the vhost of that project.
 
 | driver | the project carries | how it is served |
 |---|---|---|
@@ -318,8 +327,12 @@ A project of no driver is served by the multi-project vhost when it has a
 
 Either way the project is served from `/var/www/<project>`, answers on its own
 name and on `*.<project>.<SUFFIX>`, and the dashboard marks it `own vhost`. Run
-`laser scan` after adding or removing a project: it restarts nginx only when the
-vhosts really changed.
+`laser scan` after adding, changing or removing such a project: it restarts nginx
+only when the vhosts really changed, and a scan of a directory without one of
+these projects is a no-op. A removed project takes the vhost that `.laserstack`
+produced with it; the copy of a `laserstack-nginx.conf` stays where it is, which
+is harmless — the name answers 404 from nginx — and deleting that file by hand is
+the cleanup.
 
 With `HTTPS=on`, the multi-project vhost serves the projects that have a
 `public/index.php` on 443, and nothing else: a project served from the root of the

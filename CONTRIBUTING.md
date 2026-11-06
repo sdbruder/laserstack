@@ -115,6 +115,18 @@ first image of a *new* series is work.
 
 5. run `test/smoke.sh <major.minor>`.
 
+Two traps this work ran into, both worth a look before a pull request:
+
+- an nginx directive that only the newest images know keeps nginx from starting
+  for the older series, and one vhost that fails to load is enough. The vhosts
+  this repository renders must load on the oldest nginx in the matrix, which is
+  the one of 7.4 (`http2 on;` was the offender; `listen 443 ssl http2;` works on
+  every series). `test/smoke.sh` over all the series is what catches it;
+- a mount whose *content* changes does not change the container, so compose does
+  not recreate it: a stack that updates the checkout keeps running the command,
+  the ini or the vhost it read when it was created. `laser up` heals the one case
+  that matters (the https vhost), `laser down` and `laser up -d` is the rest.
+
 ## Add a database version
 
 1. create `config/<engine>/<version>/` and copy the config of the previous

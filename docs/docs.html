@@ -90,13 +90,13 @@ laser help                   <span class="out"># the commands; laser dockerhelp 
 
   <h2>Serving your projects</h2>
   <ul>
-    <li>Every subdirectory of <code>PROJECTS_DIRECTORY</code> with a <code>public/</code> directory is a candidate site; <code>laser scan</code> decides what each one is and writes its vhost;</li>
+    <li>A Laravel or Symfony project needs no vhost of its own: the multi-project vhost answers for every name under the suffix, so a subdirectory of <code>PROJECTS_DIRECTORY</code> with a <code>public/</code> directory is served on its own name the moment the directory is there. <code>laser scan</code> is only needed for a project that needs a vhost of its own: one that ships a <code>laserstack-nginx.conf</code>, a WordPress project (its front page is the project root), or one that asks for another PHP version in <code>.laserstack</code>;</li>
     <li>the drivers are <strong>laravel</strong>, <strong>symfony</strong>, <strong>wordpress</strong> and <strong>generic</strong>. The generic driver installs a <code>laserstack-nginx.conf</code> from the project root as the vhost of that project;</li>
     <li>the name a request must use is <code>&lt;directory&gt;.&lt;SUFFIX&gt;</code>, so <code>projecta.localdev.it</code> for a directory called <code>projecta</code> with the default suffix;</li>
     <li>those names must resolve to 127.0.0.1, and the default suffix needs nothing: <code>env.example</code> sets <code>SUFFIX=localdev.it</code>. Every name under <code>localdev.it</code> already resolves to <code>127.0.0.1</code> (and <code>::1</code>) for anyone, so <code>projecta.localdev.it</code> works on this machine the moment the stack is up — no hosts file, no DNS server, nothing to install. The notes behind that domain are at <a href="https://localdev.it/catch-all-dns.html">localdev.it/catch-all-dns.html</a>;</li>
     <li>with a suffix of your own, add the names to <code>/etc/hosts</code> or point a local DNS at them. Installing and maintaining that DNS is on the <a href="roadmap.html">roadmap</a>;</li>
     <li>projects live at <code>/var/www/&lt;directory&gt;</code> in the app container, so a project's own paths, relative URLs and artisan invocations stay ordinary;</li>
-    <li>after adding or removing a project: <code>laser scan</code>. It restarts nginx only when the vhosts really changed;</li>
+    <li>after adding, changing or removing one of <em>those</em> projects: <code>laser scan</code>. It restarts nginx only when the vhosts really changed, and over a directory of plain Laravel and Symfony projects it is a no-op;</li>
     <li>after changing <code>SUFFIX</code>: <code>laser up -d</code> first, so the containers read the new value, and then <code>laser scan</code> for the vhosts. Until the containers are recreated the stack keeps answering on the old suffix.</li>
   </ul>
 

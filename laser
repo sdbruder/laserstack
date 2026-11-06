@@ -76,6 +76,27 @@ function up() {
   # --remove-orphans: a profile that leaves PROFILES takes its container with
   # it, which is how dropping a database engine or a PHP version really stops it
   dc up -d --remove-orphans
+
+  # An app container from an earlier release runs the nginx command it read when
+  # the container was created, and the supervisord.conf mounted under it changed
+  # since: that command renders only the http vhost, so 443 would have no vhost
+  # at all. One restart hands the container the file it already has. A container
+  # that was just created renders the vhost a moment later, hence the retries.
+  if [ "$HTTPS" == "on" ] && [ -f config/tls/serve/laserstack.pem ] && [ -n "$(dc ps -q app)" ]; then
+    local vhost_missing=1
+    local try
+    for try in 1 2 3; do
+      if dc exec -T app sh -c 'test -f /etc/nginx/sites-enabled/multiProjectLaravelHttps.conf' >/dev/null 2>&1; then
+        vhost_missing=0
+        break
+      fi
+      sleep 1
+    done
+    if [ "$vhost_missing" == "1" ]; then
+      echo "TLS: this app container predates the release, restarting it so it serves https again"
+      dc restart app >/dev/null
+    fi
+  fi
 }
 
 function lasercommands() {
@@ -160,6 +181,9 @@ function use() {
   if [ -z "$version" ] || [ "$version" == "off" ] || [ "$version" == "default" ]; then
     rm -f "$marker"
     echo "USE: $project follows the PHP version of the stack again ($PHP_VERSION)"
+    # the vhost of that marker goes with it: without the scan the project keeps
+    # answering from the worker for as long as its profile runs
+    scan
     echo "USE: the profile of another version stays in PROFILES until you remove it"
     return 0
   fi
