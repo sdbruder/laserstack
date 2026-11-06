@@ -74,7 +74,7 @@ laser down
 laser up -d
 laser appexec php -v | sed -n '1p'
 <span class="out">PHP 8.6.0RC5 (cli) …</span></code></pre>
-  <p>One <code>app</code> container serves every project, so the PHP version is a property of the stack, not of a project. Per-project PHP versions, one container per version in use, are on the <a href="roadmap.html">roadmap</a>.</p>
+  <p>One <code>app</code> container serves every project, and <code>PHP_VERSION</code> is the version of the stack; a project can ask for its own in a <code>.laserstack</code> file, which <code>laser use php 8.5</code> writes, and the stack then starts one container per version in use. The database is still one version per engine, and several database versions in parallel are on the <a href="roadmap.html">roadmap</a>.</p>
 
   <h2>4 · Switch a project from MySQL to PostgreSQL</h2>
   <pre><code><span class="out"># .env of the stack</span>

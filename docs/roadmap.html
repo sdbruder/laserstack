@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Roadmap — Laser Stack</title>
-<meta name="description" content="What Laser Stack ships next: several PHP versions and database servers at the same time, and a local DNS that maintains itself. Plus what just shipped in 0.13.2.">
+<meta name="description" content="What Laser Stack ships next: several database servers at the same time, and a local DNS that maintains itself. Plus what just shipped in 0.13.2.">
 <link rel="canonical" href="https://localdev.it/laserstack/roadmap.html">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Roadmap — Laser Stack">
-<meta property="og:description" content="Per-project PHP versions, several database versions in parallel, and a self-maintaining local DNS.">
+<meta property="og:description" content="Per-project database versions, and a self-maintaining local DNS.">
 <meta property="og:image" content="https://localdev.it/laserstack/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0a0c10">
@@ -27,20 +27,21 @@
 <section class="hero"><div class="wrap">
   <p class="eyebrow">Roadmap</p>
   <h1>What comes next, in the open.</h1>
-  <p class="lede">Two things are missing from the picture and both are written down with their design, not just as a wish: per-project PHP and database versions, and a local DNS the stack maintains itself. The full notes live in the repository, in the TODO section of <a href="https://github.com/sdbruder/laserstack/blob/master/CONTRIBUTING.md">CONTRIBUTING.md</a>.</p>
+  <p class="lede">Two things are missing from the picture and both are written down with their design, not just as a wish: per-project database versions — a project picks its own PHP version already, one container per version in use — and a local DNS the stack maintains itself. The full notes live in the repository, in the TODO section of <a href="https://github.com/sdbruder/laserstack/blob/master/CONTRIBUTING.md">CONTRIBUTING.md</a>.</p>
 </div></section>
 
 <section><div class="wrap prose">
-  <p><span class="pill next">planned</span> <strong>Several PHP versions and database servers at the same time.</strong></p>
-  <p>Today a stack runs one PHP version and one version per database engine: the container is a property of the stack, not of a project. The goal is the smallest number of containers that still lets every project have what it needs:</p>
+  <p><span class="pill now">shipped</span> <strong>One PHP version per project.</strong></p>
+  <p>A project states the version it needs in a <code>.laserstack</code> file in its root — a <code>KEY=VALUE</code> file, read and never sourced, written by <code>laser use php 8.5</code> — and the stack starts one worker container per version in use; a version that nobody needs never starts. The one <code>app</code> container keeps the front door: one nginx, the certificate, the dashboard, ports 80 and 443 by host name. A version is a profile of <code>PROFILES</code> (<code>php85</code>), and a project that declares nothing behaves exactly as it did.</p>
+
+  <p><span class="pill next">planned</span> <strong>Several database servers at the same time.</strong></p>
+  <p>The database is the half that is still missing: each engine runs one version, and that version is a property of the stack, not of a project. The goal is the smallest number of containers that still lets every project have what it needs:</p>
   <ul>
-    <li>one <code>app</code> container per PHP version <em>in use</em>, not per project; the version that nobody needs never starts;</li>
     <li>one container per database engine and version in parallel — mysql 8.0 next to mysql 9.7 next to postgres 16 — on their own ports;</li>
-    <li>a mapping from project to versions, read by <code>laser scan</code> and by the CLI, so <code>laser artisan</code> in a project picks the container of <em>that</em> project;</li>
-    <li>a small router in front, so all of it still answers on port 80 by host name;</li>
+    <li>the mapping from a project to its database version, read by <code>laser scan</code> and by the CLI, the way <code>.laserstack</code> already selects the PHP container of <code>laser artisan</code>;</li>
     <li>defaults that keep today's behaviour: a stack that declares nothing behaves exactly as it does now.</li>
   </ul>
-  <p>The direction we are working from: a <code>.laserstack</code> file in the project root (a <code>KEY=VALUE</code> file, read like <code>.env</code>), then <code>composer.json</code> as a floor, then the stack default. One container per version, shared by every project that needs it, instead of a stack per project.</p>
+  <p>The direction we are working from: the same <code>.laserstack</code> file selects the database version too (a <code>KEY=VALUE</code> file, read like <code>.env</code>), then <code>composer.json</code> as a floor, then the stack default. One container per version, shared by every project that needs it, instead of a stack per project.</p>
 
   <hr>
 
@@ -84,7 +85,7 @@
 
   <h2>How to push these along</h2>
   <ul>
-    <li><strong>Say what your projects need.</strong> Which PHP and database versions do you have to run side by side? That decides the defaults of the mapping;</li>
+    <li><strong>Say what your projects need.</strong> Which database versions do you have to run side by side? That decides the defaults of the mapping;</li>
     <li><strong>Open an issue</strong> for a bug, a missing driver, or a version the stack should support — the version work has a small, documented recipe, so adding one is a good first contribution;</li>
     <li><strong>Bring a project type.</strong> The drivers behind <code>laser scan</code> are one file each, and a new framework or CMS usually needs a dozen lines;</li>
     <li><strong>Star or share the repository</strong> if the stack fits your work: it is the whole distribution channel of this project.</li>

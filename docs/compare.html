@@ -39,7 +39,7 @@
         <td><strong>Laser Stack</strong></td>
         <td>one stack for every project (nginx + PHP-FPM in one container)</td>
         <td><code>projecta.localdev.it</code> by default, no hosts file and no DNS server for anyone; https from a wildcard certificate every browser already trusts, for every project at once</td>
-        <td>one per stack, chosen by variable: 7.4–8.6</td>
+        <td>one per project in <code>.laserstack</code>, several versions at once, the stack default by variable: 7.4–8.6</td>
         <td>one per engine, chosen by variable: mysql, mariadb, postgres, redis, memcached, elasticsearch</td>
         <td>free, BSD-3-Clause, macOS · Linux · WSL2</td>
       </tr>
@@ -120,19 +120,19 @@
     <li><strong>You want to install no container runtime at all:</strong> Valet on macOS, or Herd if you also want the GUI and the version matrix.</li>
     <li><strong>You work on Windows without WSL2:</strong> Herd.</li>
     <li><strong>You want one project fully isolated, with Laravel's own defaults:</strong> Sail. It is already in the project.</li>
-    <li><strong>Each project needs a different PHP or database version:</strong> DDEV (or Lando, or a stack per project). Laser Stack runs one PHP version per stack today; per-project versions are the <a href="roadmap.html">next item on the roadmap</a>.</li>
+    <li><strong>Each project needs a different database version:</strong> DDEV (or Lando, or a stack per project). Laser Stack picks the PHP version per project, but the database is still one version per engine.</li>
     <li><strong>You are on Linux and would rather not run Docker:</strong> lerd, on Podman.</li>
     <li><strong>You need a GUI, a mail catcher and a database browser in one window:</strong> Herd Studio or DDEV's add-ons, not this.</li>
   </ul>
 
   <h2>Where Laser Stack differs, and what that costs</h2>
   <ul>
-    <li><strong>One stack, not one per project.</strong> All projects of the projects directory are served by the same nginx and PHP-FPM container, next to one database container. That is where the 607 MB and the ~113 MiB idle come from, whatever the number of projects.</li>
-    <li><strong>The price of sharing:</strong> one PHP version per stack. The version is a variable, and the same is true for every database engine, but it is a property of the stack, not of a project.</li>
+    <li><strong>One stack, not one per project.</strong> All projects of the projects directory are served by the same nginx, and by one PHP-FPM container per version in use, next to one database container. That is where the 607 MB and the ~113 MiB idle come from, whatever the number of projects.</li>
+    <li><strong>The price of sharing:</strong> one <code>app</code> container still serves every project, and the database is still one version per engine. Per-project PHP versions change only the PHP: one worker container per version in use, carrying the extensions, opcache and xdebug of that version, not of the project.</li>
     <li><strong>Names that need no setup.</strong> <code>SUFFIX</code> defaults to <code>localdev.it</code>, a domain where every name — any depth, IPv4 and IPv6 — resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone. No hosts file, no dnsmasq, no daemon. A suffix of your own needs <code>/etc/hosts</code>, and a change of suffix needs <code>laser up -d</code> before <code>laser scan</code>.</li>
     <li><strong>Config in the repository, per version.</strong> <code>config/&lt;engine&gt;/&lt;version&gt;/</code> holds the settings of each supported version, so a version is a variable and a directory, not an edit of the compose file.</li>
     <li><strong>Reproducible by design:</strong> two <code>git</code> repositories, one <code>docker-compose.yml</code>, no build step, no VM, no system package, no daemon of its own. The app images are rebuilt nightly, and <code>laser update</code> moves a running stack to the newest patch.</li>
-    <li><strong>What it does not have:</strong> a GUI, Windows without WSL2, per-project PHP versions (planned). Each database version keeps its own data volume, so changing a version keeps the data of the others and loses nothing.</li>
+    <li><strong>What it does not have:</strong> a GUI, Windows without WSL2. Each database version keeps its own data volume, so changing a version keeps the data of the others and loses nothing.</li>
   </ul>
 
   <h2>Try it</h2>

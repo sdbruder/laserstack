@@ -5,20 +5,19 @@ function multilaravel::identify() {
 }
 
 function multilaravel::https_vhost() {
-	# The https vhost is not a project config either, and it exists only when
-	# .env turns HTTPS on: off, the rendered file goes away, because nginx
-	# refuses to start when a vhost points at a certificate that is not
-	# mounted. The scan calls this inside the window it hashes, so turning
-	# HTTPS on or off reports a configuration change and restarts nginx.
-	local rendered="config/nginx/http.d/multiProjectLaravelHttps.conf"
-	local template="config/nginx/http.d/multiProjectLaravelHttps.conf.template"
-	if [ "${HTTPS:-off}" == "on" ]; then
-		if [ -f "$template" ]; then
-			sed "s/__SUFFIX__/${SUFFIX}/g" "$template" >"$rendered"
-		fi
-	else
-		rm -f "$rendered"
-	fi
+	# The https vhost of the stack is rendered by the container itself, next to
+	# the http one: the nginx program of supervisord writes both into
+	# /etc/nginx/sites-enabled and writes the https one only when the
+	# certificate is mounted, which is what HTTPS=on does.
+	#
+	# So this directory carries no vhost of the stack, and a per-project vhost
+	# here (config/nginx/http.d/<project>.conf, see libs/phpversionDriver.sh) is
+	# the first match for its own names on 443 as well as on 80: nginx.conf
+	# includes http.d before sites-enabled.
+	#
+	# A copy that an earlier version of the stack rendered here has to go: it
+	# would be included before sites-enabled and shadow every per-project vhost.
+	rm -f "config/nginx/http.d/multiProjectLaravelHttps.conf"
 }
 
 function multilaravel::config() {

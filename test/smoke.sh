@@ -13,6 +13,16 @@
 #     projects directory
 #   - the run writes nothing into config/nginx/http.d of the repository
 #
+# Stage "php", for every version it checks:
+#
+#   - two projects of two PHP versions answer at the same time: one from the app
+#     container, one from a worker container of another version, both through the
+#     one nginx the app container runs
+#   - a project without a marker keeps the version of the app container
+#   - the worker loads the php.ini of the repository, like the app container
+#   - laser php of the project with the marker runs in the container of its
+#     version, and laser scan rendered its vhost
+#
 # Stage "database", for every database profile (mysql, mariadb, postgres) and
 # every version it checks:
 #
@@ -46,6 +56,7 @@
 #        SMOKE_CACHE_PROFILES=memcached test/smoke.sh 8.4
 #        SMOKE_CACHE_PROFILES="" test/smoke.sh 8.4      (skip the cache stage)
 #        SMOKE_PULL=0 test/smoke.sh 8.4
+#        SMOKE_WORKER_VERSION=8.3 test/smoke.sh 8.5   (partner of the stage php)
 
 set -u
 
@@ -67,6 +78,12 @@ cache_profiles="${SMOKE_CACHE_PROFILES-redis memcached}"
 # nothing to test. 8.6 is a release candidate: Alpine has no package for the
 # memcached extension and the pecl build does not compile against it.
 cache_skip_versions="${SMOKE_CACHE_SKIP_VERSIONS-8.6}"
+# the partner of the two-version stage. An empty value picks another series of
+# the list: the one before the version under test, the one after it when there
+# is none, so the partner is never the release candidate by accident.
+worker_version="${SMOKE_WORKER_VERSION:-}"
+worker_series="7.4 8.0 8.1 8.2 8.3 8.4 8.5 8.6"
+worker_project="laser-smoke-worker"
 # the test pulls the images of the version it starts, so a stale image of an
 # older run cannot fail the test. SMOKE_PULL=0 keeps the local images.
 pull_images="${SMOKE_PULL:-1}"
@@ -109,7 +126,7 @@ setenv() {
 }
 
 cleanup() {
-  rm -rf "$projects_dir/$smoke_project"
+  rm -rf "$projects_dir/$smoke_project" "$projects_dir/$worker_project"
   if [ -n "${env_backup:-}" ]; then
     cp "$env_backup" .env
     rm -f "$env_backup"
@@ -140,6 +157,11 @@ preg_match('/^Uid:\s+(\d+)\s+(\d+)/m', $status, $uid);
 $ini = php_ini_loaded_file();
 echo 'php=', PHP_VERSION, ' ini=', $ini, ' inimd5=', md5_file($ini), ' euid=', $uid[1], "\n";
 PHP
+
+# the second project of the two-version stage: the same front page, and the
+# marker that sends it to a worker container is written per iteration
+mkdir -p "$projects_dir/$worker_project/public"
+cp "$projects_dir/$smoke_project/public/index.php" "$projects_dir/$worker_project/public/index.php"
 
 echo "smoke test: versions [$versions], database profiles [$db_profiles], cache profiles [${cache_profiles:-none}]"
 echo "the first run pulls the images of the profiles"
@@ -229,6 +251,70 @@ for version in $versions; do
   [ "$fails" -gt "$fails_before" ] && failed_items="$failed_items app:$version"
   "$laser" stop >/dev/null 2>&1
 done
+
+say "stage php"
+for version in $versions; do
+  # the partner: the version before this one in the series, the one after it
+  # when there is none. SMOKE_WORKER_VERSION names it outright.
+  partner="$worker_version"
+  if [ -z "$partner" ]; then
+    previous=""
+    for candidate in $worker_series; do
+      [ "$candidate" == "$version" ] && break
+      previous="$candidate"
+    done
+    [ -z "$previous" ] && previous=$(echo "$worker_series" | awk -v v="$version" '{for (i = 1; i <= NF; i++) if ($i != v) {print $i; exit}}')
+    partner="$previous"
+  fi
+  worker="php$(echo "$partner" | tr -d '.')"
+  say "PHP $version with a worker of $partner"
+  fails_before=$fails
+  sed -e "s/^PHP_VERSION=.*/PHP_VERSION=$version/" -e "s/^PROFILES=.*/PROFILES=$worker/" "$env_backup" >.env
+  setenv SUFFIX "$SUFFIX"
+  printf 'PHP_VERSION=%s\n' "$partner" >"$projects_dir/$worker_project/.laserstack"
+  [ "$pull_images" == "1" ] && { "$laser" pull >/dev/null 2>&1 || echo "  --   the pull failed, the local images are used"; }
+  "$laser" up >/dev/null 2>&1
+  "$laser" scan >/dev/null 2>&1
+
+  # both answers come through the one nginx of the app container: the project
+  # without a marker from its own php-fpm, the other one from the worker
+  app_body=$("$laser" appexec curl -sS -m 10 -H "Host: $smoke_project.$SUFFIX" http://127.0.0.1/ 2>/dev/null)
+  check "the project without a marker answers with PHP $version ($app_body)" \
+    "$(echo "$app_body" | grep -q "php=$version\." && echo 0 || echo 1)"
+
+  worker_body=""
+  for _ in $(seq "$wait_seconds"); do
+    worker_body=$("$laser" appexec curl -sS -m 10 -H "Host: $worker_project.$SUFFIX" http://127.0.0.1/ 2>/dev/null)
+    echo "$worker_body" | grep -q "php=$partner\." && break
+    sleep 1
+  done
+  check "the project with .laserstack answers with PHP $partner ($worker_body)" \
+    "$(echo "$worker_body" | grep -q "php=$partner\." && echo 0 || echo 1)"
+
+  # the worker mounts the php.ini of the version as well, which is what makes a
+  # project behave the same in either container
+  worker_ini_md5=$(echo "$worker_body" | sed -n 's/.*inimd5=\([0-9a-f]*\).*/\1/p')
+  worker_ini_known=$(md5_of config/php*/php.ini 2>/dev/null | grep -c "^$worker_ini_md5$")
+  check "PHP of the worker loads a php.ini of the repository ($worker_ini_md5)" \
+    "$([ -n "$worker_ini_md5" ] && [ "${worker_ini_known:-0}" -gt 0 ] && echo 0 || echo 1)"
+
+  # laser php follows the project you are in
+  cli_version=$( (cd "$projects_dir/$worker_project" && "$laser" php -r 'echo PHP_VERSION;') 2>/dev/null)
+  check "laser php of the marker project runs PHP $partner (found ${cli_version:-nothing})" \
+    "$(echo "$cli_version" | grep -qE "^$partner\.[0-9]" && echo 0 || echo 1)"
+
+  check "laser scan rendered the vhost of the marker project" \
+    "$([ -f "config/nginx/http.d/$worker_project.conf" ] && echo 0 || echo 1)"
+
+  [ "$fails" -gt "$fails_before" ] && failed_items="$failed_items php:$version+$partner"
+  # the marker leaves with the stage, and the scan removes its vhost again
+  rm -f "$projects_dir/$worker_project/.laserstack"
+  "$laser" scan >/dev/null 2>&1
+  check "the vhost of the marker project is gone again" \
+    "$([ ! -f "config/nginx/http.d/$worker_project.conf" ] && echo 0 || echo 1)"
+  "$laser" stop >/dev/null 2>&1
+done
+"$laser" down >/dev/null 2>&1
 
 # pdo <description> <fsn> <user> <password> <query>
 pdo() {

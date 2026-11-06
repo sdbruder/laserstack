@@ -68,7 +68,7 @@ laser help                   <span class="out"># the commands; laser dockerhelp 
       <tr><td><code>DB_DATABASE</code>, <code>DB_USERNAME</code>, <code>DB_PASSWORD</code>, <code>DB_ROOT_PASSWORD</code></td><td><code>laser</code>, <code>laser</code>, <code>laser</code>, <code>root</code></td><td>the database and the accounts the mysql profile creates</td></tr>
       <tr><td><code>MARIADB_*</code></td><td>same shape</td><td>the same for the mariadb profile: database, user, password, root password</td></tr>
       <tr><td><code>POSTGRES_PASSWORD</code></td><td><code>postgres</code></td><td>the postgres password. <code>POSTGRES_USER</code>, <code>POSTGRES_DB</code>, <code>POSTGRES_INITDB_ARGS</code>, <code>POSTGRES_HOST_AUTH_METHOD</code> are also read when set</td></tr>
-      <tr><td><code>PROFILES</code></td><td><code>mysql,redis</code></td><td>the additional containers to run, comma separated: <code>mysql</code>, <code>mariadb</code>, <code>postgres</code>, <code>redis</code>, <code>memcached</code>, <code>elasticsearch</code></td></tr>
+      <tr><td><code>PROFILES</code></td><td><code>mysql,redis</code></td><td>the additional containers to run, comma separated: <code>mysql</code>, <code>mariadb</code>, <code>postgres</code>, <code>redis</code>, <code>memcached</code>, <code>elasticsearch</code>, and <code>php&lt;version&gt;</code> for every PHP version a project asks for</td></tr>
     </tbody>
   </table></div>
   <p>The versions each engine supports are on the <a href="features.html#versions-are-variables">features page</a>. A variable that names a version without a config directory gives you docker's own "bind source path does not exist" error: there is no validation layer in between.</p>
@@ -109,10 +109,13 @@ laser npm run dev
 laser test            <span class="out"># php artisan test</span>
 laser tinker
 laser shell           <span class="out"># bash in the app container, in this project</span>
+laser use php 8.5     <span class="out"># this project asks for PHP 8.5</span>
+laser use php off     <span class="out"># it follows the stack again</span>
 
 <span class="out"># from the repository root, laser appexec talks to the container itself:</span>
 laser appexec supervisorctl status</code></pre>
   <p>The images carry composer, node, npm, yarn, phpunit, xdebug and the mysql and postgres clients, so the tool version of a project is the tool version of its PHP series — the same for everyone on the team.</p>
+  <p>A project can state its own PHP version in a <code>.laserstack</code> file in its root: <code>PHP_VERSION=8.5</code>. <code>laser use php 8.5</code> writes that file, adds the profile <code>php85</code> to <code>PROFILES</code> in <code>.env</code>, and runs <code>laser up -d</code> plus <code>laser scan</code>; <code>laser use php off</code> removes the file and the project follows the PHP version of the stack again. With that profile active, <code>laser up -d</code> starts one worker container per version in use — the same image with only php-fpm, no nginx and no published port — and the nginx of the app container sends the <code>.php</code> requests of that project there. Projects without the file keep being served by the PHP of the app container, exactly as before, and <code>laser list</code> prints the version of every project.</p>
 
   <h2>Databases</h2>
   <ul>
@@ -146,7 +149,7 @@ laser update            <span class="out"># the same, then restart the container
 
   <h2>Known limits</h2>
   <ul>
-    <li><strong>one PHP version per stack.</strong> Every project of a stack shares the app container. Per-project PHP versions are planned;</li>
+    <li><strong>PHP extensions follow the version, not the project.</strong> A project states the version it needs in <code>.laserstack</code> and the stack starts a worker container for it, but extensions, opcache and xdebug stay a property of that version, and a version whose profile is not in <code>PROFILES</code> answers with nginx's own 502 while <code>laser scan</code> names the profile to add;</li>
     <li><strong>one version per database engine.</strong> mysql, mariadb, postgres, redis, memcached and elasticsearch can run side by side, but each engine runs the version you selected;</li>
     <li><strong>a suffix of your own needs <code>/etc/hosts</code></strong>. The default suffix, <code>localdev.it</code>, resolves every name under it to loopback for anyone, so it needs nothing at all; a local dnsmasq that <code>laser</code> installs and maintains, for a suffix of your own, is planned;</li>
     <li><strong>memcached is a cache store from 7.4 to 8.5:</strong> the images carry the <code>memcached</code> extension there. PHP 8.6 is a release candidate and has neither an Alpine package nor a pecl build of the extension yet, so that series has the server without the client;</li>

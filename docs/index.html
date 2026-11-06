@@ -83,7 +83,7 @@ $ <span class="ok"># http://projecta.localdev.it and http://projectb.localdev.it
     <div class="stat"><b>113 MiB</b><span>idle memory for the app and the database together</span></div>
     <div class="stat"><b>2.9 s</b><span>from <code>laser up -d</code> to nginx and php-fpm serving</span></div>
     <div class="stat"><b>297 MB</b><span>the PHP 8.2 app image, 244–327 MB across 7.4–8.6</span></div>
-    <div class="stat"><b>7.4 – 8.6</b><span>PHP versions, one variable away</span></div>
+    <div class="stat"><b>7.4 – 8.6</b><span>PHP versions, chosen per project in <code>.laserstack</code></span></div>
     <div class="stat"><b>nightly</b><span>the app images are rebuilt in CI, newest PHP patch included</span></div>
     <div class="stat"><b>6</b><span>database engines, each with selectable versions</span></div>
   </div>
@@ -95,6 +95,7 @@ $ <span class="ok"># http://projecta.localdev.it and http://projectb.localdev.it
   <div class="grid">
     <div class="card"><h3>Many projects, one stack</h3><p>One nginx with a vhost per project, rendered by <code>laser scan</code> from the projects directory. Laravel, Symfony and WordPress drivers are included, and any project can ship its own nginx config in <code>laserstack-nginx.conf</code>.</p></div>
     <div class="card"><h3>Versions are variables</h3><p><code>PHP_VERSION</code>, <code>MYSQL_VERSION</code>, <code>MARIADB_VERSION</code>, <code>POSTGRES_VERSION</code>, <code>REDIS_VERSION</code>, <code>MEMCACHED_VERSION</code>, <code>ELASTICSEARCH_VERSION</code>. Each one selects the image tag and the matching config directory, so two installs can run different versions from the same repository.</p></div>
+    <div class="card"><h3>A PHP version per project</h3><p>A project states the version it needs in a <code>.laserstack</code> file in its root — <code>laser use php 8.5</code> writes it — and the stack starts one php-fpm container for that version: the same image, no nginx of its own and no published port. The one <code>app</code> container stays the only front door, with the one nginx, the one certificate, the dashboard and ports 80 and 443. Projects without the file keep being served by the PHP of the app container, exactly as before. Extensions, opcache and xdebug stay a property of the version, not of the project, and an idle worker still costs tens of megabytes.</p></div>
     <div class="card"><h3>Config lives in git</h3><p>php.ini, php-fpm, supervisord, nginx and every database config are files of this repository, one directory per version. Change a value, restart one service, keep the change in a commit.</p></div>
     <div class="card"><h3>Alpine, no VM</h3><p>The images are Alpine-based and pulled from public registries. There is no virtual machine, no custom orchestrator and no daemon: docker-compose does the work.</p></div>
     <div class="card"><h3>A CLI that stays out of the way</h3><p><code>laser</code> exposes every docker-compose command unchanged and adds the ones you type all day: <code>artisan</code>, <code>composer</code>, <code>php</code>, <code>npm</code>, <code>shell</code>, <code>mysql</code>, <code>psql</code>, <code>share</code>, <code>scan</code>.</p></div>
@@ -134,10 +135,9 @@ laser scan          <span class="out"># writes one nginx vhost per project</span
   <h2>What it does not do (yet)</h2>
   <p class="section-lede">The stack is opinionated and honest about the edges. Everything below is on the <a href="roadmap.html">roadmap</a> or documented as a limit.</p>
   <div class="grid">
-    <div class="card"><h3>One PHP version at a time</h3><p>All projects of one stack share the app container, so they share its PHP version. Per-project PHP versions, one container per version in use, are the next feature.</p></div>
-    <div class="card"><h3>One version per database engine</h3><p>You can run mysql and postgres and redis side by side, but each engine runs the version you selected. Several versions of the same engine in parallel is part of the same roadmap item.</p></div>
+    <div class="card"><h3>One version per database engine</h3><p>You can run mysql and postgres and redis side by side, but each engine runs the version you selected. Several versions of the same engine in parallel is still on the <a href="roadmap.html">roadmap</a>.</p></div>
     <div class="card"><h3>A suffix of your own needs /etc/hosts</h3><p>The default suffix, <code>localdev.it</code>, resolves every name under it to loopback for anyone and needs nothing. A local dnsmasq that <code>laser</code> installs, configures and maintains on macOS, Linux and WSL2 is planned for a suffix of your own.</p></div>
-    <div class="card"><h3>No GUI, no native Windows</h3><p>The CLI is the interface, and Windows runs through WSL2; macOS and Linux run as they are. Per-project PHP versions are planned, a desktop app is not.</p></div>
+    <div class="card"><h3>No GUI, no native Windows</h3><p>The CLI is the interface, and Windows runs through WSL2; macOS and Linux run as they are. A desktop app is not planned.</p></div>
   </div>
 </div></section>
 

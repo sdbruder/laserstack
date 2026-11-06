@@ -70,7 +70,12 @@ walk, so `laser scan` knows whether nginx needs a restart. The `generic`,
 `wordpress`, `laravel` and `symfony` drivers are examples; `multilaravel` is not
 a project driver, it only keeps the default vhost out of the scan, because
 supervisord renders `config/nginx/http.d/multiProjectLaravel.conf.template` at
-every nginx start and a second default server makes nginx fail. A new kind of
+every nginx start and a second default server makes nginx fail. `phpversion` is
+not a project driver either: it renders the vhost of a project that asks for
+another PHP version in `.laserstack`, and removes it again when the marker goes.
+It is also the reason those vhosts win on 443 as well as on 80 — the
+multi-project vhosts are rendered into `sites-enabled`, which `nginx.conf`
+includes after `http.d`. A new kind of
 project is one more file in `libs/`, sourced there, and a pull request is
 welcome.
 
@@ -91,7 +96,12 @@ first image of a *new* series is work.
    and adjust them to the image, for example its php.ini path and its fpm
    version;
 3. add the version to the `PHP_VERSION` list of `env.example` and to the default
-   list of `test/smoke.sh`;
+   list of `test/smoke.sh`, and add its worker service to `docker-compose.yml`:
+   one `php<VV>` block per series, behind its own profile, `command:` running
+   `php-fpm<VV> --nodaemonize --fpm-config /etc/php<VV>/php-fpm.conf`, the
+   project mount, `config/php<VV>/php.ini`, `config/php<VV>/php-fpm.conf` and
+   `config/php-fpm-worker` mounted as its `php-fpm.d`. The mapping of the names
+   is `libs/phpseries.sh`;
 4. add its row to the Versions table of the README: the php patch, Alpine, node,
    npm, yarn, nginx, phpunit and xdebug of that series. Read them from the
    image instead of guessing:
@@ -161,7 +171,8 @@ stack.
 ## The smoke test
 
 `test/smoke.sh` starts the stack once per PHP version and once per database
-profile. It checks:
+profile, and in its `php` stage it starts two versions at the same time and
+asserts which of them answered each project. It checks:
 
 - stage `app`, per version: nginx and php-fpm are RUNNING, no nginx emergency
   in the log, php-fpm runs the workers as `laser`, PHP loads the php.ini of the
@@ -326,25 +337,55 @@ changed and how it was verified.
 
 ## TODO
 
-Two abilities the stack does not have yet. Both need a plan that decides the
-mechanism before any code.
+Two abilities the stack did not have. One is half done: the PHP half of the first
+ships, the database half does not.
 
 ### Several PHP versions and database servers at the same time
 
+**Shipped: as many PHP versions at the same time as the projects need.** A
+project states its version in a `.laserstack` file in its root
+(`PHP_VERSION=8.5`); `laser use php 8.5` writes that file, adds the profile
+`php85` to `PROFILES`, and runs `laser up -d` plus `laser scan`. One worker
+container per version in use then serves the projects that ask for it: the same
+published image with only php-fpm running, no nginx, no published port. The front
+door does not move — the `app` container keeps port 80/443, TLS, the dashboard,
+`/etc/hosts` and the vhosts — so `laser tls`, `laser share` and a project without
+a marker are untouched. `laser php`, `laser artisan`, `laser composer`,
+`laser test`, `laser tinker`, `laser shell` and `laser appexec` follow the marker
+of the project you are in, `laser list` prints the version of every project, and
+`node`, `npm` and `yarn` stay in the app container: one node for the stack.
+
+What carries it: `libs/phpseries.sh` (a version to its directory, its package
+directory and its service name — 7.4 is `config/php74`, `/etc/php7`, `php74`;
+8.0 is `config/php8`, `/etc/php8`, `php80`), `libs/phpversionDriver.sh` (the
+marker, the rendered vhost, the cleanup of one whose project is gone),
+`config/php-fpm-worker/www.conf` (the pool of a worker, `listen = 0.0.0.0:9000`,
+because the nginx that calls it runs in another container), the `php<VV>`
+services of `docker-compose.yml`, one per series and inert behind its own
+profile, and the `php` stage of `test/smoke.sh`.
+
+Two consequences worth remembering. The multi-project vhosts — http and https
+both — are rendered into `/etc/nginx/sites-enabled`, which `nginx.conf` includes
+*after* `/etc/nginx/http.d`, so a per-project vhost in `http.d` is the first match
+for its own names on 443 as well as on 80. Before this work the https one was
+rendered into `http.d`, where it shadowed the per-project vhost of the generic
+driver on 443. And the front page of the dashboard shows the version of every
+project that asks for one.
+
+**Left: the databases.** The version of a project selects its PHP, not its
+database.
+
 Laser Stack serves many projects from *one* stack: one `app` container of the
-`PHP_VERSION` of `.env`, one server per database engine, one set of credentials.
-Two projects that need different versions therefore cannot run at the same time,
-and one stack per project is not the answer either.
+`PHP_VERSION` of `.env`, one server per engine, one set of credentials. Two
+projects that need different database versions therefore still cannot run at the
+same time, and one stack per project is not the answer either.
 
-Goal: as many PHP versions and database servers in parallel as the projects
-need, and no more, with the smallest number of containers. Every container
-serves all the projects that need the same thing: one app container per PHP
-version, one container per database engine *and* version (mysql 8.0 next to
-mysql 9.7, on different host ports), and each project states which of them it
-uses.
+Goal for that half: as many database versions in parallel as the projects need,
+and no more, with the smallest number of containers: one container per database
+engine *and* version (mysql 8.0 next to mysql 9.7, on different host ports), and
+each project states which of them it uses.
 
-Proposed direction for that work (a proposal, the plan still decides the
-details):
+The direction this section proposed before the PHP half shipped:
 
 - a `router`: one `nginx:alpine` that publishes port 80 and is the only
   container that does. Its config is generated, one server per project, and it
@@ -355,11 +396,11 @@ details):
   same vhost rendering. `laser` starts the versions the mapping asks for, so a
   version nobody needs never runs;
 - the mapping project → versions: `.laserstack` in the project root, a
-  `KEY=VALUE` file sourced like `.env` (`PHP_VERSION=8.4`, later
-  `MYSQL_VERSION=9.7`), written by `laser use php 8.4` and read by `laser scan`.
-  It resolves as that file, then `composer.json` (`require.php` as a floor),
-  then the `PHP_VERSION` of the stack `.env`, so a setup without a mapping keeps
-  behaving as today;
+  `KEY=VALUE` file read and never sourced (`PHP_VERSION=8.4`, and
+  `MYSQL_VERSION=9.7` when that half follows), written by `laser use php 8.4` and
+  read by `laser scan`. The shipped half resolves it as that file, then the
+  `PHP_VERSION` of the stack `.env`: no `composer.json` magic, so a setup without
+  a mapping behaves as today;
 - the subcommands of a project (`artisan`, `php`, `composer`, `npm`, `shell`,
   `appexec`, `test`, `mysql`, `psql`) pick their container through a helper
   `appservice()` next to the existing `dbhost()`; `laser share` points at the
@@ -380,31 +421,32 @@ upstream per site and a php-fpm pool per version; Valet and Herd put the version
 per site on the host; ddev, Lando and Sail go the other way and give every
 project its own set of containers.
 
-The path to it, in this order:
+What is left of that path:
 
-1. the mapping file, `laser use php` and `appservice()`, with the mapping inert
-   while there is one app container;
-2. one `app<VV>` service per PHP version behind its profile, plus the router;
-3. `laser scan` generates the router config, and `laser share` follows it;
-4. per-project database and user provisioning, and the database versions in the
-   mapping;
-5. the smoke test over combinations of versions;
-6. optionally, one `web` container with one php-fpm container per version
-   instead of one nginx per version: the same number of containers, less work
-   inside the containers, more work in the images.
+1. the version of a project in the mapping file, and `laser use mysql 9.7` next
+   to `laser use php 8.5`;
+2. one service per engine and version, behind a profile of its own, the way the
+   PHP workers already are, plus the per-project database and user provisioning;
+3. `laser mysql` and `laser psql` following the project, through the same helper
+   that picks the PHP container today;
+4. the smoke test over combinations of versions.
 
-Still to decide in the plan of that work:
+The `app<VV>` bullet of the old proposal did not survive the plan: the shipped
+mechanism is one php-fpm-only container per version behind the existing nginx,
+without the router, so nothing about TLS, the dashboard or `/etc/hosts` moved.
+Its step 6 — one web container with one php-fpm container per version instead of
+one nginx per version — is what shipped.
 
-- the name and the format of the mapping file, and whether the `composer.json`
-  fallback is worth its surprises;
-- the router: plain `nginx:alpine` with a generated config, or an image of this
-  project that carries its template;
-- whether an app container keeps a published port for direct access
-  (`http://localhost:8082`) or only the router publishes one;
-- what `hostname: laser` becomes, and what the tools that read it should do;
-- the order against the DNS TODO: the router does not need that work to happen
-  first, but the two together are what makes many projects on many versions
-  comfortable.
+Still to decide in the plan of the database half:
+
+- whether a `.laserstack` without a database version means the version of the
+  stack, and whether `composer.json` is worth reading at all;
+- whether a worker keeps a published port for direct access
+  (`http://localhost:8082`) or only the front door publishes one. The PHP half
+  answered no: `dc exec php85 ...` and the project URL cover it;
+- the order against the DNS TODO: the database half does not need that work to
+  happen first, but the two together are what makes many projects on many
+  versions comfortable.
 
 ### Local DNS for the project names
 

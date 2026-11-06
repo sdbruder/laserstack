@@ -138,6 +138,22 @@ function php_config_dir(string $version): string
 }
 
 /**
+ * The PHP version a project asks for in its `.laserstack`, or null when it asks
+ * for none and follows the version of the stack. The file is read, never
+ * sourced, and `laser use php 8.5` writes it.
+ */
+function php_at(string $path): ?string
+{
+    $file = @file_get_contents($path . '/.laserstack');
+    if ($file === false || preg_match('/^PHP_VERSION=(.+)$/m', $file, $matches) !== 1) {
+        return null;
+    }
+    $version = trim($matches[1]);
+
+    return $version === '' ? null : $version;
+}
+
+/**
  * The driver `laser scan` identifies a project by, in the order of
  * `drivers::config`, which is the order that decides, and with the markers of
  * libs/*Driver.sh. A project of no driver gets no vhost of its own; the
@@ -302,6 +318,7 @@ foreach (scandir($projectsDir) ?: [] as $entry) {
         'public' => is_dir($path . '/public'),
         'vhost' => is_file('/etc/nginx/http.d/' . $entry . '.conf'),
         'driver' => driver($path),
+        'php' => php_at($path),
         'self' => $entry === $self,
     ];
 }
@@ -411,7 +428,7 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                 <tr><td>SAPI</td><td><?= e(PHP_SAPI) ?></td></tr>
                 <tr><td>Suffix</td><td><code><?= e($suffix) ?></code></td></tr>
             </table>
-            <p class="note">The PHP series is the image tag <code>PHP_VERSION</code>: edit <code>.env</code> and run <code>laser up -d</code> to change it.</p>
+            <p class="note">The PHP series is the image tag <code>PHP_VERSION</code>: edit <code>.env</code> and run <code>laser up -d</code> to change it. A project can ask for another version in <code>.laserstack</code>, which <code>laser use php 8.5</code> writes: the stack then runs one php-fpm container per version in use.</p>
         </section>
 
         <section class="card wide2">
@@ -513,6 +530,8 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                     <li>
                         <a href="<?= e('//' . $project['name'] . '.' . $suffix . '/') ?>" target="_blank" rel="noopener noreferrer" title="<?= e($project['name'] . '.' . $suffix) ?>"><?= e($project['name']) ?></a>
                         <?php if ($project['driver'] !== null): ?><span class="pill on" title="laser scan writes the vhost of this project with the <?= e($project['driver']) ?> driver"><?= e($project['driver']) ?></span><?php endif; ?>
+                        <?php // a project that asks for another PHP version than the container of the stack: the vhost of its own sends its .php requests to the worker of that version ?>
+                        <?php if ($project['php'] !== null && $project['php'] !== $phpVersion): ?><span class="pill on" title=".laserstack asks for PHP <?= e($project['php']) ?>: the .php requests of this project are served by the worker container of that version">php <?= e($project['php']) ?></span><?php endif; ?>
                         <?php $code = $statuses[$project['name']] ?? null; ?>
                         <?php if (in_array($project['name'], $probed, true)): ?>
                             <?php if ($code === null): ?><span class="pill dim" title="the front page answered nothing within a second">no answer</span><?php elseif ($code < 400): ?><span class="pill on" title="the front page answers <?= $code ?>"><?= $code ?></span><?php else: ?><span class="pill bad" title="the front page answers <?= $code ?>"><?= $code ?></span><?php endif; ?>

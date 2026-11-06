@@ -1,0 +1,47 @@
+# The vhost of one project that asks for a PHP version other than the one of
+# the app container. `laser scan` renders this file into
+# config/nginx/http.d/<project>.conf from the .laserstack of the project, and
+# removes it again when the marker goes away. That directory is mounted into
+# the app container, so nginx includes the result: the front door stays the app
+# container, and only the .php requests of that project travel to the worker.
+#
+# The upstream is a variable, so nginx resolves it at request time: a worker
+# that is not up fails this one project with a 502 instead of keeping nginx
+# from starting. The resolver is the DNS of docker itself.
+server {
+    listen 80;
+
+    # The project and its subdomains, anchored at the suffix. A regular
+    # expression is safe here: nginx.conf includes /etc/nginx/http.d/*.conf
+    # before /etc/nginx/sites-enabled/*.conf, where the multi-project vhost
+    # lives, so this block is the first match and the order is written in
+    # nginx.conf itself, not in a filename.
+    server_name "~^(?:[^.]+\.)*(?<project>__PROJECT__)(?:\..+)?\.__SUFFIX__$";
+
+    root /var/www/$project/public;
+
+    index index.php index.html;
+
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    set $fpm __UPSTREAM__;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include fastcgi.conf;
+        fastcgi_pass $fpm;
+        fastcgi_index index.php;
+        fastcgi_split_path_info ^(.+.php)(/.+)$;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    location ~* .(ico|jpg|png|gif|jpeg|css|swf|js|woff|woff2)$ {
+        access_log off;
+        gzip_static on;
+        gzip_comp_level 5;
+        expires 1M;
+        add_header Cache-Control private;
+    }
+}

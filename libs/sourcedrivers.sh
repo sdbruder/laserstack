@@ -10,6 +10,8 @@ source libs/symfonyDriver.sh
 source libs/wordpressDriver.sh
 # shellcheck disable=SC1091
 source libs/multilaravelDriver.sh
+# shellcheck disable=SC1091
+source libs/phpversionDriver.sh
 
 
 function echoerr() {
@@ -42,10 +44,16 @@ function drivers::scan_projects() {
     hash_pre=$(drivers::config_hash)
     for project in "$projects_dir"/* ; do
         drivers::config "$project"
+        # a project can ask for another PHP version than the one of the app
+        # container, see libs/phpversionDriver.sh
+        phpversion::config "$project"
     done
     # the multi-project vhost comes from multiProjectLaravel.conf.template,
     # supervisord renders it at every nginx start
     multilaravel::config
+    # a project that left the projects directory takes the vhost that this
+    # driver rendered for it with it
+    phpversion::forget "$projects_dir"
 
     hash_pos=$(drivers::config_hash)
     if [ "$hash_pre" == "$hash_pos" ] ; then

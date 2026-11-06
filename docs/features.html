@@ -55,6 +55,7 @@
     <thead><tr><th>profile</th><th>container</th><th>purpose</th><th>host port</th></tr></thead>
     <tbody>
       <tr><td><code>app</code> (always)</td><td><code>laserstack/app:&lt;PHP_VERSION&gt;</code></td><td>nginx, php-fpm, your tools (composer, node, npm, yarn, phpunit, xdebug, mysql/psql clients)</td><td>80</td></tr>
+      <tr><td><code>php85</code> (one per version in use)</td><td><code>laserstack/app:8.5</code>, php-fpm only</td><td>the PHP version a project asks for in <code>.laserstack</code>; the nginx of the <code>app</code> container sends the <code>.php</code> requests of that project here</td><td>—</td></tr>
       <tr><td><code>mysql</code></td><td><code>mysql:&lt;MYSQL_VERSION&gt;</code></td><td>database, service name <code>db</code></td><td>3306</td></tr>
       <tr><td><code>mariadb</code></td><td><code>mariadb:&lt;MARIADB_VERSION&gt;</code></td><td>database, service name <code>mariadb</code> and alias <code>db</code></td><td>3306</td></tr>
       <tr><td><code>postgres</code></td><td><code>postgres:&lt;POSTGRES_VERSION&gt;-alpine</code></td><td>database, service name <code>postgres</code></td><td>5432</td></tr>

@@ -1,3 +1,14 @@
+# The environment of every container that runs PHP: the app container and the
+# worker containers of the other versions carry the same one, so a project
+# behaves the same whichever of them serves it.
+x-php-environment: &php-environment
+  LASER: 1
+  SUFFIX: "${SUFFIX}"
+  MYSQL_DATABASE: "${DB_DATABASE}"
+  MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+  MYSQL_USER: "${DB_USERNAME}"
+  MYSQL_PASSWORD: "${DB_PASSWORD}"
+
 services:
   app:
     image: "laserstack/app:${PHP_VERSION}"
@@ -7,13 +18,7 @@ services:
     cap_add:
       - SYS_ADMIN
     hostname: laser
-    environment:
-      LASER: 1
-      SUFFIX: "${SUFFIX}"
-      MYSQL_DATABASE: "${DB_DATABASE}"
-      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
-      MYSQL_USER: "${DB_USERNAME}"
-      MYSQL_PASSWORD: "${DB_PASSWORD}"
+    environment: *php-environment
     tty: true
     ports:
       - 80:80
@@ -36,6 +41,134 @@ services:
       - ./config/my.cnf:/etc/my.cnf.d/laserstack.cnf:cached
     networks:
       - laser
+  # One worker per PHP version: the image of the app container with only
+  # php-fpm running. A project states the version it needs in .laserstack,
+  # laser scan renders the vhost of that project, and the nginx of the app
+  # container sends its .php requests here. The profile starts a worker, so a
+  # version that no project asks for never runs: PROFILES=mysql,php85.
+  # The service name is php<version without the dot>, the config directory of
+  # the version and the name of its php-fpm binary are its own, see
+  # libs/phpseries.sh.
+  php74:
+    image: "laserstack/app:7.4"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm7 --nodaemonize --fpm-config /etc/php7/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php74/php.ini:/etc/php7/php.ini:cached
+      - ./config/php74/php-fpm.conf:/etc/php7/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php7/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php74
+  php80:
+    image: "laserstack/app:8.0"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm8 --nodaemonize --fpm-config /etc/php8/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php8/php.ini:/etc/php8/php.ini:cached
+      - ./config/php8/php-fpm.conf:/etc/php8/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php8/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php80
+  php81:
+    image: "laserstack/app:8.1"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm81 --nodaemonize --fpm-config /etc/php81/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php81/php.ini:/etc/php81/php.ini:cached
+      - ./config/php81/php-fpm.conf:/etc/php81/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php81/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php81
+  php82:
+    image: "laserstack/app:8.2"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm82 --nodaemonize --fpm-config /etc/php82/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php82/php.ini:/etc/php82/php.ini:cached
+      - ./config/php82/php-fpm.conf:/etc/php82/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php82/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php82
+  php83:
+    image: "laserstack/app:8.3"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm83 --nodaemonize --fpm-config /etc/php83/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php83/php.ini:/etc/php83/php.ini:cached
+      - ./config/php83/php-fpm.conf:/etc/php83/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php83/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php83
+  php84:
+    image: "laserstack/app:8.4"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm84 --nodaemonize --fpm-config /etc/php84/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php84/php.ini:/etc/php84/php.ini:cached
+      - ./config/php84/php-fpm.conf:/etc/php84/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php84/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php84
+  php85:
+    image: "laserstack/app:8.5"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm85 --nodaemonize --fpm-config /etc/php85/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php85/php.ini:/etc/php85/php.ini:cached
+      - ./config/php85/php-fpm.conf:/etc/php85/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php85/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php85
+  php86:
+    image: "laserstack/app:8.6"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm86 --nodaemonize --fpm-config /etc/php86/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php86/php.ini:/etc/php86/php.ini:cached
+      - ./config/php86/php-fpm.conf:/etc/php86/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php86/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php86
   db:
     image: "mysql:${MYSQL_VERSION:-8.0}"
     # the authentication plugin of the server version is in the mounted config

@@ -1,0 +1,41 @@
+# The https twin of phpVersionVhost.conf.template, rendered only when .env
+# turns HTTPS on: off, a vhost with a certificate that is not mounted keeps
+# nginx from starting. The certificate is the one the app container serves,
+# which is where TLS is terminated: the worker only ever sees the FastCGI
+# request, so only this side of the pair carries the certificate.
+server {
+    listen 443 ssl;
+    http2 on;
+
+    server_name "~^(?:[^.]+\.)*(?<project>__PROJECT__)(?:\..+)?\.__SUFFIX__$";
+
+    root /var/www/$project/public;
+
+    ssl_certificate     /etc/nginx/tls/laserstack.pem;
+    ssl_certificate_key /etc/nginx/tls/laserstack-key.pem;
+
+    index index.php index.html;
+
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    set $fpm __UPSTREAM__;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include fastcgi.conf;
+        fastcgi_pass $fpm;
+        fastcgi_index index.php;
+        fastcgi_split_path_info ^(.+.php)(/.+)$;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    location ~* .(ico|jpg|png|gif|jpeg|css|swf|js|woff|woff2)$ {
+        access_log off;
+        gzip_static on;
+        gzip_comp_level 5;
+        expires 1M;
+        add_header Cache-Control private;
+    }
+}

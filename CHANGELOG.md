@@ -9,6 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A project can ask for another PHP version than the one of the stack, and
+  several versions run at the same time. A `.laserstack` file in the project root
+  (`PHP_VERSION=8.5`, written by `laser use php 8.5`) selects it, the profile
+  `php85` starts one php-fpm-only container of that version, and `laser scan`
+  renders the nginx vhost that sends the `.php` requests of that project to it.
+  One container stays the front door — port 80/443, TLS, the dashboard and the
+  vhosts do not move — and a project without the file behaves as before.
+  `laser php`, `laser artisan`, `laser composer`, `laser test`, `laser tinker`,
+  `laser shell` and `laser appexec` follow the marker of the project you are in,
+  `laser list` prints the version of every project, and `laser use php off` takes
+  the marker away again.
+
+- The per-project vhost points at its upstream through a variable and the DNS of
+  docker as resolver, so a worker that is not up fails that one project with a
+  502 instead of keeping nginx from starting. `laser scan` warns when the profile
+  of a marker is not in `PROFILES`, and it removes the vhost of a project that is
+  gone.
+
+- The smoke test has a `php` stage: it starts a second version next to the one
+  under test and asserts which of the two answered each project, that the worker
+  loads the php.ini of the repository and that `laser php` of the marker project
+  runs the version of the marker.
+
+- The front page of the dashboard shows the PHP version of every project that
+  asks for one, next to its driver and its answer code.
+
+### Fixed
+
+- The https vhost of the stack is rendered by the container itself into
+  `sites-enabled`, next to the http one, instead of by the scan into `http.d`.
+  `nginx.conf` includes `http.d` first, so a per-project vhost is now the first
+  match for its own names on 443 as well as on 80; before this, the https vhost
+  of the stack shadowed it, and a project was served by the PHP of the app
+  container over https while it answered over http from the version it asked for.
+  The certificate under `config/tls` is what decides whether that vhost exists.
+
+- `laser up` and `laser update` pass `--remove-orphans`, so a profile that leaves
+  `PROFILES` takes its container with it: dropping `redis` from the list, or the
+  profile of a PHP version nobody asks for any more, stops that container.
+
 - The app images carry the `memcached` PHP extension from 7.4 to 8.5, so
   `PROFILES=memcached` is a cache store for a project and not only a server: the
   `Memcached` class sets a value and reads it back. PHP 8.6, a release candidate,

@@ -45,6 +45,19 @@ function nih() {
   echo "Still not implemented"
 }
 
+function build_dc_params() {
+  # The profiles decide which services exist: a database profile, and one
+  # profile per PHP version that a project asks for besides the one of .env.
+  # HTTPS=on publishes 443 and mounts the certificate that laser tls writes.
+  dc_params="-f docker-compose.yml"
+  if [ -n "${PROFILES:-}" ]; then
+    dc_params="$dc_params --profile ${PROFILES//,/ --profile }"
+  fi
+  if [ "${HTTPS:-on}" == "on" ]; then
+    dc_params="$dc_params -f docker-compose.https.yml"
+  fi
+}
+
 function dc() {
   #shellcheck disable=SC2086
   docker-compose $dc_params "$@"
@@ -60,7 +73,9 @@ function up() {
     echo "TLS: HTTPS is on and this stack has no certificate yet, provisioning one."
     tls
   fi
-  dc up -d
+  # --remove-orphans: a profile that leaves PROFILES takes its container with
+  # it, which is how dropping a database engine or a PHP version really stops it
+  dc up -d --remove-orphans
 }
 
 function lasercommands() {
@@ -87,6 +102,7 @@ function lasercommands() {
   echo "  appexec            Execute arbitrary commands in the app container"
   echo "  yarn               Execute yarn"
   echo "  stats              top-like docker stats"
+  echo "  use                Set the PHP version of this project: use php 8.5, use php off"
   echo "  update             Update the checkout and the images, restart what changed"
   echo "  tls [--global|--local]  Certificate for HTTPS: the published one, or the CA of this machine"
   echo "  trust [--remove]   Add the CA of this machine to the trust store, or remove it"
@@ -116,8 +132,58 @@ function dockerhelp() {
 }
 
 function list() {
-  cd $projects_dir
-  for project in *; do ls $project/public/*.php 2>/dev/null; done | sed "s|/.*$||g;s|^|http://|g;s|$|.$SUFFIX|g"
+  # one line per servable project: its URL and the PHP version it asks for
+  local project version
+  cd "$projects_dir" || return 1
+  for project in *; do
+    [ -n "$(ls "$project/public"/*.php 2>/dev/null)" ] || continue
+    version=$(awk -F= '/^PHP_VERSION=/{print $2}' "$project/.laserstack" 2>/dev/null || true)
+    printf 'http://%s.%s  php %s\n' "$project" "$SUFFIX" "${version:-$PHP_VERSION}"
+  done
+}
+
+function use() {
+  # laser use php 8.5: the project of the current directory states its version
+  # in .laserstack and the profile of that version joins PROFILES, so the stack
+  # starts the container that serves it. The file is read, never sourced.
+  local engine="${1:-}" version="${2:-}" project marker service profiles
+  project=$(whichproject)
+  if [ -z "$project" ]; then
+    error_message "USE: run this inside a project of $projects_dir"
+    return 1
+  fi
+  if [ "$engine" != "php" ]; then
+    error_message "USE: php is the only version that is selectable per project yet"
+    return 1
+  fi
+  marker="$projects_dir/$project/.laserstack"
+  if [ -z "$version" ] || [ "$version" == "off" ] || [ "$version" == "default" ]; then
+    rm -f "$marker"
+    echo "USE: $project follows the PHP version of the stack again ($PHP_VERSION)"
+    echo "USE: the profile of another version stays in PROFILES until you remove it"
+    return 0
+  fi
+  if [ ! -d "config/php$(phpseries_dir "$version")" ]; then
+    error_message "USE: config/php$(phpseries_dir "$version") does not exist, there is no PHP $version in this stack"
+    return 1
+  fi
+  service=$(phpservice_name "$version")
+  printf 'PHP_VERSION=%s\n' "$version" >"$marker"
+  echo "USE: $project asks for PHP $version, .laserstack written"
+  if [[ ",${PROFILES:-}," != *",$service,"* ]]; then
+    profiles="${PROFILES:+$PROFILES,}$service"
+    if grep -q '^PROFILES=' .env; then
+      printf '%s\n' "$(sed "s/^PROFILES=.*/PROFILES=$profiles/" .env)" >.env
+    else
+      echo "PROFILES=$profiles" >>.env
+    fi
+    PROFILES="$profiles"
+    build_dc_params
+    echo "USE: $service added to PROFILES in .env"
+  fi
+  up
+  scan
+  echo "USE: $project is served on http://$project.${SUFFIX:-localdev.it}/ by $service"
 }
 
 # Opens a URL in the browser of the machine that runs the stack. The WSL
@@ -159,13 +225,13 @@ function stats() {
 function artisan() {
   project=$1
   shift
-  dc exec --workdir "/var/www/$project" app php artisan "$@"
+  dc exec --workdir "/var/www/$project" "$(phpservice "$project")" php artisan "$@"
 }
 
 function composer() {
   project=$1
   shift
-  dc exec --workdir "/var/www/$project" app composer "$@"
+  dc exec --workdir "/var/www/$project" "$(phpservice "$project")" composer "$@"
 }
 
 function dbhost() {
@@ -175,6 +241,19 @@ function dbhost() {
     echo mariadb
   else
     echo db
+  fi
+}
+
+function phpservice() {
+  # Service that serves a project: the app container, unless the project states
+  # a version of its own in .laserstack. That file is read, never sourced: a
+  # project file must not be able to run code during a scan.
+  local project=$1 marker="$projects_dir/$1/.laserstack" version
+  version=$(awk -F= '/^PHP_VERSION=/{print $2}' "$marker" 2>/dev/null || true)
+  if [ -n "$version" ] && [ "$version" != "$PHP_VERSION" ]; then
+    phpservice_name "$version"
+  else
+    echo app
   fi
 }
 
@@ -249,13 +328,20 @@ function update() {
   echo "   $image carries PHP $(docker run --rm --entrypoint php "$image" -r 'echo PHP_VERSION;' 2>/dev/null || echo unknown)"
   echo "   the app container runs PHP $(appversion)"
 
+  # a worker container serves another version of a project, see phpservice
+  local service version
+  for service in $(echo "${PROFILES:-}" | tr ',' '\n' | grep -E '^php[0-9]+$' || true); do
+    version=$(dc exec -T "$service" php -r 'echo PHP_VERSION;' 2>/dev/null || echo "not up")
+    echo "   $service runs PHP $version"
+  done
+
   if [ "$check" -eq 1 ]; then
     echo "-- check only, nothing restarted"
     return 0
   fi
 
   echo "-- restarting what changed"
-  dc up -d
+  dc up -d --remove-orphans
   echo "-- the app container now runs PHP $(appversion)"
 }
 
@@ -571,19 +657,19 @@ function npx() {
 function php() {
   project=$1
   shift
-  dc exec --workdir "/var/www/$project" app php "$@"
+  dc exec --workdir "/var/www/$project" "$(phpservice "$project")" php "$@"
 }
 
 function tinker() {
   project=$1
   shift
-  dc exec --workdir "/var/www/$project" app php artisan tinker "$@"
+  dc exec --workdir "/var/www/$project" "$(phpservice "$project")" php artisan tinker "$@"
 }
 
 function dotest() {
   project=$1
   shift
-  dc exec --workdir "/var/www/$project" app php artisan test "$@"
+  dc exec --workdir "/var/www/$project" "$(phpservice "$project")" php artisan test "$@"
 }
 
 function share() {
@@ -595,13 +681,13 @@ function share() {
 function shell() {
   project=$1
   shift
-  dc exec --workdir "/var/www/$project" app bash "$@"
+  dc exec --workdir "/var/www/$project" "$(phpservice "$project")" bash "$@"
 }
 
 function appexec() {
   project=$1
   shift
-  dc exec --workdir "/var/www/$project" app "$@"
+  dc exec --workdir "/var/www/$project" "$(phpservice "$project")" "$@"
 }
 
 function yarn() {
@@ -681,6 +767,10 @@ laser_dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "$laser_dir" || exit
 dockerproject=$(basename "$laser_dir")
 
+# the name of a version in the config directory, in the image and as a service
+# shellcheck source=/dev/null
+source ./libs/phpseries.sh
+
 # shellcheck source=/dev/null
 source ./env.example
 # source .env file to get MYSQL info and projects directory
@@ -699,32 +789,14 @@ POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-postgres}"
 HTTPS="${HTTPS:-on}"
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
 POSTGRES_DB="${POSTGRES_DB:-postgres}"
-export PHPV=$(echo $PHP_VERSION | sed 's/\.//g')
-export PHPALPINE=$PHPV
-# PHPALPINE is the name of the php package of the Alpine release of the image,
-# PHPV is the name of the config directory. Alpine names them php7 for 7.4 and
-# php8 for 8.0. The config directory of 8.0 is config/php8 as well.
-if [ $PHPV == "74" ]; then
-  export PHPALPINE=7
-fi
-if [ $PHPV == "80" ]; then
-  export PHPV=8
-  export PHPALPINE=8
-fi
+export PHPV=$(phpseries_dir "$PHP_VERSION")
+export PHPALPINE=$(phpalpine_dir "$PHP_VERSION")
 projects_dir=$(
   cd "$PROJECTS_DIRECTORY"
   pwd
 )
 
-dc_params="-f docker-compose.yml"
-if [ -n "$PROFILES" ]; then
-  PROFILE="${PROFILES//,/ --profile }"
-  dc_params="$dc_params --profile $PROFILE"
-fi
-# HTTPS=on publishes 443 and mounts the certificate that laser tls writes
-if [ "$HTTPS" == "on" ]; then
-  dc_params="$dc_params -f docker-compose.https.yml"
-fi
+build_dc_params
 
 WSL=
 # shellcheck disable=SC2143
@@ -748,6 +820,9 @@ list)
   ;;
 up)
   up
+  ;;
+use)
+  use "$@"
   ;;
 update)
   update "$@"

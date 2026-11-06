@@ -67,6 +67,12 @@ Be as small, simple and fast as possible:
   it cannot authenticate an account of mysql `8.4`, `9.7` or `26.10`; use
   `laser mysql` there, the client of the database container.
 
+- The database servers are still one version per engine: the version of a
+  project selects its PHP, not its database. `PROFILES=mysql` with
+  `MYSQL_VERSION=9.7` is one mysql for every project, and two projects that need
+  different database versions cannot run at the same time. That half of the
+  roadmap item is not implemented, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Versions
 
 The app container is a public image per PHP series,
@@ -219,6 +225,10 @@ run. The available profiles, each with the image `docker-compose.yml` pulls:
 - redis (`redis:${REDIS_VERSION}-alpine`, default `redis:8.10-alpine`)
 - memcached (`memcached:${MEMCACHED_VERSION}-alpine`, default `memcached:1.6-alpine`)
 - elasticsearch (`elasticsearch:${ELASTICSEARCH_VERSION}`, default `elasticsearch:7.14.2`)
+- php74, php80, php81, php82, php83, php84, php85, php86
+  (`laserstack/app:<version>`, the same image as the app container with only
+  php-fpm running, one profile per PHP version a project asks for, see
+  [Several PHP versions at the same time](#several-php-versions-at-the-same-time))
 
 The database container of the mysql profile answers to the name `db`, the
 container of the mariadb profile to the name `mariadb` and to `db` as well.
@@ -236,6 +246,41 @@ file, its image takes the settings as command flags. The app images carry the
 `memcached` and `redis` extensions, so either profile is a cache store for the
 projects, not only a server next to them.
 
+### Several PHP versions at the same time
+
+Every project of the stack is served by the `app` container, which runs the
+`PHP_VERSION` of `.env`. A project that needs another version states it in a
+`.laserstack` file in its root:
+
+```
+PHP_VERSION=8.5
+```
+
+`laser use php 8.5`, run inside that project, writes the file, adds the profile
+`php85` to `PROFILES` in `.env` and runs `laser up -d` plus `laser scan`.
+`laser use php off` takes the file away again and the project follows
+`PHP_VERSION` again.
+
+The profile starts one worker container for that version: the same image with
+only php-fpm running, no nginx, no published port. `laser scan` renders one
+nginx vhost per project that asks for a version, and the nginx of the app
+container sends the `.php` requests of that project to the worker. Everything
+else stays where it is: one container publishes port 80 and 443, terminates TLS,
+serves the dashboard and holds the vhosts, so the entry in `/etc/hosts`, the
+certificate and `laser share` do not change. A project without a `.laserstack`
+behaves exactly as before.
+
+`laser php`, `laser artisan`, `laser composer`, `laser test`, `laser tinker`,
+`laser shell` and `laser appexec` run in the container of the project you are
+in; `laser list` prints the version of every project. `node`, `npm` and `yarn`
+always run in the app container: one node for the whole stack.
+
+Two things to know: extensions, opcache and xdebug are a property of the version
+and not of the project, and an idle worker costs tens of megabytes. A marker
+whose profile is not in `PROFILES` gets nginx's own error, a 502 with
+`host not found in upstream`, and `laser scan` warns and names the profile to
+add.
+
 ### PROFILES Examples
 
 - app and mysql: `PROFILES=mysql`
@@ -244,6 +289,8 @@ projects, not only a server next to them.
 - postgres and redis: `PROFILES=postgres,redis`
 - mysql, redis and elastic: `PROFILES=mysql,redis,elasticsearch`
 - mysql and memcached: `PROFILES=mysql,memcached`
+- mysql and PHP 8.5: `PROFILES=mysql,php85`
+- mariadb, redis and PHP 8.2: `PROFILES=mariadb,redis,php82`
 
 ## Other frameworks support
 
