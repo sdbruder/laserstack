@@ -340,7 +340,9 @@ $phpVersion = PHP_VERSION;
 $phpDir = php_config_dir($phpVersion);
 $phpSeries = array_values(array_filter(
     versions($root . '/config'),
-    static fn (string $name): bool => strpos($name, 'php') === 0
+    // a version directory is php<digits>: config/php-fpm-worker is the pool of
+    // the workers and not a version, so it stays out of this card
+    static fn (string $name): bool => preg_match('/^php[0-9]+$/', $name) === 1
 ));
 $engines = [];
 foreach (['mysql', 'mariadb', 'postgres', 'redis', 'elasticsearch'] as $engine) {
