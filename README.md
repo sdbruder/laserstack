@@ -99,8 +99,11 @@ on the newest Alpine release that packages it:
 | `8.5`  | 8.5.12   | 3.24   | v24.22.1  | 11.12.1 | 1.22.22 | 1.30.6 | 13.4.5  | 3.5.3        |
 | `8.6`  | 8.6.0RC5 | edge   | v24.22.1  | 12.0.2  | 1.22.22 | 1.30.6 | 13.4.6  | 3.6.0alpha1  |
 
-Every image has composer 2.11.1, the mysql client and the postgres client
-(`psql`, `pg_dump`). The images from `7.4` to `8.5` also carry the `memcached`
+Every image carries composer, the mysql client and the postgres client
+(`psql`, `pg_dump`), and `laser versions` prints the version of every tool the
+image carries, read from the image itself (`/etc/laserstack/versions.txt`,
+written at build time): the table above is a snapshot of one build, that command
+answers for the image you actually have. The images from `7.4` to `8.5` also carry the `memcached`
 extension, which makes the memcached profile a cache store; `8.6` does not, see
 the limitations. `laser psql` uses the postgres client of the app container;
 `laser mysql` runs in the database container, see the Versions table. Under

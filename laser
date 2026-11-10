@@ -152,6 +152,7 @@ function lasercommands() {
   echo "  appexec            Execute arbitrary commands in the app container"
   echo "  yarn               Execute yarn"
   echo "  stats              top-like docker stats"
+  echo "  versions           Print the versions of the tools baked into the app image"
   echo "  use                Set the PHP version of this project: use php 8.5, use php off"
   echo "  update             Update the checkout and the images, restart what changed"
   echo "  tls [--global|--local]  Certificate for HTTPS: the published one, or the CA of this machine"
@@ -397,6 +398,26 @@ function update() {
   dc up -d --remove-orphans
   stop_leftover_profiles
   echo "-- the app container now runs PHP $(appversion)"
+}
+
+function versions() {
+  # The versions of the tools baked into the app image. The Dockerfiles of
+  # laserstack_app write them into /etc/laserstack/versions.txt at build time, so
+  # the image describes itself and no file of this repository can go stale. An
+  # image built before that file existed has nothing to show, and this says so
+  # instead of letting a cat error out.
+  local file=/etc/laserstack/versions.txt
+
+  if [ -z "$(stackisup)" ]; then
+    error_message "the stack is not running: laser up -d, then this command again."
+    return 1
+  fi
+  if ! dc exec -T app sh -c "test -f $file" >/dev/null 2>&1; then
+    error_message "laserstack/app:${PHP_VERSION} has no $file: it was built before the stack wrote it."
+    echo "  The images the nightly build publishes carry it: 'laser update' pulls the newest one."
+    return 1
+  fi
+  dc exec -T app cat "$file"
 }
 
 function stackisup() {
@@ -918,6 +939,9 @@ trust)
   ;;
 stats)
   stats "$@"
+  ;;
+versions)
+  versions "$@"
   ;;
 restartnginx)
   restartnginx "$@"

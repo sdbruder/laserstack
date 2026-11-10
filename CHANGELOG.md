@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `laser versions` prints the versions of the tools baked into the app image —
+  php, composer, phpunit, node, npm, yarn, nginx, git, supervisor — from
+  `/etc/laserstack/versions.txt`, which the Dockerfiles of laserstack_app write
+  at build time. The answer therefore comes from the image itself, and no file of
+  this repository can go stale. An image built before that file existed has
+  nothing to show: the command says so and exits 1, instead of failing with the
+  error of the missing file. The smoke test asserts both answers.
+
 - Four cloud emulator profiles, one per provider, each behind its own profile:
   `s3` (RustFS, the S3 API on 9000 and a console on 9001), `gcs`
   (fake-gcs-server, the Cloud Storage JSON API on 4443), `azure` (Azurite, blob,

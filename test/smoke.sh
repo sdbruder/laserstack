@@ -236,6 +236,27 @@ for version in $versions; do
   check "PHP is $version (found ${php_version:-nothing})" \
     "$(echo "$php_version" | grep -qE "^$version\.[0-9]" && echo 0 || echo 1)"
 
+  # laser versions prints /etc/laserstack/versions.txt, which the Dockerfiles of
+  # laserstack_app write at build time. An image built before that file existed
+  # has none, and the command has to say so instead of failing with a cat error:
+  # both answers are correct, anything else is not.
+  versions_out=$("$laser" versions 2>&1)
+  versions_status=$?
+  case "$versions_out" in
+  "php "*)
+    check "laser versions prints the tools of the image ($(echo "$versions_out" | head -3 | tr '\n' ' '))" \
+      "$([ "$versions_status" -eq 0 ] && echo 0 || echo 1)"
+    ;;
+  *"has no /etc/laserstack/versions.txt"*)
+    echo "  --   laser versions: the image predates the file, the message is the graceful one"
+    check "laser versions reports an image without the file" \
+      "$([ "$versions_status" -eq 1 ] && echo 0 || echo 1)"
+    ;;
+  *)
+    check "laser versions answers ($(echo "$versions_out" | head -2 | tr '\n' ' '))" 1
+    ;;
+  esac
+
   # busybox ps prints "PID USER TIME COMMAND", the user is the second column
   pool_user=$("$laser" appexec sh -c 'ps aux | grep -F php-fpm | grep -v grep' 2>/dev/null | awk '{print $2}' | grep -c '^laser$')
   check "php-fpm workers run as laser" "$([ "${pool_user:-0}" -gt 0 ] && echo 0 || echo 1)"

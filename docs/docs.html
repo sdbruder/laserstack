@@ -122,8 +122,11 @@ laser use php 8.5     <span class="out"># this project asks for PHP 8.5</span>
 laser use php off     <span class="out"># it follows the stack again</span>
 
 <span class="out"># from the repository root, laser appexec talks to the container itself:</span>
-laser appexec supervisorctl status</code></pre>
-  <p>The images carry composer, node, npm, yarn, phpunit, xdebug and the mysql and postgres clients, so the tool version of a project is the tool version of its PHP series — the same for everyone on the team.</p>
+laser appexec supervisorctl status
+
+<span class="out"># what the image carries, and which version of each:</span>
+laser versions</code></pre>
+  <p>The images carry composer, node, npm, yarn, phpunit, xdebug and the mysql and postgres clients, so the tool version of a project is the tool version of its PHP series — the same for everyone on the team. <code>laser versions</code> prints the version of every one of them: the image writes that list into <code>/etc/laserstack/versions.txt</code> when it is built, so the answer comes from the image itself, and an image built before that file existed says so instead of failing.</p>
   <p>A project can state its own PHP version in a <code>.laserstack</code> file in its root: <code>PHP_VERSION=8.5</code>. <code>laser use php 8.5</code> writes that file, adds the profile <code>php85</code> to <code>PROFILES</code> in <code>.env</code>, and runs <code>laser up -d</code> plus <code>laser scan</code>; <code>laser use php off</code> removes the file and the project follows the PHP version of the stack again. With that profile active, <code>laser up -d</code> starts one worker container per version in use — the same image with only php-fpm, no nginx and no published port — and the nginx of the app container sends the <code>.php</code> requests of that project there. Projects without the file keep being served by the PHP of the app container, exactly as before, and <code>laser list</code> prints the version of every project.</p>
 
   <h2>Databases</h2>

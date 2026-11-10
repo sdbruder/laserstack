@@ -169,6 +169,7 @@ https                 *.localdev.it by Let's Encrypt YE1, 89 days left, the publ
       <tr><td><code>laser composer / npm / node / npx / yarn / php / test / tinker</code></td><td>the same for the other project tools</td></tr>
       <tr><td><code>laser shell</code></td><td>a bash in the app container, in that project</td></tr>
       <tr><td><code>laser appexec &lt;cmd&gt;</code></td><td>any command in the app container (from the repository root: the container itself)</td></tr>
+      <tr><td><code>laser versions</code></td><td>the versions of the tools baked into the app image — php, composer, phpunit, node, npm, yarn, nginx, git, supervisor — read from <code>/etc/laserstack/versions.txt</code>, which the image writes at build time; an image built before that file existed says so instead of failing</td></tr>
       <tr><td><code>laser mysql</code> / <code>laser psql</code></td><td>a client for the database of the profile, with the credentials of <code>.env</code></td></tr>
       <tr><td><code>laser dashboard</code></td><td>opens the dashboard of the stack in the browser of the machine, over https when <code>HTTPS=on</code></td></tr>
       <tr><td><code>laser share</code></td><td>an ngrok tunnel to that project</td></tr>
