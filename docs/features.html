@@ -120,9 +120,13 @@ http://projecta.localdev.it      http://myapp.localdev.it      http://clientport
       <tr><td>redis</td><td><code>REDIS_VERSION</code></td><td><code>8.10</code></td><td><code>8.8</code>, <code>8.6</code>, <code>8.4</code>, <code>8.2</code>, <code>7.4</code></td><td><code>config/redis/&lt;version&gt;/redis.conf</code></td></tr>
       <tr><td>memcached</td><td><code>MEMCACHED_VERSION</code></td><td><code>1.6</code></td><td>—</td><td>none, the image takes flags</td></tr>
       <tr><td>Elasticsearch</td><td><code>ELASTICSEARCH_VERSION</code></td><td><code>7.14.2</code></td><td><code>8.19.23</code>, <code>9.5.5</code></td><td><code>config/elasticsearch/&lt;version&gt;/elasticsearch.yml</code></td></tr>
+      <tr><td>s3 (RustFS)</td><td><code>RUSTFS_VERSION</code></td><td><code>1.0.4</code></td><td>—</td><td>none, the settings are in <code>docker-compose.yml</code></td></tr>
+      <tr><td>gcs</td><td><code>FAKE_GCS_VERSION</code></td><td><code>1.56.1</code></td><td>—</td><td>none, the flags are in <code>docker-compose.yml</code></td></tr>
+      <tr><td>azure</td><td><code>AZURITE_VERSION</code></td><td><code>3.37.0</code></td><td>—</td><td>none, the flags are in <code>docker-compose.yml</code></td></tr>
+      <tr><td>aws (Floci)</td><td><code>FLOCI_VERSION</code></td><td><code>2.4.0</code></td><td>—</td><td>none, the environment is in <code>docker-compose.yml</code></td></tr>
     </tbody>
   </table></div>
-  <p>The defaults are the versions the previous release ran, so an existing <code>.env</code> keeps behaving the same. A version that is not in the list gives you docker's own error about a missing path — there is no validation layer to fight with.</p>
+  <p>The four cloud emulators are the exception to the rule of a config directory: an emulator follows the API of its provider, not a numbered release of its own, so its variable pins the image this stack was tested with and nothing else. The defaults are the versions the previous release ran, so an existing <code>.env</code> keeps behaving the same. A version that is not in the list gives you docker's own error about a missing path — there is no validation layer to fight with.</p>
 
   <h2>Config you can read, commit and diff</h2>
   <p>The container config is not baked into the images. It lives in this repository, one directory per version:</p>
@@ -178,7 +182,9 @@ https                 *.localdev.it by Let's Encrypt YE1, 89 days left, the publ
   <p><code>test/smoke.sh</code> is part of the repository, and it starts the stack for real:</p>
   <ul>
     <li><strong>app stage, per PHP version:</strong> nginx and php-fpm reach RUNNING, no nginx emergency in the log, the workers run as the <code>laser</code> user, PHP loads the php.ini of the repository, a project answers over HTTP with the requested version, the <a href="#dashboard">dashboard</a> answers on <code>laserstack.&lt;SUFFIX&gt;</code> and lists the projects directory, and the run writes nothing into the repository's nginx config directory;</li>
-    <li><strong>database stage, per profile:</strong> <code>laser mysql</code> or <code>laser psql</code> answers with the server of the profile, and PDO from the app container reaches that server under the host name a project uses.</li>
+    <li><strong>database stage, per profile:</strong> <code>laser mysql</code> or <code>laser psql</code> answers with the server of the profile, and PDO from the app container reaches that server under the host name a project uses;</li>
+    <li><strong>cache stage, per cache profile:</strong> the <code>Redis</code> or <code>Memcached</code> class of the app image writes a value through the server and reads it back, which is what a Laravel cache store does;</li>
+    <li><strong>cloud stage, per cloud profile:</strong> the emulator answers the protocol of its provider from inside the app container — a bucket and an object, a queue round trip, a container and a blob — through <code>test/cloud.php</code>, which signs its requests the way the SDK of that provider does.</li>
   </ul>
   <p>A version variable drives it: <code>SMOKE_MYSQL_VERSION=9.7 SMOKE_DB_PROFILES=mysql test/smoke.sh 8.5</code>. The 0.13.0 release was verified that way for mysql 8.0/8.4/9.7/26.10, mariadb 10.11–13.0, postgres 15.1–18, redis 7.4–8.10, memcached 1.6 and elasticsearch 7.14.2/8.19.23/9.5.5, plus a Laravel 12 application reaching every engine through <code>artisan</code>; 0.14.0 was verified on PHP 8.4 with mysql 8.0, mariadb 10.11 and postgres 15.1, and the test now asserts that a project answers over https with a trusted certificate.<code>artisan</code>.</p>
 
