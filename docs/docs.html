@@ -65,10 +65,14 @@ laser help                   <span class="out"># the commands; laser dockerhelp 
       <tr><td><code>REDIS_VERSION</code></td><td><code>8.10</code></td><td>the redis profile image and <code>redis.conf</code></td></tr>
       <tr><td><code>MEMCACHED_VERSION</code></td><td><code>1.6</code></td><td>the memcached profile image</td></tr>
       <tr><td><code>ELASTICSEARCH_VERSION</code></td><td><code>7.14.2</code></td><td>the elasticsearch profile image and <code>elasticsearch.yml</code></td></tr>
+      <tr><td><code>RUSTFS_VERSION</code></td><td><code>1.0.4</code></td><td>the <code>s3</code> profile image, the emulator of the AWS S3 API</td></tr>
+      <tr><td><code>FAKE_GCS_VERSION</code></td><td><code>1.56.1</code></td><td>the <code>gcs</code> profile image, the emulator of the Google Cloud Storage API</td></tr>
+      <tr><td><code>AZURITE_VERSION</code></td><td><code>3.37.0</code></td><td>the <code>azure</code> profile image, the official emulator of Azure Storage</td></tr>
+      <tr><td><code>FLOCI_VERSION</code></td><td><code>2.4.0</code></td><td>the <code>aws</code> profile image, the emulator of the AWS API</td></tr>
       <tr><td><code>DB_DATABASE</code>, <code>DB_USERNAME</code>, <code>DB_PASSWORD</code>, <code>DB_ROOT_PASSWORD</code></td><td><code>laser</code>, <code>laser</code>, <code>laser</code>, <code>root</code></td><td>the database and the accounts the mysql profile creates</td></tr>
       <tr><td><code>MARIADB_*</code></td><td>same shape</td><td>the same for the mariadb profile: database, user, password, root password</td></tr>
       <tr><td><code>POSTGRES_PASSWORD</code></td><td><code>postgres</code></td><td>the postgres password. <code>POSTGRES_USER</code>, <code>POSTGRES_DB</code>, <code>POSTGRES_INITDB_ARGS</code>, <code>POSTGRES_HOST_AUTH_METHOD</code> are also read when set</td></tr>
-      <tr><td><code>PROFILES</code></td><td><code>mysql,redis</code></td><td>the additional containers to run, comma separated: <code>mysql</code>, <code>mariadb</code>, <code>postgres</code>, <code>redis</code>, <code>memcached</code>, <code>elasticsearch</code>, and <code>php&lt;version&gt;</code> for every PHP version a project asks for</td></tr>
+      <tr><td><code>PROFILES</code></td><td><code>mysql,redis</code></td><td>the additional containers to run, comma separated: <code>mysql</code>, <code>mariadb</code>, <code>postgres</code>, <code>redis</code>, <code>memcached</code>, <code>elasticsearch</code>, the four cloud emulators <code>s3</code>, <code>gcs</code>, <code>azure</code> and <code>aws</code>, and <code>php&lt;version&gt;</code> for every PHP version a project asks for</td></tr>
     </tbody>
   </table></div>
   <p>The versions each engine supports are on the <a href="features.html#versions-are-variables">features page</a>. A variable that names a version without a config directory gives you docker's own "bind source path does not exist" error: there is no validation layer in between.</p>
@@ -84,9 +88,14 @@ laser help                   <span class="out"># the commands; laser dockerhelp 
       <tr><td>redis</td><td><code>redis</code></td><td>6379</td></tr>
       <tr><td>memcached</td><td><code>memcached</code></td><td>11211</td></tr>
       <tr><td>elasticsearch</td><td><code>elasticsearch</code></td><td>9200 and 9300</td></tr>
+      <tr><td>s3 (RustFS)</td><td><code>s3</code></td><td>9000, console 9001</td></tr>
+      <tr><td>gcs (fake-gcs-server)</td><td><code>gcs</code></td><td>4443</td></tr>
+      <tr><td>azure (Azurite)</td><td><code>azure</code></td><td>10000, 10001 and 10002</td></tr>
+      <tr><td>aws (Floci)</td><td><code>aws</code></td><td>4566</td></tr>
     </tbody>
   </table></div>
   <p>Because the mariadb service carries the alias <code>db</code>, a project whose <code>.env</code> says <code>DB_HOST=db</code> works with the mysql profile and with the mariadb profile. Run one of them at a time: they both want port 3306.</p>
+  <p>Each cloud emulator answers the protocol of its provider, so a project keeps the SDK of that provider and changes one endpoint: <code>AWS_ENDPOINT_URL=http://s3:9000</code> with <code>AWS_ACCESS_KEY_ID</code>/<code>AWS_SECRET_ACCESS_KEY</code> from <code>S3_ACCESS_KEY</code>/<code>S3_SECRET_KEY</code>, <code>STORAGE_EMULATOR_HOST=http://gcs:4443</code>, the development connection string of Azurite (<code>devstoreaccount1</code>, its published key, <code>BlobEndpoint=http://azure:10000/devstoreaccount1</code>), or <code>AWS_ENDPOINT_URL=http://aws:4566</code> for the AWS API. No account, no token and no cloud credential of a real provider takes part, and no PHP extension either: the clients are the SDK packages of the project. <code>php test/cloud.php s3</code> inside a project proves an endpoint without an SDK.</p>
 
   <h2>Serving your projects</h2>
   <ul>
@@ -122,6 +131,7 @@ laser appexec supervisorctl status</code></pre>
     <li><code>laser mysql</code> and <code>laser psql</code> open the client of the database container of the active profile, with the credentials of <code>.env</code>, and pass extra arguments through: <code>laser mysql -e "select version()"</code>, <code>laser psql -c '\dt'</code>;</li>
     <li>from the host, connect to <code>127.0.0.1</code> on the published port (3306, 5432, 6379, 11211, 9200) with the credentials in <code>.env</code> — for a GUI client, a dump/restore or a script;</li>
     <li>a project reaches its database by name: <code>DB_HOST=mysql</code> or <code>DB_HOST=db</code> for the mysql profile, <code>DB_HOST=mariadb</code> or <code>DB_HOST=db</code> for the mariadb profile, <code>DB_HOST=postgres</code>, <code>REDIS_HOST=redis</code>, <code>MEMCACHED_HOST=memcached</code>. Those host names are what <code>laser scan</code> and the drivers assume;</li>
+    <li>a project reaches a cloud emulator by the name of its profile — <code>s3:9000</code>, <code>gcs:4443</code>, <code>azure:10000</code>, <code>aws:4566</code> — and each one answers the protocol of its provider, so the SDK of the project changes one endpoint and nothing else: <code>AWS_ENDPOINT_URL=http://s3:9000</code>, <code>STORAGE_EMULATOR_HOST=http://gcs:4443</code>, the development connection string of Azurite, or <code>AWS_ENDPOINT_URL=http://aws:4566</code>;</li>
     <li>the elasticsearch profile runs with security disabled (<code>xpack.security.enabled: false</code>) so a local application can talk to it without certificates;</li>
     <li><strong>each database version has its own data volume</strong> (<code>&lt;project&gt;_dbdata_&lt;version&gt;</code>, and the same shape for mariadb and postgres), so changing a version keeps every other version's data and needs no <code>laser down -v</code>. A data directory is still readable only by the server version that created it, which is why the version is part of the volume name;</li>
     <li>the app image's <code>mysql</code> client is built on MariaDB Connector/C and cannot authenticate against MySQL 8.4 and newer, whose accounts use <code>caching_sha2_password</code>. Use <code>laser mysql</code>, which runs the client of the database container.</li>
@@ -151,6 +161,7 @@ laser update            <span class="out"># the same, then restart the container
   <ul>
     <li><strong>PHP extensions follow the version, not the project.</strong> A project states the version it needs in <code>.laserstack</code> and the stack starts a worker container for it, but extensions, opcache and xdebug stay a property of that version, and a version whose profile is not in <code>PROFILES</code> answers with nginx's own 502 while <code>laser scan</code> names the profile to add;</li>
     <li><strong>one version per database engine.</strong> mysql, mariadb, postgres, redis, memcached and elasticsearch can run side by side, but each engine runs the version you selected;</li>
+    <li><strong>a cloud emulator is not the cloud.</strong> Each of the four answers the protocol of its provider, which carries the code path of a project but not every corner of the API of a provider, and none of them carries a support promise. The <code>s3</code>, <code>gcs</code>, <code>azure</code> and <code>aws</code> profiles are for development and tests;</li>
     <li><strong>a suffix of your own needs <code>/etc/hosts</code></strong>. The default suffix, <code>localdev.it</code>, resolves every name under it to loopback for anyone, so it needs nothing at all; a local dnsmasq that <code>laser</code> installs and maintains, for a suffix of your own, is planned;</li>
     <li><strong>memcached is a cache store from 7.4 to 8.5:</strong> the images carry the <code>memcached</code> extension there. PHP 8.6 is a release candidate and has neither an Alpine package nor a pecl build of the extension yet, so that series has the server without the client;</li>
     <li><strong>no Windows-native support:</strong> use WSL2. macOS and Linux run as they are;</li>

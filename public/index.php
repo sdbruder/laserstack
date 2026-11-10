@@ -273,6 +273,12 @@ $services = [
     ['label' => 'redis', 'host' => 'redis', 'port' => 6379, 'engine' => null, 'profile' => 'redis'],
     ['label' => 'memcached', 'host' => 'memcached', 'port' => 11211, 'engine' => null, 'profile' => 'memcached'],
     ['label' => 'Elasticsearch', 'host' => 'elasticsearch', 'port' => 9200, 'engine' => null, 'profile' => 'elasticsearch'],
+    // the cloud emulators: the name on the network is the name of the profile,
+    // and a socket to the port of the emulator answers as soon as it listens
+    ['label' => 's3 (RustFS)', 'host' => 's3', 'port' => 9000, 'engine' => null, 'profile' => 's3'],
+    ['label' => 'gcs (fake-gcs-server)', 'host' => 'gcs', 'port' => 4443, 'engine' => null, 'profile' => 'gcs'],
+    ['label' => 'azure (Azurite)', 'host' => 'azure', 'port' => 10000, 'engine' => null, 'profile' => 'azure'],
+    ['label' => 'aws (Floci)', 'host' => 'aws', 'port' => 4566, 'engine' => null, 'profile' => 'aws'],
 ];
 
 $profiles = enabledProfiles($root . '/.env');
@@ -521,6 +527,7 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                     <tr><td><?= e($engine) ?></td><td><code><?= e($list === [] ? 'image only' : implode(', ', $list)) ?></code></td></tr>
                 <?php endforeach; ?>
                 <tr><td>memcached</td><td><code>image only</code></td></tr>
+                <tr><td>s3, gcs, azure, aws</td><td><code>image only</code>, the settings are in <code>docker-compose.yml</code></td></tr>
             </table>
             <p class="note">Each name is a directory under <code>config/</code> and a version the stack can select by environment variable.</p>
         </section>

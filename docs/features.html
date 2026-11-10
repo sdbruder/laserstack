@@ -62,6 +62,10 @@
       <tr><td><code>redis</code></td><td><code>redis:&lt;REDIS_VERSION&gt;-alpine</code></td><td>cache, queue, sessions</td><td>6379</td></tr>
       <tr><td><code>memcached</code></td><td><code>memcached:&lt;MEMCACHED_VERSION&gt;-alpine</code></td><td>cache, sessions</td><td>11211</td></tr>
       <tr><td><code>elasticsearch</code></td><td><code>elasticsearch:&lt;ELASTICSEARCH_VERSION&gt;</code></td><td>search, single node, security off for local use</td><td>9200</td></tr>
+      <tr><td><code>s3</code></td><td><code>rustfs/rustfs:&lt;RUSTFS_VERSION&gt;</code></td><td>the S3 API of AWS, with a console</td><td>9000, console 9001</td></tr>
+      <tr><td><code>gcs</code></td><td><code>fsouza/fake-gcs-server:&lt;FAKE_GCS_VERSION&gt;</code></td><td>the Cloud Storage JSON API of Google</td><td>4443</td></tr>
+      <tr><td><code>azure</code></td><td><code>mcr.microsoft.com/azure-storage/azurite:&lt;AZURITE_VERSION&gt;</code></td><td>the blob, queue and table services of Azure</td><td>10000, 10001, 10002</td></tr>
+      <tr><td><code>aws</code></td><td><code>floci/floci:&lt;FLOCI_VERSION&gt;</code></td><td>the AWS API: queues, tables, functions, an S3</td><td>4566</td></tr>
     </tbody>
   </table></div>
   <p>Only the profile of the mysql container answers on 3306 at a time: projects that point at <code>db</code> work with the <code>mysql</code> profile and with the <code>mariadb</code> profile, which is why the mariadb service carries that alias.</p>

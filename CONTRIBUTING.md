@@ -34,7 +34,11 @@ CHANGELOG.md          the release notes, newest first
 
 `docker-compose.yml` holds one `app` service and one service per database
 engine, each behind its compose profile: `db` (mysql), `mariadb`, `postgres`,
-`redis`, `memcached` and `elasticsearch`. The `app` service builds nothing, it
+`redis`, `memcached` and `elasticsearch`. Four more services answer the protocol
+of a cloud provider, each behind the profile of its name: `s3` (RustFS), `gcs`
+(fake-gcs-server), `azure` (Azurite) and `aws` (Floci). The `s3` profile carries a
+second, one shot service, `s3-permissions`: that image runs as UID 10001 and does
+not own its volumes, so something has to chown them before it starts. The `app` service builds nothing, it
 pulls the public image `laserstack/app:<PHP_VERSION>`; that image comes from the
 [laserstack_app](https://github.com/sdbruder/laserstack_app) repository, which
 builds every PHP series from its own Dockerfiles. Inside the container
@@ -222,6 +226,16 @@ see [Add a database version](#add-a-database-version). redis and memcached run
 in the `cache` stage, one `laser up` per profile and PHP version, and the check
 is the one a project makes: the `Redis` or `Memcached` class of the image sets a
 value on the server and reads it back.
+
+The four cloud emulators run in the `cloud` stage: one `laser up` with all four
+profiles, then `test/cloud.php <service>` inside the app container, once per
+profile. That file builds its requests the way the SDK of the provider does —
+SigV4 for the S3 and queue calls of RustFS and Floci, the JSON API with a bearer
+token for the Cloud Storage emulator, SharedKey for Azurite — so a green stage
+means a project with that SDK reaches the emulator. A new emulator needs its
+round trip in `test/cloud.php` and its profile in the stage. `SMOKE_CLOUD_PROFILES`
+selects the profiles (all four by default) and an explicit empty value skips the
+stage.
 
 A sweep over every supported server version is a loop around the test, driven by
 the config directories, so no version list has to be kept in sync:

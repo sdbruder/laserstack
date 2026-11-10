@@ -289,6 +289,111 @@ services:
     profiles:
       - elasticsearch
       - full
+  # The four cloud emulators. Each one answers the protocol of its provider, so
+  # a project keeps its SDK and changes one endpoint in its environment. None
+  # needs an account, a token or a licence: LocalStack and MinIO, the two
+  # defaults of the years before, archived their repositories in 2026 and
+  # LocalStack now requires an account to start at all.
+  s3:
+    image: "rustfs/rustfs:${RUSTFS_VERSION:-1.0.4}"
+    # the S3 API of the provider, a dedicated server of the local network. A
+    # project that needs the S3 API of the aws profile as well gets it on the
+    # same port of that service.
+    depends_on:
+      # the image runs as UID 10001 and does not own its volumes, so the one
+      # shot helper below prepares them before this container starts
+      s3-permissions:
+        condition: service_completed_successfully
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - s3data:/data
+      - s3logs:/app/logs
+    environment:
+      LASER: 1
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
+      # a project needs a bucket, not an account. A project sends these as its
+      # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, and every other key is
+      # refused the way S3 refuses it.
+      RUSTFS_ACCESS_KEY: "${S3_ACCESS_KEY:-laser}"
+      RUSTFS_SECRET_KEY: "${S3_SECRET_KEY:-laser}"
+      RUSTFS_OBS_LOG_DIRECTORY: /app/logs
+      RUSTFS_OBS_LOGGER_LEVEL: info
+    networks:
+      - laser
+    profiles:
+      - s3
+  s3-permissions:
+    # a named volume is owned by root, and rustfs refuses a data directory it
+    # cannot write. This container exits at once and the s3 service waits for it
+    image: alpine
+    command: chown -R 10001:10001 /data /logs
+    volumes:
+      - s3data:/data
+      - s3logs:/logs
+    networks:
+      - laser
+    profiles:
+      - s3
+  gcs:
+    image: "fsouza/fake-gcs-server:${FAKE_GCS_VERSION:-1.56.1}"
+    # the image speaks https by default and a local project needs no
+    # certificate; the filesystem backend keeps the objects in a volume
+    command: -scheme http -backend filesystem -filesystem-root /data -public-host gcs:4443
+    ports:
+      - 4443:4443
+    volumes:
+      - gcsdata:/data
+    environment:
+      LASER: 1
+    networks:
+      - laser
+    profiles:
+      - gcs
+  azure:
+    image: "mcr.microsoft.com/azure-storage/azurite:${AZURITE_VERSION:-3.37.0}"
+    # --loose accepts the URLs and headers a client builds for an emulator, and
+    # --skipApiVersionCheck lets a client of a newer API version through
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --location /data --loose --skipApiVersionCheck
+    ports:
+      - 10000:10000
+      - 10001:10001
+      - 10002:10002
+    volumes:
+      - azuredata:/data
+    environment:
+      LASER: 1
+    networks:
+      - laser
+    profiles:
+      - azure
+  aws:
+    image: "floci/floci:${FLOCI_VERSION:-2.4.0}"
+    ports:
+      - 4566:4566
+    volumes:
+      - awsdata:/app/data
+      # the console starts a sidecar container on its first request, which needs
+      # the socket. Nothing runs until a browser asks for the console.
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      LASER: 1
+      # a URL that the emulator returns, an SQS QueueUrl for one, has to carry
+      # the name a project uses and not localhost
+      FLOCI_HOSTNAME: aws
+      # the entrypoint of the image owns this directory itself, so a volume
+      # here needs no helper
+      FLOCI_STORAGE_PERSISTENT_PATH: /app/data
+      FLOCI_STORAGE_MODE: "${FLOCI_STORAGE_MODE:-persistent}"
+      FLOCI_SERVICES_UI_ENABLED: "${FLOCI_SERVICES_UI_ENABLED:-true}"
+    networks:
+      - laser
+    profiles:
+      - aws
 
 volumes:
   # One volume per server version, not one per engine: the name carries the
@@ -304,6 +409,25 @@ volumes:
     driver: local
   mariadata:
     name: "${COMPOSE_PROJECT_NAME:-laserstack}_mariadata_${MARIADB_VERSION:-10.11}"
+    driver: local
+  # One volume per cloud emulator, and no version in the name: an emulator
+  # follows the API of its provider, and a version variable only pins the image
+  # of the day the stack was tested. An emulator that cannot read the data of an
+  # older version is a bug of that emulator, not a reason to lose the objects.
+  s3data:
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_s3data"
+    driver: local
+  s3logs:
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_s3logs"
+    driver: local
+  gcsdata:
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_gcsdata"
+    driver: local
+  azuredata:
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_azuredata"
+    driver: local
+  awsdata:
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_awsdata"
     driver: local
 networks:
   laser:

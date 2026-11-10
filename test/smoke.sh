@@ -38,6 +38,18 @@
 #   - PHP of the app container writes a value through the server and reads it
 #     back, which is what a Laravel cache store does
 #
+# Stage "cloud", for every cloud emulator profile (s3, gcs, azure, aws):
+#
+#   - the emulator answers the protocol of its provider from inside the app
+#     container, with the credentials a project uses: a bucket and an object
+#     through the S3 API of RustFS, the same plus a queue round trip through the
+#     AWS API of Floci, a bucket and an object through the JSON API of the
+#     Cloud Storage emulator, and a container and a blob through Azurite
+#
+# The stage runs test/cloud.php, the same file a project can run to prove an
+# endpoint of the stack against its own SDK. The four profiles run at once,
+# because each emulator listens on ports of its own.
+#
 # The test does not use port 80 of the host, because another web server (Valet,
 # Herd) may hold it. The http check calls curl inside the app container.
 #
@@ -55,6 +67,8 @@
 #        SMOKE_POSTGRES_VERSION=18 SMOKE_DB_PROFILES=postgres test/smoke.sh 8.5
 #        SMOKE_CACHE_PROFILES=memcached test/smoke.sh 8.4
 #        SMOKE_CACHE_PROFILES="" test/smoke.sh 8.4      (skip the cache stage)
+#        SMOKE_CLOUD_PROFILES="s3 gcs" test/smoke.sh 8.4
+#        SMOKE_CLOUD_PROFILES="" test/smoke.sh 8.4      (skip the cloud stage)
 #        SMOKE_PULL=0 test/smoke.sh 8.4
 #        SMOKE_WORKER_VERSION=8.3 test/smoke.sh 8.5   (partner of the stage php)
 
@@ -78,6 +92,9 @@ cache_profiles="${SMOKE_CACHE_PROFILES-redis memcached}"
 # nothing to test. 8.6 is a release candidate: Alpine has no package for the
 # memcached extension and the pecl build does not compile against it.
 cache_skip_versions="${SMOKE_CACHE_SKIP_VERSIONS-8.6}"
+# the cloud emulator profiles to test against the protocol of their provider. An
+# explicit empty value skips the whole stage.
+cloud_profiles="${SMOKE_CLOUD_PROFILES-s3 gcs azure aws}"
 # the partner of the two-version stage. An empty value picks another series of
 # the list: the one before the version under test, the one after it when there
 # is none, so the partner is never the release candidate by accident.
@@ -183,7 +200,11 @@ PHP
 mkdir -p "$projects_dir/$worker_project/public"
 cp "$projects_dir/$smoke_project/public/index.php" "$projects_dir/$worker_project/public/index.php"
 
-echo "smoke test: versions [$versions], database profiles [$db_profiles], cache profiles [${cache_profiles:-none}]"
+# the round trip file of the cloud stage: it lives in test/ and runs inside the
+# project of the test, so no check of the stack depends on a file of a project
+cp "$laser_dir/test/cloud.php" "$projects_dir/$smoke_project/cloud.php"
+
+echo "smoke test: versions [$versions], database profiles [$db_profiles], cache profiles [${cache_profiles:-none}], cloud profiles [${cloud_profiles:-none}]"
 echo "the first run pulls the images of the profiles"
 
 say "stage app"
@@ -491,6 +512,44 @@ for profile in $cache_profiles; do
   done
   "$laser" down >/dev/null 2>&1
 done
+
+# cloudcheck <service>: the emulator of the profile answers the protocol of its
+# provider from inside the app container, with the credentials a project uses.
+# test/cloud.php signs its requests the way the SDK of the provider does.
+cloudcheck() {
+  local service="$1" out=""
+
+  for _ in $(seq "$db_wait_seconds"); do
+    out=$("$laser" appexec php "/var/www/$smoke_project/cloud.php" "$service" 2>&1 | tr '\n' ' ' | tr -s ' ')
+    case "$out" in
+    *"ok $service"*) break ;;
+    esac
+    sleep 1
+  done
+  check "PHP reaches $service with the protocol of its provider (${out:0:160})" \
+    "$(echo "$out" | grep -q "ok $service" && echo 0 || echo 1)"
+}
+
+say "stage cloud"
+if [ -n "$cloud_profiles" ]; then
+  "$laser" down >/dev/null 2>&1
+  # one version serves this stage: the emulator is the subject, not the PHP
+  # version of the client that talks to it
+  cloud_version="${versions%% *}"
+  echo "  -- PHP $cloud_version, profiles ${cloud_profiles// /,}"
+  sed -e "s/^PHP_VERSION=.*/PHP_VERSION=$cloud_version/" \
+    -e "s/^PROFILES=.*/PROFILES=${cloud_profiles// /,}/" "$env_backup" >.env
+  setenv SUFFIX "$SUFFIX"
+  [ "$pull_images" == "1" ] && { "$laser" pull >/dev/null 2>&1 || echo "  --   the pull failed, the local images are used"; }
+  "$laser" up >/dev/null 2>&1
+  for service in $cloud_profiles; do
+    fails_before=$fails
+    cloudcheck "$service"
+    [ "$fails" -gt "$fails_before" ] && failed_items="$failed_items cloud:$service"
+    [ "$fails" -gt "$fails_before" ] && state
+  done
+  "$laser" down >/dev/null 2>&1
+fi
 
 say "result"
 if [ "$fails" -eq 0 ]; then

@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Four cloud emulator profiles, one per provider, each behind its own profile:
+  `s3` (RustFS, the S3 API on 9000 and a console on 9001), `gcs`
+  (fake-gcs-server, the Cloud Storage JSON API on 4443), `azure` (Azurite, blob,
+  queue and table on 10000-10002) and `aws` (Floci, the AWS API on 4566, with
+  queues, tables, functions and an S3 of its own). Each one answers the protocol
+  of its provider under the name of its profile, so a project keeps the SDK of
+  the provider and changes one endpoint, and none of the four needs an account,
+  a token or a licence. `localstack/localstack` and `minio/minio`, the two
+  defaults of the years before, archived their repositories in 2026 and
+  LocalStack requires an account before its container starts at all.
+
+- `test/cloud.php` is one round trip per emulator, with the standard library of
+  PHP only: it signs its requests the way the SDK of the provider does (SigV4 for
+  the S3 and queue calls, SharedKey for the Azure calls) and prints
+  `ok <service>`. A project can run it to prove an endpoint of the stack without
+  installing an SDK, and the smoke test runs it in a new `cloud` stage for every
+  cloud profile, from inside the app container. `SMOKE_CLOUD_PROFILES` selects
+  the profiles of that stage and an empty value skips it.
+
+- The `s3` profile carries a one shot `s3-permissions` helper: the RustFS image
+  runs as UID 10001 and does not take ownership of its volumes, so the helper
+  chowns them before the server starts. A named volume is owned by root, and
+  without the helper rustfs refuses a data directory it cannot write.
+
 - The container of the mysql profile answers to `mysql` as well as to `db`, so a
   project can name the engine it needs (`DB_HOST=mysql`) next to
   `DB_HOST=mariadb` for the other profile, and keep `DB_HOST=db` to work with

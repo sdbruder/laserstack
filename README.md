@@ -60,6 +60,15 @@ Be as small, simple and fast as possible:
   `PROFILES=memcached` is a cache store for a project. PHP 8.6 is a release
   candidate: pecl's `memcached` does not build against it and Alpine has no
   package, so that series carries the server without the client.
+- Four cloud emulators behind four profiles, each one answering the protocol of
+  its provider, so a project keeps its SDK and changes one endpoint: `s3`
+  (RustFS, the S3 API on 9000 and a console on 9001), `gcs` (fake-gcs-server,
+  the Cloud Storage JSON API on 4443), `azure` (Azurite, blob, queue and table
+  on 10000-10002) and `aws` (Floci, the AWS API on 4566, with queues, tables,
+  functions and an S3 of its own). None of them needs an account, a token or a
+  licence. The two defaults of the years before are gone: `localstack/localstack`
+  and `minio/minio` archived their repositories in 2026, and LocalStack now
+  requires an account before its container starts at all.
 - The `mysql` client of a shell in the app container (`laser shell`,
   `laser appexec mysql`) is the client of the image and authenticates with
   `config/my.cnf`. It works with the mariadb profile and with mysql `8.0`. The
@@ -117,6 +126,15 @@ version variable that selects the image tag and the config directory
 | redis         | `REDIS_VERSION`         | `redis:8.10-alpine`    | `8.8`, `8.6`, `8.4`, `8.2`, `7.4` | `config/redis/<version>/redis.conf`                |
 | memcached     | `MEMCACHED_VERSION`     | `memcached:1.6-alpine` | none                              | none, the image has no config file                 |
 | Elasticsearch | `ELASTICSEARCH_VERSION` | `elasticsearch:7.14.2` | `8.19.23`, `9.5.5`                | `config/elasticsearch/<version>/elasticsearch.yml` |
+| S3 (RustFS)   | `RUSTFS_VERSION`        | `rustfs/rustfs:1.0.4`  | none, an emulator follows the API | none, the settings are in `docker-compose.yml`      |
+| Cloud Storage | `FAKE_GCS_VERSION`      | `fsouza/fake-gcs-server:1.56.1` | none                     | none, the flags are in `docker-compose.yml`         |
+| Azure Storage | `AZURITE_VERSION`       | `mcr.microsoft.com/azure-storage/azurite:3.37.0` | none      | none, the flags are in `docker-compose.yml`         |
+| AWS (Floci)   | `FLOCI_VERSION`         | `floci/floci:2.4.0`    | none                              | none, the environment is in `docker-compose.yml`    |
+
+The four cloud emulators are the exception to the rule of a version directory: an
+emulator follows the API of its provider, not a numbered release of its own, so
+its version variable pins the image the stack was tested with and nothing else.
+A newer emulator is meant to answer everything the pinned one answered.
 
 Each database engine keeps one data volume per version,
 `<project>_dbdata_<version>`, `<project>_mariadata_<version>` and
@@ -225,6 +243,13 @@ run. The available profiles, each with the image `docker-compose.yml` pulls:
 - redis (`redis:${REDIS_VERSION}-alpine`, default `redis:8.10-alpine`)
 - memcached (`memcached:${MEMCACHED_VERSION}-alpine`, default `memcached:1.6-alpine`)
 - elasticsearch (`elasticsearch:${ELASTICSEARCH_VERSION}`, default `elasticsearch:7.14.2`)
+- s3 (`rustfs/rustfs:${RUSTFS_VERSION}`, default `rustfs/rustfs:1.0.4`, the S3
+  API on 9000 and its console on 9001)
+- gcs (`fsouza/fake-gcs-server:${FAKE_GCS_VERSION}`, default `:1.56.1`, the
+  Cloud Storage JSON API on 4443)
+- azure (`mcr.microsoft.com/azure-storage/azurite:${AZURITE_VERSION}`, default
+  `:3.37.0`, blob, queue and table on 10000, 10001 and 10002)
+- aws (`floci/floci:${FLOCI_VERSION}`, default `:2.4.0`, the AWS API on 4566)
 - php74, php80, php81, php82, php83, php84, php85, php86
   (`laserstack/app:<version>`, the same image as the app container with only
   php-fpm running, one profile per PHP version a project asks for, see
@@ -235,6 +260,36 @@ of the mariadb profile to `mariadb` and to `db` as well. A project can name the
 engine it needs (`DB_HOST=mysql`, `DB_HOST=mariadb`) or use `db` and work with
 both profiles without a change. Do not activate the mysql and the mariadb
 profile at the same time, both use port 3306.
+
+### The cloud emulators
+
+Each cloud profile answers the protocol of its provider on the network of the
+stack, under the name of the profile, so a project keeps the SDK of the provider
+and changes its endpoint:
+
+| profile | a project reaches it as           | a project sets                                                                                                                 |
+| ------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| s3      | `s3:9000`, console `s3:9001`      | `AWS_ENDPOINT_URL=http://s3:9000` and `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` from `S3_ACCESS_KEY`/`S3_SECRET_KEY`           |
+| gcs     | `gcs:4443`                        | `STORAGE_EMULATOR_HOST=http://gcs:4443`                                                                                        |
+| azure   | `azure:10000`, `:10001`, `:10002` | `AZURE_STORAGE_CONNECTION_STRING` with the development account of Azurite: `devstoreaccount1`, its published key, and `BlobEndpoint=http://azure:10000/devstoreaccount1` |
+| aws     | `aws:4566`                        | `AWS_ENDPOINT_URL=http://aws:4566`, any credentials, `AWS_REGION`                                                              |
+
+No PHP extension takes part: the clients are packages of the project
+(`aws/aws-sdk-php`, `google/cloud-storage`, `microsoft/azure-storage-blob`).
+`php test/cloud.php s3` inside a project proves an endpoint of the stack without
+an SDK, and `php test/cloud.php aws` does the same for the queues. The `aws`
+profile serves an S3 API of its own as well, so one endpoint can carry the
+buckets and the queues of a project; the `s3` profile is the dedicated server
+with the console.
+
+The data of an emulator survives `laser down` in its own volume
+(`<project>_s3data`, `_gcsdata`, `_azuredata`, `_awsdata`), and
+`FLOCI_STORAGE_MODE=memory` starts the AWS one empty at every `up`. The console
+of RustFS is on `http://s3:9001` (`rustfsadmin`/`rustfsadmin` until you set
+`S3_ACCESS_KEY`/`S3_SECRET_KEY`), and the console of Floci is on
+`http://aws:4566/_floci/ui`: its first request starts a sidecar container, which
+is why that service mounts the docker socket, and
+`FLOCI_SERVICES_UI_ENABLED=false` keeps it off.
 
 The postgres container keeps its data in the `pgdata` volume and reads the
 config directory of its version, `config/postgres/<version>/`. The container of
@@ -291,6 +346,9 @@ add.
 - mysql and memcached: `PROFILES=mysql,memcached`
 - mysql and PHP 8.5: `PROFILES=mysql,php85`
 - mariadb, redis and PHP 8.2: `PROFILES=mariadb,redis,php82`
+- mysql and the S3 API: `PROFILES=mysql,s3`
+- every cloud emulator and redis: `PROFILES=redis,s3,gcs,azure,aws`
+- postgres, the S3 API and two PHP versions: `PROFILES=postgres,s3,php82,php85`
 
 ## Other frameworks support
 
