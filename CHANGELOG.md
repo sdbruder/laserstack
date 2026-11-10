@@ -75,9 +75,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   container over https while it answered over http from the version it asked for.
   The certificate under `config/tls` is what decides whether that vhost exists.
 
-- `laser up` and `laser update` pass `--remove-orphans`, so a profile that leaves
-  `PROFILES` takes its container with it: dropping `redis` from the list, or the
-  profile of a PHP version nobody asks for any more, stops that container.
+- `laser up` and `laser update` stop and remove the container of a profile that
+  left `PROFILES`: dropping `redis` from the list, or the profile of a PHP version
+  or a cloud emulator nobody asks for any more, really stops that container.
+  Compose does not do that on its own: it counts a service behind a profile that
+  is not active as part of the project, so `--remove-orphans` never touches it.
+  `laser down` worked around it by removing every container of the project by
+  hand, and now the two commands that start the stack do the same for the
+  containers of the profiles that are not in `PROFILES`.
 
 - The https vhost of the stack uses the `http2` parameter of `listen` instead of
   the `http2` directive. nginx 1.24 and older, which the images of 7.4, 8.0 and

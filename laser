@@ -63,6 +63,32 @@ function dc() {
   docker-compose $dc_params "$@"
 }
 
+# The containers of this project whose service the active profiles do not carry.
+# Compose counts a service behind a profile that is not in PROFILES as part of
+# the project, so it is no orphan to --remove-orphans and neither up nor update
+# stops it. The list of services to keep comes from the resolved compose file, so
+# the app and the dependency of an active profile (the s3-permissions helper, for
+# one) count as enabled without naming them here.
+function stop_leftover_profiles() {
+  local enabled leftover service
+  enabled=$(dc config --services 2>/dev/null || true)
+  # a compose file that does not resolve or a profile that does not exist stops
+  # nothing, and certainly not every container of the project
+  if [ -z "$enabled" ]; then
+    return 0
+  fi
+  for leftover in $(docker ps -aq --filter "label=com.docker.compose.project=$dockerproject" 2>/dev/null); do
+    service=$(docker inspect -f '{{index .Config.Labels "com.docker.compose.service"}}' "$leftover" 2>/dev/null || true)
+    if [ -z "$service" ] || printf '%s\n' "$enabled" | grep -qx -- "$service"; then
+      continue
+    fi
+    if docker stop -t 10 "$leftover" >/dev/null 2>&1; then
+      echo "-- $service left PROFILES, stopping it (its volumes stay)"
+    fi
+    docker rm "$leftover" >/dev/null 2>&1 || true
+  done
+}
+
 function up() {
   # laser tls writes the certificate the container serves into config/tls/serve,
   # which is the directory docker-compose.https.yml mounts. HTTPS is on unless
@@ -73,9 +99,12 @@ function up() {
     echo "TLS: HTTPS is on and this stack has no certificate yet, provisioning one."
     tls
   fi
-  # --remove-orphans: a profile that leaves PROFILES takes its container with
-  # it, which is how dropping a database engine or a PHP version really stops it
+  # --remove-orphans covers a service the compose file no longer has. A service
+  # whose profile left PROFILES needs stop_leftover_profiles, see its comment:
+  # that is how dropping a database engine, a PHP version or an emulator really
+  # stops it.
   dc up -d --remove-orphans
+  stop_leftover_profiles
 
   # An app container from an earlier release runs the nginx command it read when
   # the container was created, and the supervisord.conf mounted under it changed
@@ -366,6 +395,7 @@ function update() {
 
   echo "-- restarting what changed"
   dc up -d --remove-orphans
+  stop_leftover_profiles
   echo "-- the app container now runs PHP $(appversion)"
 }
 
