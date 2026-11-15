@@ -99,12 +99,11 @@ on the newest Alpine release that packages it:
 | `8.5`  | 8.5.12   | 3.24.4  | v24.22.3  | 11.12.1 | 1.22.22 | 1.30.6 | 13.4.7  | 3.5.3        |
 | `8.6`  | 8.6.0RC7 | edge    | v24.22.3  | 12.2.1  | 1.22.22 | 1.30.6 | 13.4.7  | 3.6.0alpha1  |
 
-The table is a snapshot of the published images, read on 2026-11-15: the `php`,
-`phpunit`, `nginx`, `git` and `supervisor` lines come from
-`/etc/laserstack/versions.txt` of each image, Alpine from `/etc/alpine-release`
-and xdebug from `php -r 'phpversion("xdebug");'`, all with `docker run
---pull always`. `laser versions` answers the same question for the image you
-actually have.
+The table is a snapshot of the published images, read on 2026-11-15 with
+`docker run --pull always` against all eight tags: php, node, npm, yarn, nginx
+and phpunit come from `/etc/laserstack/versions.txt` of each image, Alpine from
+`/etc/alpine-release`, xdebug from `php -r 'phpversion("xdebug");'`.
+`laser versions` answers the same question for the image you actually have.
 
 Every image carries composer, the mysql client and the postgres client
 (`psql`, `pg_dump`), and `laser versions` prints the version of every tool the
