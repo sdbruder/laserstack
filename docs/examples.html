@@ -73,7 +73,7 @@ sed -i '' 's/^PHP_VERSION=.*/PHP_VERSION=8.6/' .env     <span class="out"># or e
 laser down
 laser up -d
 laser appexec php -v | sed -n '1p'
-<span class="out">PHP 8.6.0RC5 (cli) …</span></code></pre>
+<span class="out">PHP 8.6.0RC7 (cli) …</span></code></pre>
   <p>One <code>app</code> container serves every project, so the PHP version is a property of the stack, not of a project. Per-project PHP versions, one container per version in use, are on the <a href="roadmap.html">roadmap</a>.</p>
 
   <h2>4 · Switch a project from MySQL to PostgreSQL</h2>
