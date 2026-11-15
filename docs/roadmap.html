@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Roadmap — Laser Stack</title>
-<meta name="description" content="What Laser Stack ships next: several database servers at the same time, and a local DNS that maintains itself. Plus what just shipped in 0.13.2.">
+<meta name="description" content="What Laser Stack ships next: several database servers at the same time, and a local DNS that maintains itself. Plus the release in the branch, and what just shipped in 0.14.0.">
 <link rel="canonical" href="https://localdev.it/laserstack/roadmap.html">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Roadmap — Laser Stack">
@@ -57,6 +57,22 @@
 
   <hr>
 
+  <h2>Next — on the branch, not released yet</h2>
+  <ul>
+    <li><strong>One PHP version per project</strong>, several at the same time: a <code>.laserstack</code> file selects the version (<code>laser use php 8.5</code> writes it) and the stack starts one php-fpm-only container per version in use, behind the one front door, which keeps port 80/443, TLS, the dashboard and the vhosts;</li>
+    <li><strong>Four cloud emulators behind four profiles</strong>, one per provider: <code>s3</code> (RustFS, with a console), <code>gcs</code> (fake-gcs-server), <code>azure</code> (Azurite, the official one) and <code>aws</code> (Floci: queues, tables, functions, an S3). Each answers the protocol of its provider, so a project keeps its SDK and changes one endpoint, and none of them needs an account, a token or a licence — LocalStack and MinIO, the two defaults of the years before, archived their repositories in 2026. <code>test/cloud.php</code> proves an endpoint from inside a project, and the smoke test has a stage for them;</li>
+    <li><strong><code>laser versions</code></strong> prints the versions of the tools baked into the app image, read from <code>/etc/laserstack/versions.txt</code> in the image itself, and says so when an image predates that file;</li>
+    <li><strong>Smaller things that add up</strong>: the mysql container answers to <code>mysql</code> as well as to <code>db</code>, a profile that leaves <code>PROFILES</code> really stops its container, and the https vhost of the stack no longer shadows a per-project vhost on 443.</li>
+  </ul>
+
+  <h2>Just shipped — 0.14.0, 2026-11-05</h2>
+  <ul>
+    <li><strong>https is on by default</strong>, with a certificate a browser already trusts: the published wildcard of <code>*.localdev.it</code> for the default suffix, and a certificate authority of this machine (<code>laser tls</code>, <code>laser trust</code>) for a suffix of your own. <code>HTTPS=off</code> serves http on port 80 only;</li>
+    <li><strong>The dashboard says what https gives you and what it takes</strong>: a card with the mode, the certificate the container serves — subject, issuer, the names it covers, the validity window and the days left — and whether that copy is the published one or the CA of this machine. It reads the certificate and never the key;</li>
+    <li><strong>The certificate renews itself</strong>: <code>publish-certificate.yml</code> renews and republishes the wildcard of <code>*.localdev.it</code> every Monday, so no machine does it by hand, and the run fails when the certificate ends up within two weeks of its expiry;</li>
+    <li><strong>The php-fpm pool of every series carries <code>clear_env = no</code></strong>, so a project reads <code>SUFFIX</code> and the <code>MYSQL_*</code> values the app service sets instead of an empty environment.</li>
+  </ul>
+
   <h2>Just shipped — 0.13.2, 2026-11-05</h2>
   <ul>
     <li><strong>Each database version keeps its own data volume.</strong> The volume name carries the version, so switching <code>MYSQL_VERSION</code>, <code>MARIADB_VERSION</code> or <code>POSTGRES_VERSION</code> starts that version with its own data directory and leaves the data of the others alone: a version change needs no <code>laser down -v</code> and loses nothing. Before this, one volume per engine was shared by every version of it, which is what made a version switch fail on a downgrade or destroy data;</li>
@@ -79,7 +95,6 @@
     <li><strong>Database versions are selectable</strong> the same way PHP always was: one variable per engine selects the image tag and the config directory. mysql 8.0/8.4/9.7/26.10, mariadb 10.11–13.0, postgres 15.1–18, redis 7.4–8.10, elasticsearch 7.14.2/8.19.23/9.5.5, memcached 1.6 — each combination verified with the smoke test;</li>
     <li><strong><code>laser mysql</code> runs the client inside the database container</strong>, over its own socket. That is what makes MySQL 8.4, 9.7 and the 26.10 series work at all, since their accounts use <code>caching_sha2_password</code>;</li>
     <li><strong>Config per version</strong>: the mariadb, redis and elasticsearch profiles have their config in the repository now, and the mysql host cache setting moved into <code>config/mysql/&lt;version&gt;/docker.cnf</code>;</li>
-    <li><strong>Four cloud emulator profiles</strong>, one per provider: <code>s3</code> (RustFS, with a console), <code>gcs</code> (fake-gcs-server), <code>azure</code> (Azurite, the official one) and <code>aws</code> (Floci: queues, tables, functions, an S3). Each answer the protocol of its provider, so a project keeps its SDK and changes one endpoint, and none of them needs an account, a token or a licence — LocalStack and MinIO, the two defaults of the years before, archived their repositories in 2026;</li>
     <li><strong>The documentation is split</strong> into a user part (README) and a development part (CONTRIBUTING), including how to run the tests.</li>
   </ul>
   <p><a href="https://github.com/sdbruder/laserstack/blob/master/CHANGELOG.md">The full changelog →</a> · <a href="https://github.com/sdbruder/laserstack/releases">Releases →</a></p>

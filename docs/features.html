@@ -109,7 +109,7 @@ http://projecta.localdev.it      http://myapp.localdev.it      http://clientport
   <p>A suffix of your own still needs the hosts lines — or the DNS work that is on the <a href="roadmap.html">roadmap</a>.</p>
 
   <h2 id="versions-are-variables">Versions are variables</h2>
-  <p>One variable per engine selects the image tag <em>and</em> the config directory, so the settings of a version travel with it. As of release 0.13.2:</p>
+  <p>One variable per engine selects the image tag <em>and</em> the config directory, so the settings of a version travel with it. As of release 0.14.0:</p>
   <div class="table-scroll"><table>
     <thead><tr><th>engine</th><th>variable</th><th>default</th><th>other versions</th><th>config directory</th></tr></thead>
     <tbody>
@@ -187,7 +187,7 @@ https                 *.localdev.it by Let's Encrypt YE1, 89 days left, the publ
     <li><strong>cache stage, per cache profile:</strong> the <code>Redis</code> or <code>Memcached</code> class of the app image writes a value through the server and reads it back, which is what a Laravel cache store does;</li>
     <li><strong>cloud stage, per cloud profile:</strong> the emulator answers the protocol of its provider from inside the app container — a bucket and an object, a queue round trip, a container and a blob — through <code>test/cloud.php</code>, which signs its requests the way the SDK of that provider does.</li>
   </ul>
-  <p>A version variable drives it: <code>SMOKE_MYSQL_VERSION=9.7 SMOKE_DB_PROFILES=mysql test/smoke.sh 8.5</code>. The 0.13.0 release was verified that way for mysql 8.0/8.4/9.7/26.10, mariadb 10.11–13.0, postgres 15.1–18, redis 7.4–8.10, memcached 1.6 and elasticsearch 7.14.2/8.19.23/9.5.5, plus a Laravel 12 application reaching every engine through <code>artisan</code>; 0.14.0 was verified on PHP 8.4 with mysql 8.0, mariadb 10.11 and postgres 15.1, and the test now asserts that a project answers over https with a trusted certificate.</p>
+  <p>A version variable drives it: <code>SMOKE_MYSQL_VERSION=9.7 SMOKE_DB_PROFILES=mysql test/smoke.sh 8.5</code>. The 0.13.0 release was verified that way for mysql 8.0/8.4/9.7/26.10, mariadb 10.11–13.0, postgres 15.1–18, redis 7.4–8.10, memcached 1.6 and elasticsearch 7.14.2/8.19.23/9.5.5, plus a Laravel 12 application reaching every engine through <code>artisan</code>; 0.14.0 was verified on PHP 8.4 with mysql 8.0, mariadb 10.11 and postgres 15.1, and the test now asserts that a project answers over https with a trusted certificate. The next release adds the <code>cloud</code> stage: the four emulator profiles answer the protocol of their provider from inside the app container, and the whole test is green on PHP 8.2 with the three database profiles, both cache profiles and the four cloud profiles.</p>
 
   <h2>Design decisions we do not apologise for</h2>
   <ul>

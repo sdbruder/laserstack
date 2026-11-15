@@ -88,16 +88,23 @@ The app container is a public image per PHP series,
 `laserstack/app:<major.minor>`. Each image runs the newest patch of its series
 on the newest Alpine release that packages it:
 
-| image  | PHP      | Alpine | node      | npm     | yarn    | nginx  | phpunit | xdebug       |
-| ------ | -------- | ------ | --------- | ------- | ------- | ------ | ------- | ------------ |
-| `7.4`  | 7.4.33   | 3.15   | v16.20.2  | 8.1.3   | 1.22.17 | 1.20.2 | 9.6.38  | 3.1.4        |
-| `8.0`  | 8.0.30   | 3.16   | v16.20.2  | 8.10.0  | 1.22.19 | 1.22.1 | 9.6.38  | 3.1.6        |
-| `8.1`  | 8.1.34   | 3.19   | v20.15.1  | 10.2.5  | 1.22.19 | 1.24.0 | 10.5.66 | 3.3.2        |
-| `8.2`  | 8.2.35   | 3.22   | v22.23.4  | 11.6.4  | 1.22.22 | 1.28.3 | 11.5.57 | 3.4.6        |
-| `8.3`  | 8.3.36   | 3.24   | v24.22.1  | 11.12.1 | 1.22.22 | 1.30.6 | 12.5.42 | 3.5.3        |
-| `8.4`  | 8.4.27   | 3.24   | v24.22.1  | 11.12.1 | 1.22.22 | 1.30.6 | 13.4.5  | 3.5.3        |
-| `8.5`  | 8.5.12   | 3.24   | v24.22.1  | 11.12.1 | 1.22.22 | 1.30.6 | 13.4.5  | 3.5.3        |
-| `8.6`  | 8.6.0RC5 | edge   | v24.22.1  | 12.0.2  | 1.22.22 | 1.30.6 | 13.4.6  | 3.6.0alpha1  |
+| image  | PHP      | Alpine  | node      | npm     | yarn    | nginx  | phpunit | xdebug       |
+| ------ | -------- | ------- | --------- | ------- | ------- | ------ | ------- | ------------ |
+| `7.4`  | 7.4.33   | 3.15.11 | v16.20.2  | 8.1.3   | 1.22.17 | 1.20.2 | 9.6.39  | 3.1.4        |
+| `8.0`  | 8.0.30   | 3.16.9  | v16.20.2  | 8.10.0  | 1.22.19 | 1.22.1 | 9.6.39  | 3.1.6        |
+| `8.1`  | 8.1.34   | 3.19.9  | v20.15.1  | 10.2.5  | 1.22.19 | 1.24.0 | 10.5.67 | 3.3.2        |
+| `8.2`  | 8.2.35   | 3.22.8  | v22.23.5  | 11.6.4  | 1.22.22 | 1.28.3 | 11.5.58 | 3.4.6        |
+| `8.3`  | 8.3.36   | 3.24.4  | v24.22.3  | 11.12.1 | 1.22.22 | 1.30.6 | 12.5.44 | 3.5.3        |
+| `8.4`  | 8.4.27   | 3.24.4  | v24.22.3  | 11.12.1 | 1.22.22 | 1.30.6 | 13.4.7  | 3.5.3        |
+| `8.5`  | 8.5.12   | 3.24.4  | v24.22.3  | 11.12.1 | 1.22.22 | 1.30.6 | 13.4.7  | 3.5.3        |
+| `8.6`  | 8.6.0RC7 | edge    | v24.22.3  | 12.2.1  | 1.22.22 | 1.30.6 | 13.4.7  | 3.6.0alpha1  |
+
+The table is a snapshot of the published images, read on 2026-11-15: the `php`,
+`phpunit`, `nginx`, `git` and `supervisor` lines come from
+`/etc/laserstack/versions.txt` of each image, Alpine from `/etc/alpine-release`
+and xdebug from `php -r 'phpversion("xdebug");'`, all with `docker run
+--pull always`. `laser versions` answers the same question for the image you
+actually have.
 
 Every image carries composer, the mysql client and the postgres client
 (`psql`, `pg_dump`), and `laser versions` prints the version of every tool the
@@ -113,9 +120,10 @@ images are built from the Dockerfiles in
 
 The tag `latest` is the newest released series, currently `8.5`. The `8.6`
 series has no stable release yet (GA is planned for 19 November 2026), so its
-image is a release candidate (PHP 8.6.0RC5, Alpine `edge`) and does not take
-`latest`. Every other image runs on the newest Alpine release that packages its
-series.
+image is a release candidate on Alpine `edge` and does not take `latest`;
+`laser versions` prints the release candidate it carries today (8.6.0RC7 on the
+image published on 2026-11-15). Every other image runs on the newest Alpine
+release that packages its series.
 
 The additional containers come from `docker-compose.yml`. Each engine has one
 version variable that selects the image tag and the config directory
