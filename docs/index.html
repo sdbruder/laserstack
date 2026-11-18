@@ -68,7 +68,7 @@ $ laser scan
 $ laser ps
 <span class="out">NAME                  IMAGE                 STATUS         PORTS</span>
 <span class="out">laserstack-app-1      laserstack/app:8.4    Up 4 seconds   0.0.0.0:80-&gt;80/tcp</span>
-<span class="out">laserstack-db-1       mysql:8.0             Up 4 seconds   0.0.0.0:3306-&gt;3306/tcp</span>
+<span class="out">laserstack-db-1       mysql:8.4             Up 4 seconds   0.0.0.0:3306-&gt;3306/tcp</span>
 <span class="out">laserstack-redis-1    redis:8.10-alpine     Up 4 seconds   0.0.0.0:6379-&gt;6379/tcp</span>
 $ <span class="ok"># http://projecta.localdev.it and http://projectb.localdev.it are both served</span></code></pre>
   </div>
@@ -120,7 +120,7 @@ alias laser=~/src/laserstack/laser        <span class="out"># or add it to $PATH
       <pre><code>cd ~/src/laserstack &amp;&amp; cp env.example .env
 <span class="out"># PHP_VERSION=8.4</span>
 <span class="out"># PROFILES=mysql,redis</span>
-<span class="out"># DB_PASSWORD=…  MYSQL_VERSION=8.0  REDIS_VERSION=8.10</span>
+<span class="out"># DB_PASSWORD=…  MYSQL_VERSION=8.4  REDIS_VERSION=8.10</span>
 <span class="out"># SUFFIX=localdev.it   # the default, no setup: projecta.localdev.it</span></code></pre></div></div>
     <div class="step"><div><h3>Start it and scan</h3>
       <pre><code>laser up -d

@@ -59,7 +59,7 @@ laser help                   <span class="out"># the commands; laser dockerhelp 
       <tr><td><code>PROJECTS_DIRECTORY</code></td><td><code>./..</code></td><td>the directory bind-mounted into the app container at <code>/var/www</code> and scanned for projects</td></tr>
       <tr><td><code>SUFFIX</code></td><td><code>localdev.it</code></td><td>the domain suffix of a project URL: <code>projecta.localdev.it</code>. Every name under <code>localdev.it</code> resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone, so the default needs no setup at all; a suffix of your own, <code>test</code> for instance, needs the names in <code>/etc/hosts</code></td></tr>
       <tr><td><code>PHP_VERSION</code></td><td><code>8.4</code></td><td>the app image series, <code>laserstack/app:&lt;version&gt;</code>: 7.4, 8.0–8.6</td></tr>
-      <tr><td><code>MYSQL_VERSION</code></td><td><code>8.0</code></td><td>the mysql profile image and its config directory</td></tr>
+      <tr><td><code>MYSQL_VERSION</code></td><td><code>8.4</code></td><td>the mysql profile image and its config directory. <code>8.0</code> is still there for a project that needs it: that series reached end of life in April 2026 and receives no security fixes</td></tr>
       <tr><td><code>MARIADB_VERSION</code></td><td><code>10.11</code></td><td>the mariadb profile image and its config file</td></tr>
       <tr><td><code>POSTGRES_VERSION</code></td><td><code>15.1</code></td><td>the postgres profile image (<code>-alpine</code> is appended) and its config directory</td></tr>
       <tr><td><code>REDIS_VERSION</code></td><td><code>8.10</code></td><td>the redis profile image and <code>redis.conf</code></td></tr>

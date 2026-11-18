@@ -460,7 +460,7 @@ for profile in $db_profiles; do
   for version in $versions; do
     fails_before=$fails
     case "$profile" in
-    mysql) db_var=MYSQL_VERSION db_ver="${smoke_mysql_version:-${MYSQL_VERSION:-8.0}}" ;;
+    mysql) db_var=MYSQL_VERSION db_ver="${smoke_mysql_version:-${MYSQL_VERSION:-8.4}}" ;;
     mariadb) db_var=MARIADB_VERSION db_ver="${smoke_mariadb_version:-${MARIADB_VERSION:-10.11}}" ;;
     postgres) db_var=POSTGRES_VERSION db_ver="${smoke_postgres_version:-${POSTGRES_VERSION:-15.1}}" ;;
     esac

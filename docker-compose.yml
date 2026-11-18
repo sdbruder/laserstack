@@ -170,13 +170,13 @@ services:
     profiles:
       - php86
   db:
-    image: "mysql:${MYSQL_VERSION:-8.0}"
+    image: "mysql:${MYSQL_VERSION:-8.4}"
     # the authentication plugin of the server version is in the mounted config
     # directory, see config/mysql/<version>/docker.cnf
     ports:
       - "3306:3306"
     volumes:
-      - ./config/mysql/${MYSQL_VERSION:-8.0}:/etc/mysql/conf.d:cached
+      - ./config/mysql/${MYSQL_VERSION:-8.4}:/etc/mysql/conf.d:cached
       - dbdata:/var/lib/mysql:delegated
     environment:
       LASER: 1
@@ -402,7 +402,7 @@ volumes:
   # is only readable by the server version that created it, so the version has
   # to be part of the name.
   dbdata:
-    name: "${COMPOSE_PROJECT_NAME:-laserstack}_dbdata_${MYSQL_VERSION:-8.0}"
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_dbdata_${MYSQL_VERSION:-8.4}"
     driver: local
   pgdata:
     name: "${COMPOSE_PROJECT_NAME:-laserstack}_pgdata_${POSTGRES_VERSION:-15.1}"

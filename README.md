@@ -130,7 +130,7 @@ version variable that selects the image tag and the config directory
 
 | engine        | variable                | default                | other versions                    | config directory                                   |
 | ------------- | ----------------------- | ---------------------- | --------------------------------- | -------------------------------------------------- |
-| MySQL         | `MYSQL_VERSION`         | `mysql:8.0`            | `8.4`, `9.7`, `26.10`             | `config/mysql/<version>/`                          |
+| MySQL         | `MYSQL_VERSION`         | `mysql:8.4`            | `8.0`, `9.7`, `26.10`             | `config/mysql/<version>/`                          |
 | MariaDB       | `MARIADB_VERSION`       | `mariadb:10.11`        | `11.4`, `11.8`, `12.3`, `13.0`    | `config/mariadb/<version>/laserstack.cnf`          |
 | PostgreSQL    | `POSTGRES_VERSION`      | `postgres:15.1-alpine` | `16`, `17`, `18`                  | `config/postgres/<version>/`                       |
 | redis         | `REDIS_VERSION`         | `redis:8.10-alpine`    | `8.8`, `8.6`, `8.4`, `8.2`, `7.4` | `config/redis/<version>/redis.conf`                |
@@ -140,6 +140,12 @@ version variable that selects the image tag and the config directory
 | Cloud Storage | `FAKE_GCS_VERSION`      | `fsouza/fake-gcs-server:1.56.1` | none                     | none, the flags are in `docker-compose.yml`         |
 | Azure Storage | `AZURITE_VERSION`       | `mcr.microsoft.com/azure-storage/azurite:3.37.0` | none      | none, the flags are in `docker-compose.yml`         |
 | AWS (Floci)   | `FLOCI_VERSION`         | `floci/floci:2.4.0`    | none                              | none, the environment is in `docker-compose.yml`    |
+
+MySQL is the one engine whose default moved: `MYSQL_VERSION` starts at `8.4`
+because 8.0 reached end of life in April 2026 — 8.0.46 is its last release, under
+Oracle's Sustaining Support, so no new security fix reaches it. The `8.0`
+directory and image stay listed and available, the same way the PHP `7.4` series
+does, for a project that needs exactly that server.
 
 The four cloud emulators are the exception to the rule of a version directory: an
 emulator follows the API of its provider, not a numbered release of its own, so
@@ -247,7 +253,7 @@ version directory in laserstack_app plus `config/php<VV>` and
 `PROFILES` define a comma separated list of additional containers you want to
 run. The available profiles, each with the image `docker-compose.yml` pulls:
 
-- mysql (`mysql:${MYSQL_VERSION}`, default `mysql:8.0`)
+- mysql (`mysql:${MYSQL_VERSION}`, default `mysql:8.4`)
 - mariadb (`mariadb:${MARIADB_VERSION}`, default `mariadb:10.11`)
 - postgres (`postgres:${POSTGRES_VERSION}-alpine`, default `postgres:15.1-alpine`)
 - redis (`redis:${REDIS_VERSION}-alpine`, default `redis:8.10-alpine`)

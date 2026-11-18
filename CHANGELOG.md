@@ -127,6 +127,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `MYSQL_VERSION` defaults to `8.4` instead of `8.0`. MySQL 8.0 reached end of
+  life in April 2026 — 8.0.46 is its last release and it sits under Oracle's
+  Sustaining Support — and Oracle's Critical Security Patch Update of November
+  2026 says it plainly: releases outside Premier and Extended Support are not
+  tested for the vulnerabilities it fixes, and earlier versions of affected
+  releases are likely affected anyway. The `8.0` config directory and image stay
+  available, the way the PHP `7.4` series does, for a project that needs that
+  server. Only a new `.env` changes; a stack already on `8.0` keeps it. Changed in
+  `env.example`, the three inline defaults of `docker-compose.yml`, the fallback
+  of the smoke test, and the tables and snippets of the README, the documentation,
+  the features page and the overview.
+
 - A screenshot or a recording on the site tilts a little, carries an edge in the
   accent colour and a deep shadow, and straightens under the pointer. The pages
   here are dark and the images are dark, so the edge is what separates them.
