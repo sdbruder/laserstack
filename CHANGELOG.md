@@ -9,6 +9,107 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `laser versions` prints the versions of the tools baked into the app image —
+  php, composer, phpunit, node, npm, yarn, nginx, git, supervisor — from
+  `/etc/laserstack/versions.txt`, which the Dockerfiles of laserstack_app write
+  at build time. The answer therefore comes from the image itself, and no file of
+  this repository can go stale. An image built before that file existed has
+  nothing to show: the command says so and exits 1, instead of failing with the
+  error of the missing file. The smoke test asserts both answers.
+
+- Four cloud emulator profiles, one per provider, each behind its own profile:
+  `s3` (RustFS, the S3 API on 9000 and a console on 9001), `gcs`
+  (fake-gcs-server, the Cloud Storage JSON API on 4443), `azure` (Azurite, blob,
+  queue and table on 10000-10002) and `aws` (Floci, the AWS API on 4566, with
+  queues, tables, functions and an S3 of its own). Each one answers the protocol
+  of its provider under the name of its profile, so a project keeps the SDK of
+  the provider and changes one endpoint, and none of the four needs an account,
+  a token or a licence. `localstack/localstack` and `minio/minio`, the two
+  defaults of the years before, archived their repositories in 2026 and
+  LocalStack requires an account before its container starts at all.
+
+- `test/cloud.php` is one round trip per emulator, with the standard library of
+  PHP only: it signs its requests the way the SDK of the provider does (SigV4 for
+  the S3 and queue calls, SharedKey for the Azure calls) and prints
+  `ok <service>`. A project can run it to prove an endpoint of the stack without
+  installing an SDK, and the smoke test runs it in a new `cloud` stage for every
+  cloud profile, from inside the app container. `SMOKE_CLOUD_PROFILES` selects
+  the profiles of that stage and an empty value skips it.
+
+- The `s3` profile carries a one shot `s3-permissions` helper: the RustFS image
+  runs as UID 10001 and does not take ownership of its volumes, so the helper
+  chowns them before the server starts. A named volume is owned by root, and
+  without the helper rustfs refuses a data directory it cannot write.
+
+- The container of the mysql profile answers to `mysql` as well as to `db`, so a
+  project can name the engine it needs (`DB_HOST=mysql`) next to
+  `DB_HOST=mariadb` for the other profile, and keep `DB_HOST=db` to work with
+  either. Before this, only `db` reached the mysql container: `mysql` was not a
+  host name at all.
+
+- A project can ask for another PHP version than the one of the stack, and
+  several versions run at the same time. A `.laserstack` file in the project root
+  (`PHP_VERSION=8.5`, written by `laser use php 8.5`) selects it, the profile
+  `php85` starts one php-fpm-only container of that version, and `laser scan`
+  renders the nginx vhost that sends the `.php` requests of that project to it.
+  One container stays the front door — port 80/443, TLS, the dashboard and the
+  vhosts do not move — and a project without the file behaves as before.
+  `laser php`, `laser artisan`, `laser composer`, `laser test`, `laser tinker`,
+  `laser shell` and `laser appexec` follow the marker of the project you are in,
+  `laser list` prints the version of every project, and `laser use php off` takes
+  the marker away again.
+
+- The per-project vhost points at its upstream through a variable and the DNS of
+  docker as resolver, so a worker that is not up fails that one project with a
+  502 instead of keeping nginx from starting. `laser scan` warns when the profile
+  of a marker is not in `PROFILES`, and it removes the vhost of a project that is
+  gone.
+
+- The smoke test has a `php` stage: it starts a second version next to the one
+  under test and asserts which of the two answered each project, that the worker
+  loads the php.ini of the repository and that `laser php` of the marker project
+  runs the version of the marker.
+
+- The front page of the dashboard shows the PHP version of every project that
+  asks for one, next to its driver and its answer code.
+
+### Fixed
+
+- The https vhost of the stack is rendered by the container itself into
+  `sites-enabled`, next to the http one, instead of by the scan into `http.d`.
+  `nginx.conf` includes `http.d` first, so a per-project vhost is now the first
+  match for its own names on 443 as well as on 80; before this, the https vhost
+  of the stack shadowed it, and a project was served by the PHP of the app
+  container over https while it answered over http from the version it asked for.
+  The certificate under `config/tls` is what decides whether that vhost exists.
+
+- `laser up` and `laser update` stop and remove the container of a profile that
+  left `PROFILES`: dropping `redis` from the list, or the profile of a PHP version
+  or a cloud emulator nobody asks for any more, really stops that container.
+  Compose does not do that on its own: it counts a service behind a profile that
+  is not active as part of the project, so `--remove-orphans` never touches it.
+  `laser down` worked around it by removing every container of the project by
+  hand, and now the two commands that start the stack do the same for the
+  containers of the profiles that are not in `PROFILES`.
+
+- The https vhost of the stack uses the `http2` parameter of `listen` instead of
+  the `http2` directive. nginx 1.24 and older, which the images of 7.4, 8.0 and
+  8.1 carry, do not know the directive, and one vhost that fails to load keeps
+  nginx from starting at all. The bug was latent: the scan wrote that vhost into
+  `config/nginx/http.d`, so a stack on 7.4, 8.0 or 8.1 that had been scanned
+  before a restart ended up with a dead nginx.
+
+- `laser up` restarts an app container that predates this release once, so a
+  container that never read the new nginx command renders the https vhost again.
+  `laser use php off` runs a scan, so the vhost of the marker goes away with the
+  marker instead of serving the project from the worker until the next scan.
+
+- `laser down` removes every container of the project, whatever profile it was
+  started with. A container that a plain `docker-compose down` leaves behind
+  keeps the network it was created in, and a later `laser up` of that profile
+  then failed with `failed to set up container networking: network ... not
+  found`, which took the whole `up` down with it — the app container included.
+
 - The app images carry the `memcached` PHP extension from 7.4 to 8.5, so
   `PROFILES=memcached` is a cache store for a project and not only a server: the
   `Memcached` class sets a value and reads it back. PHP 8.6, a release candidate,
@@ -25,6 +126,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the overview grid that says what the page reports and links to it.
 
 ### Changed
+
+- `MYSQL_VERSION` defaults to `8.4` instead of `8.0`. MySQL 8.0 reached end of
+  life in April 2026 — 8.0.46 is its last release and it sits under Oracle's
+  Sustaining Support — and Oracle's Critical Security Patch Update of November
+  2026 says it plainly: releases outside Premier and Extended Support are not
+  tested for the vulnerabilities it fixes, and earlier versions of affected
+  releases are likely affected anyway. The `8.0` config directory and image stay
+  available, the way the PHP `7.4` series does, for a project that needs that
+  server. Only a new `.env` changes; a stack already on `8.0` keeps it. Changed in
+  `env.example`, the three inline defaults of `docker-compose.yml`, the fallback
+  of the smoke test, and the tables and snippets of the README, the documentation,
+  the features page and the overview.
 
 - A screenshot or a recording on the site tilts a little, carries an edge in the
   accent colour and a deep shadow, and straightens under the pointer. The pages

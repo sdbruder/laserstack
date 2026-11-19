@@ -138,6 +138,22 @@ function php_config_dir(string $version): string
 }
 
 /**
+ * The PHP version a project asks for in its `.laserstack`, or null when it asks
+ * for none and follows the version of the stack. The file is read, never
+ * sourced, and `laser use php 8.5` writes it.
+ */
+function php_at(string $path): ?string
+{
+    $file = @file_get_contents($path . '/.laserstack');
+    if ($file === false || preg_match('/^PHP_VERSION=(.+)$/m', $file, $matches) !== 1) {
+        return null;
+    }
+    $version = trim($matches[1]);
+
+    return $version === '' ? null : $version;
+}
+
+/**
  * The driver `laser scan` identifies a project by, in the order of
  * `drivers::config`, which is the order that decides, and with the markers of
  * libs/*Driver.sh. A project of no driver gets no vhost of its own; the
@@ -187,6 +203,15 @@ function enabledProfiles(string $envFile): ?array
 }
 
 /**
+ * The key of a curl handle: an object from PHP 8.0 and a resource before that,
+ * and this page runs on every series of the image.
+ */
+function handle_key($handle): int
+{
+    return is_object($handle) ? spl_object_id($handle) : (int) $handle;
+}
+
+/**
  * The answer of the front page of each project: one HEAD request per project
  * through the vhost of that name. The container resolves no *.SUFFIX name (the
  * resolver of the suffix lives on the host), so the request goes to the nginx
@@ -217,7 +242,7 @@ function project_statuses(array $names, string $suffix, float $timeout = 0.8): a
             CURLOPT_TIMEOUT_MS => (int) round($timeout * 1000),
         ]);
         curl_multi_add_handle($multi, $handle);
-        $byHandle[spl_object_id($handle)] = [$name, $handle];
+        $byHandle[handle_key($handle)] = [$name, $handle];
     }
     do {
         $state = curl_multi_exec($multi, $running);
@@ -229,7 +254,7 @@ function project_statuses(array $names, string $suffix, float $timeout = 0.8): a
     $statuses = [];
     while (($info = curl_multi_info_read($multi)) !== false) {
         $handle = $info['handle'];
-        [$name] = $byHandle[spl_object_id($handle)] ?? [null, null];
+        [$name] = $byHandle[handle_key($handle)] ?? [null, null];
         $code = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
         if ($name !== null) {
             $statuses[$name] = $code > 0 ? $code : null;
@@ -248,6 +273,12 @@ $services = [
     ['label' => 'redis', 'host' => 'redis', 'port' => 6379, 'engine' => null, 'profile' => 'redis'],
     ['label' => 'memcached', 'host' => 'memcached', 'port' => 11211, 'engine' => null, 'profile' => 'memcached'],
     ['label' => 'Elasticsearch', 'host' => 'elasticsearch', 'port' => 9200, 'engine' => null, 'profile' => 'elasticsearch'],
+    // the cloud emulators: the name on the network is the name of the profile,
+    // and a socket to the port of the emulator answers as soon as it listens
+    ['label' => 's3 (RustFS)', 'host' => 's3', 'port' => 9000, 'engine' => null, 'profile' => 's3'],
+    ['label' => 'gcs (fake-gcs-server)', 'host' => 'gcs', 'port' => 4443, 'engine' => null, 'profile' => 'gcs'],
+    ['label' => 'azure (Azurite)', 'host' => 'azure', 'port' => 10000, 'engine' => null, 'profile' => 'azure'],
+    ['label' => 'aws (Floci)', 'host' => 'aws', 'port' => 4566, 'engine' => null, 'profile' => 'aws'],
 ];
 
 $profiles = enabledProfiles($root . '/.env');
@@ -302,6 +333,7 @@ foreach (scandir($projectsDir) ?: [] as $entry) {
         'public' => is_dir($path . '/public'),
         'vhost' => is_file('/etc/nginx/http.d/' . $entry . '.conf'),
         'driver' => driver($path),
+        'php' => php_at($path),
         'self' => $entry === $self,
     ];
 }
@@ -323,7 +355,9 @@ $phpVersion = PHP_VERSION;
 $phpDir = php_config_dir($phpVersion);
 $phpSeries = array_values(array_filter(
     versions($root . '/config'),
-    static fn (string $name): bool => strpos($name, 'php') === 0
+    // a version directory is php<digits>: config/php-fpm-worker is the pool of
+    // the workers and not a version, so it stays out of this card
+    static fn (string $name): bool => preg_match('/^php[0-9]+$/', $name) === 1
 ));
 $engines = [];
 foreach (['mysql', 'mariadb', 'postgres', 'redis', 'elasticsearch'] as $engine) {
@@ -411,7 +445,7 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                 <tr><td>SAPI</td><td><?= e(PHP_SAPI) ?></td></tr>
                 <tr><td>Suffix</td><td><code><?= e($suffix) ?></code></td></tr>
             </table>
-            <p class="note">The PHP series is the image tag <code>PHP_VERSION</code>: edit <code>.env</code> and run <code>laser up -d</code> to change it.</p>
+            <p class="note">The PHP series is the image tag <code>PHP_VERSION</code>: edit <code>.env</code> and run <code>laser up -d</code> to change it. A project can ask for another version in <code>.laserstack</code>, which <code>laser use php 8.5</code> writes: the stack then runs one php-fpm container per version in use.</p>
         </section>
 
         <section class="card wide2">
@@ -493,6 +527,7 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                     <tr><td><?= e($engine) ?></td><td><code><?= e($list === [] ? 'image only' : implode(', ', $list)) ?></code></td></tr>
                 <?php endforeach; ?>
                 <tr><td>memcached</td><td><code>image only</code></td></tr>
+                <tr><td>s3, gcs, azure, aws</td><td><code>image only</code>, the settings are in <code>docker-compose.yml</code></td></tr>
             </table>
             <p class="note">Each name is a directory under <code>config/</code> and a version the stack can select by environment variable.</p>
         </section>
@@ -513,6 +548,8 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                     <li>
                         <a href="<?= e('//' . $project['name'] . '.' . $suffix . '/') ?>" target="_blank" rel="noopener noreferrer" title="<?= e($project['name'] . '.' . $suffix) ?>"><?= e($project['name']) ?></a>
                         <?php if ($project['driver'] !== null): ?><span class="pill on" title="laser scan writes the vhost of this project with the <?= e($project['driver']) ?> driver"><?= e($project['driver']) ?></span><?php endif; ?>
+                        <?php // a project that asks for another PHP version than the container of the stack: the vhost of its own sends its .php requests to the worker of that version ?>
+                        <?php if ($project['php'] !== null && $project['php'] !== $phpVersion): ?><span class="pill on" title=".laserstack asks for PHP <?= e($project['php']) ?>: the .php requests of this project are served by the worker container of that version">php <?= e($project['php']) ?></span><?php endif; ?>
                         <?php $code = $statuses[$project['name']] ?? null; ?>
                         <?php if (in_array($project['name'], $probed, true)): ?>
                             <?php if ($code === null): ?><span class="pill dim" title="the front page answered nothing within a second">no answer</span><?php elseif ($code < 400): ?><span class="pill on" title="the front page answers <?= $code ?>"><?= $code ?></span><?php else: ?><span class="pill bad" title="the front page answers <?= $code ?>"><?= $code ?></span><?php endif; ?>
@@ -524,7 +561,7 @@ footer { margin-top:26px; color:var(--muted); font-size:13px; }
                     </li>
                 <?php endforeach; ?>
             </ul>
-            <p class="note"><code><?= e($projectsDir) ?></code>, <code>PROJECTS_DIRECTORY</code> in <code>.env</code>. Add a directory with a <code>public/index.php</code>, run <code>laser scan</code>, and it answers on its own name. The first pill is the driver <code>laser scan</code> finds: <code>laravel</code> carries an <code>artisan</code>, <code>symfony</code> a <code>symfony.lock</code>, <code>wordpress</code> a <code>wp-config.php</code>, <code>generic</code> a <code>laserstack-nginx.conf</code>, and a project of no driver is served by the multi-project vhost. The code is the answer of the front page, one HEAD request through the vhost of that name: green from 200 to 399, red from 400 up, grey when nothing answered within a second. <code>own vhost</code> means laserstack serves the project through an nginx vhost of its own instead of the multi-project one; <code>no public/</code> means no driver claims it and the multi-project vhost cannot reach it.</p>
+            <p class="note"><code><?= e($projectsDir) ?></code>, <code>PROJECTS_DIRECTORY</code> in <code>.env</code>. A Laravel or Symfony project needs no vhost of its own: add a directory with a <code>public/index.php</code> and it answers on its own name. <code>laser scan</code> is for a project that needs one — it ships a <code>laserstack-nginx.conf</code>, it is WordPress, or it asks for another PHP version in <code>.laserstack</code>. The first pill is the driver <code>laser scan</code> finds: <code>laravel</code> carries an <code>artisan</code>, <code>symfony</code> a <code>symfony.lock</code>, <code>wordpress</code> a <code>wp-config.php</code>, <code>generic</code> a <code>laserstack-nginx.conf</code>, and a project of no driver is served by the multi-project vhost. The code is the answer of the front page, one HEAD request through the vhost of that name: green from 200 to 399, red from 400 up, grey when nothing answered within a second. <code>own vhost</code> means laserstack serves the project through an nginx vhost of its own instead of the multi-project one; <code>no public/</code> means no driver claims it and the multi-project vhost cannot reach it.</p>
         </section>
 
         <section class="card wide">

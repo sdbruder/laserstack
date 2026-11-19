@@ -6,6 +6,8 @@
 config/nginx/http.d/*
 !config/nginx/http.d/multiProjectLaravel.conf.template
 !config/nginx/http.d/multiProjectLaravelHttps.conf.template
+!config/nginx/http.d/phpVersionVhost.conf.template
+!config/nginx/http.d/phpVersionVhostHttps.conf.template
 
 # laser tls writes these: the local certificate authority of the machine and
 # the certificate it issues, never the repository.

@@ -7,8 +7,10 @@
 # config/tls. Two default servers cannot share a port, which is why this file
 # listens on 443 only.
 server {
-    listen 443 ssl default_server;
-    http2 on;
+    # the http2 parameter of listen, not the http2 directive: the images of the
+    # older series (7.4, 8.0, 8.1) carry an nginx that does not know the
+    # directive, and one vhost that fails to load keeps nginx from starting
+    listen 443 ssl http2 default_server;
 
     server_name "~^([^.]*\.){0,}(?P<project>[^.]+)\.__SUFFIX__$";
     root /var/www/$project/public;

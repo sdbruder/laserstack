@@ -1,3 +1,14 @@
+# The environment of every container that runs PHP: the app container and the
+# worker containers of the other versions carry the same one, so a project
+# behaves the same whichever of them serves it.
+x-php-environment: &php-environment
+  LASER: 1
+  SUFFIX: "${SUFFIX}"
+  MYSQL_DATABASE: "${DB_DATABASE}"
+  MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+  MYSQL_USER: "${DB_USERNAME}"
+  MYSQL_PASSWORD: "${DB_PASSWORD}"
+
 services:
   app:
     image: "laserstack/app:${PHP_VERSION}"
@@ -7,13 +18,7 @@ services:
     cap_add:
       - SYS_ADMIN
     hostname: laser
-    environment:
-      LASER: 1
-      SUFFIX: "${SUFFIX}"
-      MYSQL_DATABASE: "${DB_DATABASE}"
-      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
-      MYSQL_USER: "${DB_USERNAME}"
-      MYSQL_PASSWORD: "${DB_PASSWORD}"
+    environment: *php-environment
     tty: true
     ports:
       - 80:80
@@ -36,14 +41,142 @@ services:
       - ./config/my.cnf:/etc/my.cnf.d/laserstack.cnf:cached
     networks:
       - laser
+  # One worker per PHP version: the image of the app container with only
+  # php-fpm running. A project states the version it needs in .laserstack,
+  # laser scan renders the vhost of that project, and the nginx of the app
+  # container sends its .php requests here. The profile starts a worker, so a
+  # version that no project asks for never runs: PROFILES=mysql,php85.
+  # The service name is php<version without the dot>, the config directory of
+  # the version and the name of its php-fpm binary are its own, see
+  # libs/phpseries.sh.
+  php74:
+    image: "laserstack/app:7.4"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm7 --nodaemonize --fpm-config /etc/php7/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php74/php.ini:/etc/php7/php.ini:cached
+      - ./config/php74/php-fpm.conf:/etc/php7/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php7/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php74
+  php80:
+    image: "laserstack/app:8.0"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm8 --nodaemonize --fpm-config /etc/php8/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php8/php.ini:/etc/php8/php.ini:cached
+      - ./config/php8/php-fpm.conf:/etc/php8/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php8/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php80
+  php81:
+    image: "laserstack/app:8.1"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm81 --nodaemonize --fpm-config /etc/php81/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php81/php.ini:/etc/php81/php.ini:cached
+      - ./config/php81/php-fpm.conf:/etc/php81/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php81/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php81
+  php82:
+    image: "laserstack/app:8.2"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm82 --nodaemonize --fpm-config /etc/php82/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php82/php.ini:/etc/php82/php.ini:cached
+      - ./config/php82/php-fpm.conf:/etc/php82/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php82/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php82
+  php83:
+    image: "laserstack/app:8.3"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm83 --nodaemonize --fpm-config /etc/php83/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php83/php.ini:/etc/php83/php.ini:cached
+      - ./config/php83/php-fpm.conf:/etc/php83/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php83/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php83
+  php84:
+    image: "laserstack/app:8.4"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm84 --nodaemonize --fpm-config /etc/php84/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php84/php.ini:/etc/php84/php.ini:cached
+      - ./config/php84/php-fpm.conf:/etc/php84/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php84/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php84
+  php85:
+    image: "laserstack/app:8.5"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm85 --nodaemonize --fpm-config /etc/php85/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php85/php.ini:/etc/php85/php.ini:cached
+      - ./config/php85/php-fpm.conf:/etc/php85/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php85/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php85
+  php86:
+    image: "laserstack/app:8.6"
+    command: /bin/bash -c "mkdir -p /var/run/php && php-fpm86 --nodaemonize --fpm-config /etc/php86/php-fpm.conf"
+    working_dir: /var/www
+    environment: *php-environment
+    tty: true
+    volumes:
+      - ${PROJECTS_DIRECTORY}:/var/www:cached
+      - ./config/php86/php.ini:/etc/php86/php.ini:cached
+      - ./config/php86/php-fpm.conf:/etc/php86/php-fpm.conf:cached
+      - ./config/php-fpm-worker:/etc/php86/php-fpm.d:cached
+    networks:
+      - laser
+    profiles:
+      - php86
   db:
-    image: "mysql:${MYSQL_VERSION:-8.0}"
+    image: "mysql:${MYSQL_VERSION:-8.4}"
     # the authentication plugin of the server version is in the mounted config
     # directory, see config/mysql/<version>/docker.cnf
     ports:
       - "3306:3306"
     volumes:
-      - ./config/mysql/${MYSQL_VERSION:-8.0}:/etc/mysql/conf.d:cached
+      - ./config/mysql/${MYSQL_VERSION:-8.4}:/etc/mysql/conf.d:cached
       - dbdata:/var/lib/mysql:delegated
     environment:
       LASER: 1
@@ -52,7 +185,14 @@ services:
       MYSQL_USER: "${DB_USERNAME}"
       MYSQL_PASSWORD: "${DB_PASSWORD}"
     networks:
-      - laser
+      laser:
+        # A project reaches this server by the name of its engine, and by the
+        # name every project of the stack uses whatever its database is: the
+        # mariadb profile carries the same db alias, so DB_HOST=db works with
+        # either profile and only one of them runs at a time.
+        aliases:
+          - mysql
+          - db
     profiles:
       - mysql
   mariadb:
@@ -70,9 +210,10 @@ services:
       MARIADB_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
     networks:
       laser:
-        # Projects created before the mariadb profile use "db" as the database
-        # host, the name of the service of the mysql profile. Do not activate
-        # both database profiles at the same time, both use port 3306.
+        # The same db alias as the mysql profile, so a project that uses db as
+        # its database host works with either profile, plus the name of the
+        # engine from the service itself. Do not activate both database profiles
+        # at the same time, both use port 3306.
         aliases:
           - db
     profiles:
@@ -148,6 +289,111 @@ services:
     profiles:
       - elasticsearch
       - full
+  # The four cloud emulators. Each one answers the protocol of its provider, so
+  # a project keeps its SDK and changes one endpoint in its environment. None
+  # needs an account, a token or a licence: LocalStack and MinIO, the two
+  # defaults of the years before, archived their repositories in 2026 and
+  # LocalStack now requires an account to start at all.
+  s3:
+    image: "rustfs/rustfs:${RUSTFS_VERSION:-1.0.4}"
+    # the S3 API of the provider, a dedicated server of the local network. A
+    # project that needs the S3 API of the aws profile as well gets it on the
+    # same port of that service.
+    depends_on:
+      # the image runs as UID 10001 and does not own its volumes, so the one
+      # shot helper below prepares them before this container starts
+      s3-permissions:
+        condition: service_completed_successfully
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - s3data:/data
+      - s3logs:/app/logs
+    environment:
+      LASER: 1
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
+      # a project needs a bucket, not an account. A project sends these as its
+      # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, and every other key is
+      # refused the way S3 refuses it.
+      RUSTFS_ACCESS_KEY: "${S3_ACCESS_KEY:-laser}"
+      RUSTFS_SECRET_KEY: "${S3_SECRET_KEY:-laser}"
+      RUSTFS_OBS_LOG_DIRECTORY: /app/logs
+      RUSTFS_OBS_LOGGER_LEVEL: info
+    networks:
+      - laser
+    profiles:
+      - s3
+  s3-permissions:
+    # a named volume is owned by root, and rustfs refuses a data directory it
+    # cannot write. This container exits at once and the s3 service waits for it
+    image: alpine
+    command: chown -R 10001:10001 /data /logs
+    volumes:
+      - s3data:/data
+      - s3logs:/logs
+    networks:
+      - laser
+    profiles:
+      - s3
+  gcs:
+    image: "fsouza/fake-gcs-server:${FAKE_GCS_VERSION:-1.56.1}"
+    # the image speaks https by default and a local project needs no
+    # certificate; the filesystem backend keeps the objects in a volume
+    command: -scheme http -backend filesystem -filesystem-root /data -public-host gcs:4443
+    ports:
+      - 4443:4443
+    volumes:
+      - gcsdata:/data
+    environment:
+      LASER: 1
+    networks:
+      - laser
+    profiles:
+      - gcs
+  azure:
+    image: "mcr.microsoft.com/azure-storage/azurite:${AZURITE_VERSION:-3.37.0}"
+    # --loose accepts the URLs and headers a client builds for an emulator, and
+    # --skipApiVersionCheck lets a client of a newer API version through
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --location /data --loose --skipApiVersionCheck
+    ports:
+      - 10000:10000
+      - 10001:10001
+      - 10002:10002
+    volumes:
+      - azuredata:/data
+    environment:
+      LASER: 1
+    networks:
+      - laser
+    profiles:
+      - azure
+  aws:
+    image: "floci/floci:${FLOCI_VERSION:-2.4.0}"
+    ports:
+      - 4566:4566
+    volumes:
+      - awsdata:/app/data
+      # the console starts a sidecar container on its first request, which needs
+      # the socket. Nothing runs until a browser asks for the console.
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      LASER: 1
+      # a URL that the emulator returns, an SQS QueueUrl for one, has to carry
+      # the name a project uses and not localhost
+      FLOCI_HOSTNAME: aws
+      # the entrypoint of the image owns this directory itself, so a volume
+      # here needs no helper
+      FLOCI_STORAGE_PERSISTENT_PATH: /app/data
+      FLOCI_STORAGE_MODE: "${FLOCI_STORAGE_MODE:-persistent}"
+      FLOCI_SERVICES_UI_ENABLED: "${FLOCI_SERVICES_UI_ENABLED:-true}"
+    networks:
+      - laser
+    profiles:
+      - aws
 
 volumes:
   # One volume per server version, not one per engine: the name carries the
@@ -156,13 +402,32 @@ volumes:
   # is only readable by the server version that created it, so the version has
   # to be part of the name.
   dbdata:
-    name: "${COMPOSE_PROJECT_NAME:-laserstack}_dbdata_${MYSQL_VERSION:-8.0}"
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_dbdata_${MYSQL_VERSION:-8.4}"
     driver: local
   pgdata:
     name: "${COMPOSE_PROJECT_NAME:-laserstack}_pgdata_${POSTGRES_VERSION:-15.1}"
     driver: local
   mariadata:
     name: "${COMPOSE_PROJECT_NAME:-laserstack}_mariadata_${MARIADB_VERSION:-10.11}"
+    driver: local
+  # One volume per cloud emulator, and no version in the name: an emulator
+  # follows the API of its provider, and a version variable only pins the image
+  # of the day the stack was tested. An emulator that cannot read the data of an
+  # older version is a bug of that emulator, not a reason to lose the objects.
+  s3data:
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_s3data"
+    driver: local
+  s3logs:
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_s3logs"
+    driver: local
+  gcsdata:
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_gcsdata"
+    driver: local
+  azuredata:
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_azuredata"
+    driver: local
+  awsdata:
+    name: "${COMPOSE_PROJECT_NAME:-laserstack}_awsdata"
     driver: local
 networks:
   laser:

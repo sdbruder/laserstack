@@ -55,12 +55,17 @@
     <thead><tr><th>profile</th><th>container</th><th>purpose</th><th>host port</th></tr></thead>
     <tbody>
       <tr><td><code>app</code> (always)</td><td><code>laserstack/app:&lt;PHP_VERSION&gt;</code></td><td>nginx, php-fpm, your tools (composer, node, npm, yarn, phpunit, xdebug, mysql/psql clients)</td><td>80</td></tr>
+      <tr><td><code>php85</code> (one per version in use)</td><td><code>laserstack/app:8.5</code>, php-fpm only</td><td>the PHP version a project asks for in <code>.laserstack</code>; the nginx of the <code>app</code> container sends the <code>.php</code> requests of that project here</td><td>—</td></tr>
       <tr><td><code>mysql</code></td><td><code>mysql:&lt;MYSQL_VERSION&gt;</code></td><td>database, service name <code>db</code></td><td>3306</td></tr>
       <tr><td><code>mariadb</code></td><td><code>mariadb:&lt;MARIADB_VERSION&gt;</code></td><td>database, service name <code>mariadb</code> and alias <code>db</code></td><td>3306</td></tr>
       <tr><td><code>postgres</code></td><td><code>postgres:&lt;POSTGRES_VERSION&gt;-alpine</code></td><td>database, service name <code>postgres</code></td><td>5432</td></tr>
       <tr><td><code>redis</code></td><td><code>redis:&lt;REDIS_VERSION&gt;-alpine</code></td><td>cache, queue, sessions</td><td>6379</td></tr>
       <tr><td><code>memcached</code></td><td><code>memcached:&lt;MEMCACHED_VERSION&gt;-alpine</code></td><td>cache, sessions</td><td>11211</td></tr>
       <tr><td><code>elasticsearch</code></td><td><code>elasticsearch:&lt;ELASTICSEARCH_VERSION&gt;</code></td><td>search, single node, security off for local use</td><td>9200</td></tr>
+      <tr><td><code>s3</code></td><td><code>rustfs/rustfs:&lt;RUSTFS_VERSION&gt;</code></td><td>the S3 API of AWS, with a console</td><td>9000, console 9001</td></tr>
+      <tr><td><code>gcs</code></td><td><code>fsouza/fake-gcs-server:&lt;FAKE_GCS_VERSION&gt;</code></td><td>the Cloud Storage JSON API of Google</td><td>4443</td></tr>
+      <tr><td><code>azure</code></td><td><code>mcr.microsoft.com/azure-storage/azurite:&lt;AZURITE_VERSION&gt;</code></td><td>the blob, queue and table services of Azure</td><td>10000, 10001, 10002</td></tr>
+      <tr><td><code>aws</code></td><td><code>floci/floci:&lt;FLOCI_VERSION&gt;</code></td><td>the AWS API: queues, tables, functions, an S3</td><td>4566</td></tr>
     </tbody>
   </table></div>
   <p>Only the profile of the mysql container answers on 3306 at a time: projects that point at <code>db</code> work with the <code>mysql</code> profile and with the <code>mariadb</code> profile, which is why the mariadb service carries that alias.</p>
@@ -109,15 +114,19 @@ http://projecta.localdev.it      http://myapp.localdev.it      http://clientport
     <thead><tr><th>engine</th><th>variable</th><th>default</th><th>other versions</th><th>config directory</th></tr></thead>
     <tbody>
       <tr><td>PHP</td><td><code>PHP_VERSION</code></td><td><code>8.4</code></td><td><code>7.4</code>, <code>8.0</code>–<code>8.3</code>, <code>8.5</code>, <code>8.6</code></td><td><code>config/php&lt;VV&gt;/</code>, <code>config/supervisord.&lt;VV&gt;/</code></td></tr>
-      <tr><td>MySQL</td><td><code>MYSQL_VERSION</code></td><td><code>8.0</code></td><td><code>8.4</code>, <code>9.7</code>, <code>26.10</code></td><td><code>config/mysql/&lt;version&gt;/</code></td></tr>
+      <tr><td>MySQL</td><td><code>MYSQL_VERSION</code></td><td><code>8.4</code></td><td><code>8.0</code>, <code>9.7</code>, <code>26.10</code></td><td><code>config/mysql/&lt;version&gt;/</code></td></tr>
       <tr><td>MariaDB</td><td><code>MARIADB_VERSION</code></td><td><code>10.11</code></td><td><code>11.4</code>, <code>11.8</code>, <code>12.3</code>, <code>13.0</code></td><td><code>config/mariadb/&lt;version&gt;/laserstack.cnf</code></td></tr>
       <tr><td>PostgreSQL</td><td><code>POSTGRES_VERSION</code></td><td><code>15.1</code></td><td><code>16</code>, <code>17</code>, <code>18</code></td><td><code>config/postgres/&lt;version&gt;/</code></td></tr>
       <tr><td>redis</td><td><code>REDIS_VERSION</code></td><td><code>8.10</code></td><td><code>8.8</code>, <code>8.6</code>, <code>8.4</code>, <code>8.2</code>, <code>7.4</code></td><td><code>config/redis/&lt;version&gt;/redis.conf</code></td></tr>
       <tr><td>memcached</td><td><code>MEMCACHED_VERSION</code></td><td><code>1.6</code></td><td>—</td><td>none, the image takes flags</td></tr>
       <tr><td>Elasticsearch</td><td><code>ELASTICSEARCH_VERSION</code></td><td><code>7.14.2</code></td><td><code>8.19.23</code>, <code>9.5.5</code></td><td><code>config/elasticsearch/&lt;version&gt;/elasticsearch.yml</code></td></tr>
+      <tr><td>s3 (RustFS)</td><td><code>RUSTFS_VERSION</code></td><td><code>1.0.4</code></td><td>—</td><td>none, the settings are in <code>docker-compose.yml</code></td></tr>
+      <tr><td>gcs</td><td><code>FAKE_GCS_VERSION</code></td><td><code>1.56.1</code></td><td>—</td><td>none, the flags are in <code>docker-compose.yml</code></td></tr>
+      <tr><td>azure</td><td><code>AZURITE_VERSION</code></td><td><code>3.37.0</code></td><td>—</td><td>none, the flags are in <code>docker-compose.yml</code></td></tr>
+      <tr><td>aws (Floci)</td><td><code>FLOCI_VERSION</code></td><td><code>2.4.0</code></td><td>—</td><td>none, the environment is in <code>docker-compose.yml</code></td></tr>
     </tbody>
   </table></div>
-  <p>The defaults are the versions the previous release ran, so an existing <code>.env</code> keeps behaving the same. A version that is not in the list gives you docker's own error about a missing path — there is no validation layer to fight with.</p>
+  <p>The four cloud emulators are the exception to the rule of a config directory: an emulator follows the API of its provider, not a numbered release of its own, so its variable pins the image this stack was tested with and nothing else. The defaults are the versions the previous release ran, so an existing <code>.env</code> keeps behaving the same. A version that is not in the list gives you docker's own error about a missing path — there is no validation layer to fight with.</p>
 
   <h2>Config you can read, commit and diff</h2>
   <p>The container config is not baked into the images. It lives in this repository, one directory per version:</p>
@@ -160,6 +169,7 @@ https                 *.localdev.it by Let's Encrypt YE1, 89 days left, the publ
       <tr><td><code>laser composer / npm / node / npx / yarn / php / test / tinker</code></td><td>the same for the other project tools</td></tr>
       <tr><td><code>laser shell</code></td><td>a bash in the app container, in that project</td></tr>
       <tr><td><code>laser appexec &lt;cmd&gt;</code></td><td>any command in the app container (from the repository root: the container itself)</td></tr>
+      <tr><td><code>laser versions</code></td><td>the versions of the tools baked into the app image — php, composer, phpunit, node, npm, yarn, nginx, git, supervisor — read from <code>/etc/laserstack/versions.txt</code>, which the image writes at build time; an image built before that file existed says so instead of failing</td></tr>
       <tr><td><code>laser mysql</code> / <code>laser psql</code></td><td>a client for the database of the profile, with the credentials of <code>.env</code></td></tr>
       <tr><td><code>laser dashboard</code></td><td>opens the dashboard of the stack in the browser of the machine, over https when <code>HTTPS=on</code></td></tr>
       <tr><td><code>laser share</code></td><td>an ngrok tunnel to that project</td></tr>
@@ -173,9 +183,11 @@ https                 *.localdev.it by Let's Encrypt YE1, 89 days left, the publ
   <p><code>test/smoke.sh</code> is part of the repository, and it starts the stack for real:</p>
   <ul>
     <li><strong>app stage, per PHP version:</strong> nginx and php-fpm reach RUNNING, no nginx emergency in the log, the workers run as the <code>laser</code> user, PHP loads the php.ini of the repository, a project answers over HTTP with the requested version, the <a href="#dashboard">dashboard</a> answers on <code>laserstack.&lt;SUFFIX&gt;</code> and lists the projects directory, and the run writes nothing into the repository's nginx config directory;</li>
-    <li><strong>database stage, per profile:</strong> <code>laser mysql</code> or <code>laser psql</code> answers with the server of the profile, and PDO from the app container reaches that server under the host name a project uses.</li>
+    <li><strong>database stage, per profile:</strong> <code>laser mysql</code> or <code>laser psql</code> answers with the server of the profile, and PDO from the app container reaches that server under the host name a project uses;</li>
+    <li><strong>cache stage, per cache profile:</strong> the <code>Redis</code> or <code>Memcached</code> class of the app image writes a value through the server and reads it back, which is what a Laravel cache store does;</li>
+    <li><strong>cloud stage, per cloud profile:</strong> the emulator answers the protocol of its provider from inside the app container — a bucket and an object, a queue round trip, a container and a blob — through <code>test/cloud.php</code>, which signs its requests the way the SDK of that provider does.</li>
   </ul>
-  <p>A version variable drives it: <code>SMOKE_MYSQL_VERSION=9.7 SMOKE_DB_PROFILES=mysql test/smoke.sh 8.5</code>. The 0.13.0 release was verified that way for mysql 8.0/8.4/9.7/26.10, mariadb 10.11–13.0, postgres 15.1–18, redis 7.4–8.10, memcached 1.6 and elasticsearch 7.14.2/8.19.23/9.5.5, plus a Laravel 12 application reaching every engine through <code>artisan</code>; 0.14.0 was verified on PHP 8.4 with mysql 8.0, mariadb 10.11 and postgres 15.1, and the test now asserts that a project answers over https with a trusted certificate.<code>artisan</code>.</p>
+  <p>A version variable drives it: <code>SMOKE_MYSQL_VERSION=9.7 SMOKE_DB_PROFILES=mysql test/smoke.sh 8.5</code>. The 0.13.0 release was verified that way for mysql 8.0/8.4/9.7/26.10, mariadb 10.11–13.0, postgres 15.1–18, redis 7.4–8.10, memcached 1.6 and elasticsearch 7.14.2/8.19.23/9.5.5, plus a Laravel 12 application reaching every engine through <code>artisan</code>; 0.14.0 was verified on PHP 8.4 with mysql 8.0, mariadb 10.11 and postgres 15.1, and the test now asserts that a project answers over https with a trusted certificate. The next release adds the <code>cloud</code> stage: the four emulator profiles answer the protocol of their provider from inside the app container, and the whole test is green on PHP 8.2 with the three database profiles, both cache profiles and the four cloud profiles.</p>
 
   <h2>Design decisions we do not apologise for</h2>
   <ul>
