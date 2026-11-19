@@ -31,7 +31,7 @@
 </div></section>
 
 <section><div class="wrap prose">
-  <p><span class="pill next">on the branch</span> <strong>One PHP version per project.</strong></p>
+  <p><span class="pill now">shipped</span> <strong>One PHP version per project.</strong></p>
   <p>A project states the version it needs in a <code>.laserstack</code> file in its root — a <code>KEY=VALUE</code> file, read and never sourced, written by <code>laser use php 8.5</code> — and the stack starts one worker container per version in use; a version that nobody needs never starts. The one <code>app</code> container keeps the front door: one nginx, the certificate, the dashboard, ports 80 and 443 by host name. A version is a profile of <code>PROFILES</code> (<code>php85</code>), and a project that declares nothing behaves exactly as it did.</p>
 
   <p><span class="pill next">planned</span> <strong>Several database servers at the same time.</strong></p>
@@ -57,10 +57,10 @@
 
   <hr>
 
-  <h2>Next — on the branch, not released yet</h2>
+  <h2>Just shipped — 0.15.0, 2026-11-19</h2>
   <ul>
     <li><strong>One PHP version per project</strong>, several at the same time: a <code>.laserstack</code> file selects the version (<code>laser use php 8.5</code> writes it) and the stack starts one php-fpm-only container per version in use, behind the one front door, which keeps port 80/443, TLS, the dashboard and the vhosts;</li>
-    <li><strong>Four cloud emulators behind four profiles</strong>, one per provider: <code>s3</code> (RustFS, with a console), <code>gcs</code> (fake-gcs-server), <code>azure</code> (Azurite, the official one) and <code>aws</code> (Floci: queues, tables, functions, an S3). Each answers the protocol of its provider, so a project keeps its SDK and changes one endpoint, and none of them needs an account, a token or a licence — LocalStack and MinIO, the two defaults of the years before, archived their repositories in 2026. <code>test/cloud.php</code> proves an endpoint from inside a project, and the smoke test has a stage for them;</li>
+    <li><strong>Four cloud emulators behind four profiles</strong>, one per provider: <code>s3</code> (RustFS, with a console), <code>gcs</code> (fake-gcs-server), <code>azure</code> (Azurite, the official one) and <code>aws</code> (Floci: queues, tables, functions, an S3). Each answers the protocol of its provider, so a project keeps its SDK and changes one endpoint, and none of them needs an account, a token or a licence. <code>test/cloud.php</code> proves an endpoint from inside a project, and the smoke test has a stage for them;</li>
     <li><strong><code>laser versions</code></strong> prints the versions of the tools baked into the app image, read from <code>/etc/laserstack/versions.txt</code> in the image itself, and says so when an image predates that file;</li>
     <li><strong>Smaller things that add up</strong>: the mysql container answers to <code>mysql</code> as well as to <code>db</code>, a profile that leaves <code>PROFILES</code> really stops its container, and the https vhost of the stack no longer shadows a per-project vhost on 443.</li>
   </ul>
