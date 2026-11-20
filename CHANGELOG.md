@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [Unreleased]
+
+### Changed
+
+- PHP 8.6 is the release, PHP 8.6.0 (19 November 2026), and no longer a release
+  candidate. The docs, the README table and the example output say 8.6.0. The
+  image is still built from the Alpine testing repository and still does not
+  take `latest`, which stays on 8.5.
+- The 8.6 image still has no `memcached` client: Alpine has no `php86` package
+  and pecl's build does not compile against it. The docs keep that gap, and
+  `SMOKE_CACHE_SKIP_VERSIONS` still skips 8.6 in the cache stage.
+- The nightly build runs at 22:23 UTC, not 00:23 UTC. The features page said the
+  old time.
 
 ## [0.15.0] 2026-11-19
 

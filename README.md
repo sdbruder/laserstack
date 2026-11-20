@@ -57,9 +57,9 @@ Be as small, simple and fast as possible:
   every name under it to loopback for anyone, so it needs nothing (see
   [DNS resolution](#dns-resolution)).
 - The app images carry the `memcached` PHP extension from 7.4 to 8.5, so
-  `PROFILES=memcached` is a cache store for a project. PHP 8.6 is a release
-  candidate: pecl's `memcached` does not build against it and Alpine has no
-  package, so that series carries the server without the client.
+  `PROFILES=memcached` is a cache store for a project. PHP 8.6 has no
+  `memcached` client: Alpine has no `php86` package and pecl's build does not
+  compile against it, so that series carries the server without the client.
 - Four cloud emulators behind four profiles, each one answering the protocol of
   its provider, so a project keeps its SDK and changes one endpoint: `s3`
   (RustFS, the S3 API on 9000 and a console on 9001), `gcs` (fake-gcs-server,
@@ -97,7 +97,7 @@ on the newest Alpine release that packages it:
 | `8.3`  | 8.3.36   | 3.24.4  | v24.22.3  | 11.12.1 | 1.22.22 | 1.30.6 | 12.5.44 | 3.5.3        |
 | `8.4`  | 8.4.27   | 3.24.4  | v24.22.3  | 11.12.1 | 1.22.22 | 1.30.6 | 13.4.7  | 3.5.3        |
 | `8.5`  | 8.5.12   | 3.24.4  | v24.22.3  | 11.12.1 | 1.22.22 | 1.30.6 | 13.4.7  | 3.5.3        |
-| `8.6`  | 8.6.0RC7 | edge    | v24.22.3  | 12.2.1  | 1.22.22 | 1.30.6 | 13.4.7  | 3.6.0alpha1  |
+| `8.6`  | 8.6.0    | edge    | v24.22.3  | 12.2.1  | 1.22.22 | 1.30.7 | 13.4.8  | 3.6.0alpha1  |
 
 The table is a snapshot of the published images, read on 2026-11-15 with
 `docker run --pull always` against all eight tags: php, node, npm, yarn, nginx
@@ -118,11 +118,11 @@ images are built from the Dockerfiles in
 [laserstack_app](https://github.com/sdbruder/laserstack_app).
 
 The tag `latest` is the newest released series, currently `8.5`. The `8.6`
-series has no stable release yet (GA is planned for 19 November 2026), so its
-image is a release candidate on Alpine `edge` and does not take `latest`;
-`laser versions` prints the release candidate it carries today (8.6.0RC7 on the
-image published on 2026-11-15). Every other image runs on the newest Alpine
-release that packages its series.
+series is released (PHP 8.6.0, 19 November 2026) and is built on Alpine `edge`
+from its testing repository. It does not take `latest`: the nightly workflow
+pins that tag to 8.5 with `APP_LATEST`. `laser versions` prints the versions
+the image carries. Every other image runs on the newest Alpine release that
+packages its series.
 
 The additional containers come from `docker-compose.yml`. Each engine has one
 version variable that selects the image tag and the config directory

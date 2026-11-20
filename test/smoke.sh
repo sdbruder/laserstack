@@ -89,7 +89,7 @@ smoke_postgres_version="${SMOKE_POSTGRES_VERSION:-}"
 # explicit empty value skips the whole stage.
 cache_profiles="${SMOKE_CACHE_PROFILES-redis memcached}"
 # versions whose image has no client for the cache profiles, so there is
-# nothing to test. 8.6 is a release candidate: Alpine has no package for the
+# nothing to test. 8.6 has no memcached client: Alpine has no package for the
 # memcached extension and the pecl build does not compile against it.
 cache_skip_versions="${SMOKE_CACHE_SKIP_VERSIONS-8.6}"
 # the cloud emulator profiles to test against the protocol of their provider. An
@@ -97,7 +97,7 @@ cache_skip_versions="${SMOKE_CACHE_SKIP_VERSIONS-8.6}"
 cloud_profiles="${SMOKE_CLOUD_PROFILES-s3 gcs azure aws}"
 # the partner of the two-version stage. An empty value picks another series of
 # the list: the one before the version under test, the one after it when there
-# is none, so the partner is never the release candidate by accident.
+# is none, so the partner is never the series without a cache client by accident.
 worker_version="${SMOKE_WORKER_VERSION:-}"
 worker_series="7.4 8.0 8.1 8.2 8.3 8.4 8.5 8.6"
 worker_project="laser-smoke-worker"
