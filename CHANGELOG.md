@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
+### Added
+
+- `laser open` opens the project of the current directory in the browser of the
+  machine that runs the stack. The directory name is the name the stack serves
+  the project by, so the command resolves the URL the same way `laser php` finds
+  the container, and it takes the scheme from `HTTPS`. The opener follows the
+  system: `wslview`, `powershell.exe` or `cmd.exe` on WSL, `open` on macOS and
+  the BSDs, `xdg-open` on Linux; when none is available it prints the address.
+
 ### Changed
 
 - PHP 8.6 is the release, PHP 8.6.0 (19 November 2026), and no longer a release
@@ -17,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SMOKE_CACHE_SKIP_VERSIONS` still skips 8.6 in the cache stage.
 - The nightly build runs at 22:23 UTC, not 00:23 UTC. The features page said the
   old time.
+
+### Fixed
+
+- `laser new` calls the browser opener of the system. It used the bare `open`
+  of macOS and failed on Linux and WSL.
 
 ## [0.15.0] 2026-11-19
 

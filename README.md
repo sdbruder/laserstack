@@ -343,8 +343,10 @@ behaves exactly as before.
 
 `laser php`, `laser artisan`, `laser composer`, `laser test`, `laser tinker`,
 `laser shell` and `laser appexec` run in the container of the project you are
-in; `laser list` prints the version of every project. `node`, `npm` and `yarn`
-always run in the app container: one node for the whole stack.
+in; `laser list` prints the version of every project. `laser open` opens the
+project of the current directory in the browser of the machine that runs the
+stack. `node`, `npm` and `yarn` always run in the app container: one node for
+the whole stack.
 
 Two things to know: extensions, opcache and xdebug are a property of the version
 and not of the project, and an idle worker costs tens of megabytes. A marker

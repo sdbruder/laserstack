@@ -144,6 +144,7 @@ function lasercommands() {
   echo "  node               Execute node"
   echo "  npm                Execute npm"
   echo "  npx                Execute npx"
+  echo "  open               Open the project of the current directory in your browser"
   echo "  php                Execute php commands in your app container"
   echo "  tinker             Execute php artisan tinker"
   echo "  test               Execute php artisan test"
@@ -240,24 +241,57 @@ function use() {
   echo "USE: $project is served on http://$project.${SUFFIX:-localdev.it}/ by $service"
 }
 
-# Opens a URL in the browser of the machine that runs the stack. The WSL
-# browser runs on Windows, so it takes the Windows opener; everything else is
-# open on macOS and xdg-open on Linux.
+# Opens a URL in the browser of the machine that runs the stack. The browser
+# belongs to the system the user sits at, so each one takes its own opener: the
+# WSL browser runs on Windows, macOS and the BSDs have open, Linux has xdg-open.
+# A command that succeeds returns at once; a command that fails, or no command
+# at all, prints the address so the run still ends well.
 function openurl() {
   local url=${1}
-  if [ -n "$WSL" ]; then
+  if [ -n "${WSL:-}" ]; then
     if command -v wslview >/dev/null 2>&1; then
-      wslview "$url"
-    else
-      powershell.exe -Command "Start-Process '$url'"
+      wslview "$url" && return 0
+    elif command -v powershell.exe >/dev/null 2>&1; then
+      powershell.exe -NoProfile -Command "Start-Process '$url'" && return 0
+    elif command -v cmd.exe >/dev/null 2>&1; then
+      cmd.exe /c start "" "$url" && return 0
     fi
-  elif command -v open >/dev/null 2>&1; then
-    open "$url"
-  elif command -v xdg-open >/dev/null 2>&1; then
-    xdg-open "$url"
   else
-    echo "DASHBOARD: open this address in your browser: $url"
+    case "$(uname -s)" in
+    Darwin | FreeBSD | OpenBSD | NetBSD)
+      if command -v open >/dev/null 2>&1; then
+        open "$url" && return 0
+      fi
+      ;;
+    *)
+      if command -v xdg-open >/dev/null 2>&1; then
+        xdg-open "$url" && return 0
+      elif command -v open >/dev/null 2>&1; then
+        open "$url" && return 0
+      fi
+      ;;
+    esac
   fi
+  echo "OPEN: no browser opener found, open this address yourself: $url"
+}
+
+# Opens the project of the current directory: its directory name is the name the
+# stack serves it by, so whichproject answers the URL the same way it does for
+# php, artisan and the other per-project commands.
+function opencmd() {
+  local project scheme url
+  project=$(whichproject)
+  if [ -z "$project" ]; then
+    error_message "OPEN: run this inside a project of $projects_dir"
+    return 1
+  fi
+  scheme=http
+  if [ "$HTTPS" == "on" ]; then
+    scheme=https
+  fi
+  url="$scheme://$project.${SUFFIX:-localdev.it}/"
+  echo "OPEN: $url"
+  openurl "$url"
 }
 
 # The dashboard of the stack: the checkout is one of the projects the stack
@@ -832,7 +866,7 @@ function new() {
   if [[ "$WSL" ]]; then
     echo "WSL detected, manually add \"127.0.0.1 $project.$SUFFIX $project\" to %windir%\\System32\\drivers\\etc\\hosts"
   fi
-  open "http://$project.$SUFFIX/"
+  openurl "http://$project.$SUFFIX/"
 }
 
 # MAIN ----------------------------------------------------------------------
@@ -927,6 +961,9 @@ psql)
   ;;
 dashboard)
   dashboard "$@"
+  ;;
+open)
+  opencmd "$@"
   ;;
 scan)
   scan "$@"
