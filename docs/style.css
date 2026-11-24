@@ -243,3 +243,45 @@ footer.site .fine { border-top: 1px solid var(--line); padding-top: 1.2rem; disp
 
 /* more air between the numbered landing sections */
 #features, #services, #numbers, #platforms, #drivers, #compare, #faq { padding: 4.25rem 0; }
+
+/* --- ambient background: slow glows and a drifting diagonal hatch, all
+   behind the content, off for reduced motion --- */
+html::before, html::after, body::before, body::after {
+  content: ""; position: fixed; z-index: -1; pointer-events: none; will-change: transform;
+}
+html::before {
+  width: 80vmax; height: 80vmax; left: -28vmax; top: -34vmax; border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 15%, transparent), transparent 72%);
+  animation: glow-a 52s ease-in-out infinite alternate;
+}
+html::after {
+  width: 70vmax; height: 70vmax; right: -26vmax; top: 18vh; border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent-2) 12%, transparent), transparent 72%);
+  animation: glow-b 66s ease-in-out infinite alternate;
+}
+body::after {
+  width: 60vmax; height: 60vmax; left: 8vw; bottom: -34vmax; border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 8%, transparent), transparent 72%);
+  animation: glow-c 78s ease-in-out infinite alternate;
+}
+body::before {
+  inset: -40vmax;
+  background-image: repeating-linear-gradient(125deg, color-mix(in srgb, var(--fg) 4.5%, transparent) 0 1px, transparent 1px 104px);
+  animation: hatch 150s linear infinite;
+}
+@keyframes glow-a { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(8vw, 7vh, 0) scale(1.16); } }
+@keyframes glow-b { from { transform: translate3d(0, 0, 0) scale(1.08); } to { transform: translate3d(-7vw, -9vh, 0) scale(.96); } }
+@keyframes glow-c { from { transform: translate3d(0, 0, 0) scale(.94); } to { transform: translate3d(6vw, -7vh, 0) scale(1.12); } }
+@keyframes hatch { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(256px, 179px, 0); } }
+@media (prefers-color-scheme: light) {
+  html::before { background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 9%, transparent), transparent 72%); }
+  html::after { background: radial-gradient(closest-side, color-mix(in srgb, var(--accent-2) 8%, transparent), transparent 72%); }
+  body::after { background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 5%, transparent), transparent 72%); }
+  body::before { background-image: repeating-linear-gradient(125deg, color-mix(in srgb, var(--fg) 3.5%, transparent) 0 1px, transparent 1px 104px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html::before, html::after, body::before, body::after { animation: none; }
+}
+
+/* the header CTA and the hero buttons need light text on the darker light-mode accent */
+@media (prefers-color-scheme: light) { .btn.primary { color: #fff; } }
