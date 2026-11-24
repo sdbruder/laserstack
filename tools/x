@@ -1,27 +1,27 @@
 #!/bin/bash
 #
-# Post on X as @laserstack_sdb, never as the account of the browser.
+# Post on X as @sdbruder, the account the browser is signed in to.
 #
 # X has no free API since February 2026: a post costs $0.015, and $0.20 when it
 # carries a link, which is most of what this project posts. twitter-cli instead
 # speaks the GraphQL of the web app with the session cookie of the account, so
-# posting costs nothing. The trade is that X can rate-limit or lock the account
-# of an automated session: see tools/x.md.
+# posting costs nothing. The trade is that X can rate-limit or lock an account
+# used from an automated session: see tools/x.md.
 #
 # The cookies live in one file, and this wrapper never runs twitter-cli without
-# them. That guard matters: with no cookie in the environment, twitter-cli falls
-# back to the cookies of the browser it finds, and a post would go out as the
-# personal account. A missing file is an error, not a silent fallback.
+# them. Two reasons: twitter-cli would otherwise extract the cookies of whatever
+# browser it finds, which a shell outside the desktop cannot read at all (macOS
+# TCC), and a named file proves which account the post goes out as.
 #
 # Requirements:
 #   - twitter-cli: `uv tool install twitter-cli` (or pipx install twitter-cli)
-#   - the cookie file, made once from the laserstack_sdb browser session:
+#   - the cookie file, made once from the sdbruder browser session:
 #       $HOME/.config/laserstack/x.env  (mode 600)
 #       TWITTER_AUTH_TOKEN=...
 #       TWITTER_CT0=...
 #
 # Usage:
-#   tools/x whoami                         # which account the cookies belong to
+#   tools/x whoami                         # must print @sdbruder
 #   tools/x post "Laser Stack 2.0 is out"  # a post
 #   tools/x post "text" -i docs/og.png     # with an image
 #   tools/x reply <tweet-id> "text"
@@ -50,6 +50,6 @@ TWITTER_CT0="$(cred TWITTER_CT0)"
 export TWITTER_AUTH_TOKEN TWITTER_CT0
 
 [ -n "$TWITTER_AUTH_TOKEN" ] && [ -n "$TWITTER_CT0" ] ||
-  die "$X_ENV lacks TWITTER_AUTH_TOKEN or TWITTER_CT0; refusing to run, because twitter-cli would then use the cookies of the browser account"
+  die "$X_ENV lacks TWITTER_AUTH_TOKEN or TWITTER_CT0; refusing to run, because twitter-cli would then extract cookies from whichever browser session it finds"
 
 exec "$TWITTER_BIN" "$@"

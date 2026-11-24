@@ -1,8 +1,8 @@
-# Posting on X as @laserstack_sdb
+# Posting on X as @sdbruder
 
 `tools/x` posts, replies and reads on X through
 [twitter-cli](https://github.com/jackwener/twitter-cli), authenticated with the
-session cookie of @laserstack_sdb. It never uses the account of the browser.
+session cookie of @sdbruder in `~/.config/laserstack/x.env`.
 
 ## Why not the official API
 
@@ -22,13 +22,14 @@ costs nothing.
 
 ## Risk
 
-Automating a web session is against the X terms of service. X can rate-limit,
-lock or suspend the account. The account is dedicated to the project, so the
-damage stops there, and the cookie file keeps the personal account out of it.
+Automating a web session is against the X terms of service, and this is the
+personal account: a rate limit, a lock or a suspension lands on the account that
+also carries the everyday browser session, not on a spare one. Use the terminal
+at human pace — a few posts, no bulk follow or unfollow, no direct messages, no
+bursts — and let nothing else automate the account.
 
-Keep the account within human behavior: no bulk follow or unfollow, no direct
-messages, no bursts. An unverified account may create about 50 posts and 200
-replies a day, inside a 30-minute burst window that X does not publish.
+An unverified account may create about 50 posts and 200 replies a day, inside a
+30-minute burst window that X does not publish.
 
 The cookie is a password. `auth_token` gives full control of the account until
 that session ends. Keep the file at mode 600, and never commit it.
@@ -44,14 +45,13 @@ web app often, and the tool follows it.
 
 ## Cookies, once
 
-1. In Chrome, open the profile menu, choose **Add**, and make a profile named
-   `laserstack_sdb`. Sign in to x.com as @laserstack_sdb in that profile only.
-   A separate profile keeps the cookie of the personal account apart; sign out
-   of nothing.
-2. In that profile open <https://x.com>, then DevTools (⌥⌘I) → **Application** →
+The cookie comes from the browser session that is already signed in to
+@sdbruder, so no login and no password are needed.
+
+1. Open <https://x.com> in that browser, then DevTools (⌥⌘I) → **Application** →
    **Cookies** → `https://x.com`.
-3. Copy the values of `auth_token` and `ct0`.
-4. Write them to the cookie file:
+2. Copy the values of `auth_token` and `ct0`.
+3. Write them to the cookie file:
 
    ```sh
    mkdir -p ~/.config/laserstack
@@ -61,26 +61,31 @@ web app often, and the tool follows it.
    EOF
    ```
 
-5. Check the account:
+4. Check the account:
 
    ```sh
-   tools/x whoami          # must print @laserstack_sdb
+   tools/x whoami          # must print @sdbruder
    ```
 
-If `tools/x whoami` prints another account, the cookie is wrong: delete the
-file and repeat step 2.
+Do not rely on the browser extraction of `twitter-cli`. A shell outside the
+desktop cannot read the cookie stores of Safari, Firefox or Chrome — macOS TCC
+answers `Operation not permitted` — and the explicit file is what shows which
+account a post will use.
+
+The session ends when the browser session ends, or when the password changes.
+Repeat step 2 then.
 
 ## Use
 
 ```sh
-tools/x whoami                          # who the cookie belongs to
+tools/x whoami                          # must print @sdbruder
 tools/x post "Laser Stack 2.0 is out"    # a post
 tools/x post "text" -i docs/og.png       # with an image, up to four
 tools/x reply <tweet-id> "text"
 tools/x quote <tweet-id> "text"
 tools/x delete <tweet-id>
 tools/x feed --max 20                    # home timeline of that account
-tools/x user-posts laserstack_sdb --max 20
+tools/x user-posts sdbruder --max 20
 tools/x search "laserstack" -t Latest
 ```
 
@@ -91,11 +96,11 @@ Add `--json` or `--yaml` for scripts. `twitter --help` lists every command;
 
 | Message | Cause | Fix |
 |---|---|---|
-| `Cookie expired or invalid (HTTP 401)` | the session ended | repeat **Cookies**, steps 2 to 4 |
+| `Cookie expired or invalid (HTTP 401)` | the session ended | repeat **Cookies**, steps 1 to 3 |
 | `Couldn't get KEY_BYTE indices`, or a transaction-id error | X changed its web app | `uv tool upgrade twitter-cli` |
 | `tools/x: no credentials at ...` | no cookie file | repeat **Cookies** |
 | `tools/x: ... lacks TWITTER_AUTH_TOKEN or TWITTER_CT0` | half-written file | rewrite the file |
 
 The last two errors are deliberate. With no cookie in the environment,
-`twitter-cli` reads the cookies of the browser and would post as the personal
-account, so the wrapper refuses instead.
+`twitter-cli` extracts the cookies of whichever browser it finds, so the wrapper
+refuses instead of guessing.

@@ -561,4 +561,4 @@ Laser Stack is open-sourced software licensed under [BSD license](LICENSE.md).
 
 ## Social network
 
-Follow us on Twitter as @laserstack_sdb: https://twitter.com/laserstack_sdb
+Follow us on Twitter as @sdbruder: https://twitter.com/sdbruder
