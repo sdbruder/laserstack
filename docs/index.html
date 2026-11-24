@@ -22,61 +22,213 @@
   <a class="brand" href="./"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 19.5 L20 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 4.5h11M3.5 20v-9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/><circle cx="18.4" cy="5.6" r="2.2" fill="#4ade80"/></svg>laserstack</a>
   <nav class="site">
     <a href="./" aria-current="page">Overview</a><a href="features.html">Features</a><a href="compare.html">Compare</a><a href="benchmarks.html">Numbers</a><a href="docs.html">Docs</a><a href="examples.html">Examples</a><a href="roadmap.html">Roadmap</a><a href="https://github.com/sdbruder/laserstack">GitHub ↗</a>
+    <a class="btn primary nav-cta" href="index.html#quickstart">Get started</a>
   </nav>
 </div></header>
 
 <main>
 <section class="hero"><div class="wrap">
-  <p class="eyebrow">the localdev.it stack · macOS · Linux · WSL2 · docker-compose · one shell script · BSD-3-Clause</p>
+  <p class="eyebrow">the localdev.it stack · macOS · Linux · WSL2</p>
   <h1>Many PHP projects.<br>One small stack.</h1>
-  <p class="lede">Laser Stack serves all of your Laravel, Symfony and WordPress projects from a single set of Alpine containers — one nginx, one PHP-FPM, one database server — with the PHP and database versions chosen by a variable. No VM, no per-project containers, no dashboard application to install.</p>
+  <p class="lede">Laser Stack serves all of your Laravel, Symfony and WordPress projects from a single set of Alpine containers — one nginx, one PHP-FPM per version, one database server. No VM, no per-project containers, no dashboard application to install.</p>
   <div class="actions">
-    <a class="btn primary" href="#quickstart">Quick start</a>
-    <a class="btn" href="benchmarks.html">Measured numbers</a>
-    <a class="btn" href="https://github.com/sdbruder/laserstack">Source on GitHub</a>
+    <a class="btn primary" href="#quickstart">Get started</a>
+    <a class="btn" href="docs.html">Read the docs</a>
   </div>
-  <p class="platforms"><strong>https on every project, by default</strong> — a real wildcard certificate your browser already trusts, so there is no CA to install, no warning page and no <code>-k</code> in your tests. <a href="features.html#https">How it works</a>.</p>
-  <p class="install-line"><code>curl -fsSL https://localdev.it/laserstack/install | bash</code></p>
-  <p class="platforms"><strong>Runs on macOS, Linux and WSL2/WSLg</strong> — Intel and Apple silicon, any docker with compose v2 (Docker Desktop, OrbStack, Colima, the engine). It installs nothing on the host: no VM, no system package, no daemon of its own.</p>
+  <p class="hero-meta">
+    <span>Free and open source</span>
+    <span>BSD-3-Clause</span>
+    <span>no account, no telemetry</span>
+    <span><a href="https://github.com/sdbruder/laserstack">Source on GitHub ↗</a></span>
+  </p>
+  <p class="hero-meta">
+    <span>macOS · Linux · WSL2/WSLg</span>
+    <span>Intel and Apple silicon</span>
+    <span>any docker with compose v2</span>
+  </p>
 
   <a class="shot-link" href="demo.gif" target="_blank" rel="noopener"><img class="shot" src="demo.gif" width="1000" height="602" alt="Terminal recording: laser up -d starts two containers, laser scan identifies every project of the projects directory, one project answers 200, and the same two containers serve them all"></a>
+  <p class="shot-caption">Two containers, every project in the directory, and a real certificate on 443.</p>
+</div></section>
 
-  <div style="margin-top:2.2rem">
-    <h2>https, out of the box</h2>
-    <p class="section-lede">Every project answers on 443 as well as on 80, from a wildcard certificate a browser already trusts — no CA to install, no warning page, no browser exception.</p>
-    <div class="grid">
-      <div class="card"><h3>Nothing to install, nothing to trust</h3><p>No mkcert step, no CA in the keychain, no re-trust after an update. The certificate is a real one, it covers every name under the suffix — including the project you create tomorrow — and <code>HTTPS=off</code> is one line if you want plain http back.</p></div>
-      <div class="card"><h3>A secure context, because it is not <code>localhost</code></h3><p>Service workers, <code>Secure</code> cookies, <code>SameSite=None</code>, <code>navigator.clipboard</code>, WebAuthn and camera or microphone permissions all require a secure context. <code>projecta.localdev.it</code> is not <code>localhost</code>, so over http they refuse — here they work, on 443, by default.</p></div>
-      <div class="card"><h3>What your tools and your CI expect</h3><p>curl, Postman, PHP, node and the browser validate the chain normally: no <code>-k</code>, no <code>--insecure</code>, no exception to remember. OAuth, SAML and payment callbacks that demand an <code>https</code> redirect URI work locally without a tunnel.</p></div>
-    </div>
-    <p class="section-lede"><a href="features.html#https">How https works here, and what a certificate of your own suffix takes →</a></p>
-  </div>
+<section id="features"><div class="wrap">
+  <p class="kicker">01 · Features</p>
+  <h2>Everything your projects need. One stack.</h2>
+  <p class="section-lede">The whole stack is a compose file, a config directory and a shell script you can read in an afternoon.</p>
+  <div class="features">
 
-  <div class="term" style="margin-top:2.2rem">
-    <div class="bar"><i></i><i></i><i></i><span>a first run, end to end</span></div>
-<pre><code>$ curl -fsSL https://localdev.it/laserstack/install | bash
-<span class="out">  bash 5.3.20   git 2.56.0   docker 29.9.2   compose 5.7.0</span>
-<span class="out">  system macOS, arm64</span>
-<span class="out">  wrote .env from env.example in ~/src/laserstack</span>
-$ cd ~/src/laserstack &amp;&amp; laser up -d
-<span class="out">Container laserstack-app-1     Started</span>
-<span class="out">Container laserstack-db-1      Started</span>
-<span class="out">Container laserstack-redis-1   Started</span>
-$ laser scan
-<span class="out">SCAN: /Users/you/src/projecta identified as laravel.</span>
-<span class="out">SCAN: /Users/you/src/projectb identified as wordpress.</span>
-$ laser ps
-<span class="out">NAME                  IMAGE                 STATUS         PORTS</span>
-<span class="out">laserstack-app-1      laserstack/app:8.4    Up 4 seconds   0.0.0.0:80-&gt;80/tcp</span>
-<span class="out">laserstack-db-1       mysql:8.4             Up 4 seconds   0.0.0.0:3306-&gt;3306/tcp</span>
-<span class="out">laserstack-redis-1    redis:8.10-alpine     Up 4 seconds   0.0.0.0:6379-&gt;6379/tcp</span>
-$ <span class="ok"># http://projecta.localdev.it and http://projectb.localdev.it are both served</span></code></pre>
+    <article class="feature">
+      <div class="mock">
+        <div class="row"><span class="url">projecta.localdev.it</span><span class="ok end">200</span></div>
+        <div class="row"><span class="url">projectb.localdev.it</span><span class="ok end">200</span></div>
+        <div class="row"><span class="url">shop.localdev.it</span><span class="ok end">200</span></div>
+        <div class="row mock-foot"><span>one nginx · one app container</span></div>
+      </div>
+      <h3>Many projects, one stack</h3>
+      <p>One nginx and one <code>app</code> container serve every project of the projects directory. <code>laser scan</code> writes one vhost per project, so adding or removing a project is the same command.</p>
+    </article>
+
+    <article class="feature">
+      <div class="mock">
+        <div class="row"><span class="mono-ok">TLS</span><span class="url">*.localdev.it</span><span class="pill ok-pill end">valid</span></div>
+        <div class="row"><span class="mock-k">issuer</span><span>a certificate it trusts</span></div>
+        <div class="row"><span class="mock-k">trust</span><span>nothing to install</span></div>
+        <div class="row"><span class="mock-k">every</span><span>project, including tomorrow's</span></div>
+      </div>
+      <h3>https that is already trusted</h3>
+      <p>Every project answers on 443 from a wildcard certificate every browser already trusts. No mkcert step, no CA in the keychain, no warning page and no <code>-k</code> in your tests.</p>
+    </article>
+
+    <article class="feature">
+      <div class="mock">
+        <div class="row"><span class="url">projecta</span><span class="mock-k">.laserstack 8.5</span><span class="pill end">php85</span></div>
+        <div class="row"><span class="url">projectb</span><span class="mock-k">no file</span><span class="pill end">app</span></div>
+        <div class="row mock-foot"><span>the app container stays the front door</span></div>
+      </div>
+      <h3>A PHP version per project</h3>
+      <p>A project states the PHP it needs in a <code>.laserstack</code> file — <code>laser use php 8.5</code> writes it — and the stack starts one php-fpm worker for that version: the same image, no nginx of its own and no published port. 7.4 to 8.6.</p>
+    </article>
+
+    <article class="feature">
+      <div class="mock">
+        <div class="row"><span class="mock-k">PHP_VERSION=</span><span class="url end">8.4</span></div>
+        <div class="row"><span class="mock-k">MYSQL_VERSION=</span><span class="url end">8.4</span></div>
+        <div class="row"><span class="mock-k">POSTGRES_VERSION=</span><span class="url end">18</span></div>
+        <div class="row"><span class="mock-k">PROFILES=</span><span class="url end">mysql,redis</span></div>
+      </div>
+      <h3>Versions are variables</h3>
+      <p><code>PHP_VERSION</code>, <code>MYSQL_VERSION</code>, <code>MARIADB_VERSION</code>, <code>POSTGRES_VERSION</code>, <code>REDIS_VERSION</code> and the rest select the image tag and the matching config directory. Two checkouts can run different versions from the same repository.</p>
+    </article>
+
+    <article class="feature">
+      <div class="mock">
+        <div class="row"><span class="mock-k">config/</span></div>
+        <div class="row"><span class="mock-k">├─</span><span class="url">php84/php.ini</span></div>
+        <div class="row"><span class="mock-k">├─</span><span class="url">nginx/http.d/</span></div>
+        <div class="row"><span class="mock-k">├─</span><span class="url">mysql/8.4/docker.cnf</span></div>
+        <div class="row"><span class="mock-k">└─</span><span class="url">postgres/18/</span></div>
+      </div>
+      <h3>Config lives in git</h3>
+      <p>php.ini, php-fpm, nginx and every database config are files of this repository, one directory per version. Change a value, restart one service, keep the change in a commit.</p>
+    </article>
+
+    <article class="feature">
+      <div class="mock">
+        <div class="row"><span class="mock-k">$</span><span class="url">laser artisan migrate</span></div>
+        <div class="row"><span class="mock-k">$</span><span class="url">laser npm run dev</span></div>
+        <div class="row"><span class="mock-k">$</span><span class="url">laser mysql</span></div>
+        <div class="row"><span class="mock-k">$</span><span class="url">laser logs app --tail 50</span></div>
+      </div>
+      <h3>A CLI, not a GUI</h3>
+      <p><code>laser</code> exposes every docker-compose command unchanged and adds the ones you type all day: <code>artisan</code>, <code>composer</code>, <code>php</code>, <code>npm</code>, <code>shell</code>, <code>mysql</code>, <code>psql</code>, <code>share</code>, <code>scan</code>.</p>
+    </article>
+
   </div>
 </div></section>
 
+<section id="services"><div class="wrap">
+  <p class="kicker">02 · Services</p>
+  <h2>Every service behind a profile.</h2>
+  <p class="section-lede"><code>PROFILES</code> decides what runs. Each server is a small upstream image, and its version is a variable in <code>.env</code> with a directory in <code>config/</code>.</p>
+  <div class="svcs">
 
-<section><div class="wrap">
-  <h2>What it costs</h2>
+    <article class="svc">
+      <div class="svc-top"><span class="badge">My</span><span class="port">:3306</span></div>
+      <h3>MySQL</h3>
+      <p class="svc-meta">Database</p>
+      <p>The database server, and the <code>db</code> service name every project uses.</p>
+      <div class="pills"><span>8.0</span><span>8.4</span><span>9.7</span><span>26.10</span></div>
+      <p class="profile">PROFILES=mysql</p>
+    </article>
+
+    <article class="svc">
+      <div class="svc-top"><span class="badge">Ma</span><span class="port">:3306</span></div>
+      <h3>MariaDB</h3>
+      <p class="svc-meta">Database</p>
+      <p>The community fork of MySQL, under the same <code>db</code> alias.</p>
+      <div class="pills"><span>10.11</span><span>11.4</span><span>11.8</span><span>12.3</span><span>13.0</span></div>
+      <p class="profile">PROFILES=mariadb</p>
+    </article>
+
+    <article class="svc">
+      <div class="svc-top"><span class="badge">Pg</span><span class="port">:5432</span></div>
+      <h3>PostgreSQL</h3>
+      <p class="svc-meta">Database</p>
+      <p>Its own config directory per version, on its own data volume.</p>
+      <div class="pills"><span>15.1</span><span>16</span><span>17</span><span>18</span></div>
+      <p class="profile">PROFILES=postgres</p>
+    </article>
+
+    <article class="svc">
+      <div class="svc-top"><span class="badge">Re</span><span class="port">:6379</span></div>
+      <h3>Redis</h3>
+      <p class="svc-meta">Cache &amp; queue</p>
+      <p>Cache, queue and sessions for every project of the stack.</p>
+      <div class="pills"><span>7.4</span><span>8.2</span><span>8.4</span><span>8.6</span><span>8.8</span><span>8.10</span></div>
+      <p class="profile">PROFILES=redis</p>
+    </article>
+
+    <article class="svc">
+      <div class="svc-top"><span class="badge">Me</span><span class="port">:11211</span></div>
+      <h3>Memcached</h3>
+      <p class="svc-meta">Cache</p>
+      <p>Cache and sessions; the PHP client ships in the app images from 7.4 to 8.5.</p>
+      <div class="pills"><span>1.6</span></div>
+      <p class="profile">PROFILES=memcached</p>
+    </article>
+
+    <article class="svc">
+      <div class="svc-top"><span class="badge">El</span><span class="port">:9200</span></div>
+      <h3>Elasticsearch</h3>
+      <p class="svc-meta">Search</p>
+      <p>One node, security off for local use, with its config in the repository.</p>
+      <div class="pills"><span>7.14.2</span><span>8.19.23</span><span>9.5.5</span></div>
+      <p class="profile">PROFILES=elasticsearch</p>
+    </article>
+
+    <article class="svc">
+      <div class="svc-top"><span class="badge">S3</span><span class="port">:9000 · :9001</span></div>
+      <h3>RustFS</h3>
+      <p class="svc-meta">Storage</p>
+      <p>The S3 API with a console. No account, no token, no licence.</p>
+      <div class="pills"><span>1.0.4</span></div>
+      <p class="profile">PROFILES=s3</p>
+    </article>
+
+    <article class="svc">
+      <div class="svc-top"><span class="badge">Gc</span><span class="port">:4443</span></div>
+      <h3>fake-gcs-server</h3>
+      <p class="svc-meta">Storage</p>
+      <p>The Cloud Storage JSON API of Google, so the project keeps its SDK.</p>
+      <div class="pills"><span>1.56.1</span></div>
+      <p class="profile">PROFILES=gcs</p>
+    </article>
+
+    <article class="svc">
+      <div class="svc-top"><span class="badge">Az</span><span class="port">:10000–10002</span></div>
+      <h3>Azurite</h3>
+      <p class="svc-meta">Storage</p>
+      <p>The blob, queue and table services of Azure.</p>
+      <div class="pills"><span>3.37.0</span></div>
+      <p class="profile">PROFILES=azure</p>
+    </article>
+
+    <article class="svc">
+      <div class="svc-top"><span class="badge">Aw</span><span class="port">:4566</span></div>
+      <h3>Floci</h3>
+      <p class="svc-meta">Cloud API</p>
+      <p>The AWS API: queues, tables, functions and an S3 of its own.</p>
+      <div class="pills"><span>2.4.0</span></div>
+      <p class="profile">PROFILES=aws</p>
+    </article>
+
+  </div>
+  <p class="note">Only one of <code>mysql</code> and <code>mariadb</code> runs at a time: both publish 3306, so a project that points at <code>db</code> works with either profile. Each database version keeps its own data volume, so a version change loses nothing.</p>
+</div></section>
+
+<section id="numbers"><div class="wrap">
+  <p class="kicker">03 · Numbers</p>
+  <h2>What it costs.</h2>
   <p class="section-lede">Measured on a MacBook (Docker 29, arm64), warm images and data volumes — the state you are in from the second day. The method is on the <a href="benchmarks.html">numbers page</a>.</p>
   <div class="stats">
     <div class="stat"><b>2</b><span>containers serving every project of the projects directory</span></div>
@@ -89,66 +241,139 @@ $ <span class="ok"># http://projecta.localdev.it and http://projectb.localdev.it
   </div>
 </div></section>
 
-<section><div class="wrap">
-  <h2>Built for a small footprint</h2>
-  <p class="section-lede">The whole stack is a compose file, a config directory and a shell script you can read in an afternoon.</p>
-  <div class="grid">
-    <div class="card"><h3>Many projects, one stack</h3><p>One nginx with a vhost per project, rendered by <code>laser scan</code> from the projects directory. Laravel, Symfony and WordPress drivers are included, and any project can ship its own nginx config in <code>laserstack-nginx.conf</code>.</p></div>
-    <div class="card"><h3>Versions are variables</h3><p><code>PHP_VERSION</code>, <code>MYSQL_VERSION</code>, <code>MARIADB_VERSION</code>, <code>POSTGRES_VERSION</code>, <code>REDIS_VERSION</code>, <code>MEMCACHED_VERSION</code>, <code>ELASTICSEARCH_VERSION</code>. Each one selects the image tag and the matching config directory, so two installs can run different versions from the same repository.</p></div>
-    <div class="card"><h3>A PHP version per project</h3><p>A project states the version it needs in a <code>.laserstack</code> file in its root — <code>laser use php 8.5</code> writes it — and the stack starts one php-fpm container for that version: the same image, no nginx of its own and no published port. The one <code>app</code> container stays the only front door, with the one nginx, the one certificate, the dashboard and ports 80 and 443. Projects without the file keep being served by the PHP of the app container, exactly as before. Extensions, opcache and xdebug stay a property of the version, not of the project, and an idle worker still costs tens of megabytes.</p></div>
-    <div class="card"><h3>Config lives in git</h3><p>php.ini, php-fpm, supervisord, nginx and every database config are files of this repository, one directory per version. Change a value, restart one service, keep the change in a commit.</p></div>
-    <div class="card"><h3>Alpine, no VM</h3><p>The images are Alpine-based and pulled from public registries. There is no virtual machine, no custom orchestrator and no daemon: docker-compose does the work.</p></div>
-    <div class="card"><h3>A CLI that stays out of the way</h3><p><code>laser</code> exposes every docker-compose command unchanged and adds the ones you type all day: <code>artisan</code>, <code>composer</code>, <code>php</code>, <code>npm</code>, <code>shell</code>, <code>mysql</code>, <code>psql</code>, <code>share</code>, <code>scan</code>.</p></div>
-    <div class="card"><h3>Tested, not vibes</h3><p><code>test/smoke.sh</code> starts the stack once per PHP version and once per database profile and checks nginx, php-fpm, the php.ini of the repository, an HTTP response, an https response with a trusted certificate, and the PDO path from the app container to the server. The 0.13.0 release was verified against every version of every engine; 0.14.0 was verified on PHP 8.4 with mysql 8.0, mariadb 10.11 and postgres 15.1; 0.15.0 adds a cache stage for memcached and redis, and a cloud stage where the four emulators of <code>s3</code>, <code>gcs</code>, <code>azure</code> and <code>aws</code> answer the protocol of their provider from inside the app container.</p></div>
-    <div class="card"><h3>Always up to date</h3><p>The app images are rebuilt every night, so <code>laserstack/app:8.4</code> always carries the newest PHP 8.4 patch and a newer series appears as its own tag. <code>laser update</code> pulls the newest code and images and restarts only what changed.</p></div>
-    <div class="card"><h3>Project names with no DNS setup</h3><p><code>localdev.it</code> is the default suffix, so every project answers as <code>projecta.localdev.it</code>: every name under that domain already resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone. No hosts file, no dnsmasq, nothing to install.</p></div>
-    <div class="card"><h3>A dashboard that describes the stack</h3><p>The checkout is one of the projects, so the stack serves a read-only dashboard for itself on <code>laserstack.&lt;SUFFIX&gt;</code>: the PHP series and its config directory, every project with the driver <code>laser scan</code> found and the code its front page answered, the services, the database version, the certificate it serves with the days left, and the head of the changelog. It writes nothing and prints no credential. <a href="features.html#dashboard">See what it shows</a>.</p></div>
-    <div class="card"><h3>No sshd, so nothing to log into</h3><p>The containers run nginx and php-fpm under supervisord and nothing else: no <code>sshd</code> and no <code>ssh</code> client, in any image. That is why the OpenSSH-on-musl authentication bypass (<a href="https://github.com/sdbruder/laserstack_app/blob/master/SECURITY-2026-11-openssh-musl.md">CVE-2026-123158</a>, fixed upstream in 10.6p2 on 2026-11-05) has no target here, and why the images are rebuilt every night from Alpine rather than patched by hand.</p></div>
-    <div class="card"><h3>No magic, no lock-in</h3><p>Nothing rewrites your compose file and nothing guesses. When a container is missing you get docker's own error, which is the error you can act on.</p></div>
-    <div class="card"><h3>macOS, Linux, WSL2</h3><p>Official support for macOS (Intel and Apple silicon), Linux and WSL2/WSLg, with Docker Desktop, OrbStack, Colima or the docker engine. The projects directory is bind-mounted, so your editor keeps working on your own files.</p></div>
+<section id="platforms"><div class="wrap">
+  <p class="kicker">04 · Platforms</p>
+  <h2>Your machine, your docker.</h2>
+  <p class="section-lede">Official support for the three environments developers use, with any docker that speaks compose v2 — and nothing installed on the host besides it.</p>
+  <div class="plats">
+    <article class="plat">
+      <h3>macOS</h3>
+      <ul>
+        <li>Docker Desktop, OrbStack or Colima</li>
+        <li>Intel and Apple silicon</li>
+        <li>The numbers on this site come from an M3 with OrbStack</li>
+      </ul>
+    </article>
+    <article class="plat">
+      <h3>Linux</h3>
+      <ul>
+        <li>docker engine with the compose v2 plugin</li>
+        <li>No desktop app, no VM</li>
+        <li>The same script, the same compose file</li>
+      </ul>
+    </article>
+    <article class="plat">
+      <h3>WSL2 / WSLg</h3>
+      <ul>
+        <li>Docker Desktop with the WSL2 backend</li>
+        <li>Keep projects in the Linux filesystem (<code>~/src</code>), not under <code>/mnt/c</code></li>
+        <li>Bind mounts and file watching stay fast</li>
+      </ul>
+    </article>
+  </div>
+  <p class="section-lede" style="margin-top:1.4rem">No VM of its own, no system package, no shell profile, no daemon: <code>laser</code> is a bash script and docker does the rest. The <a href="install">installer</a> checks bash, git and docker with compose v2 before it clones anything.</p>
+</div></section>
+
+<section id="drivers"><div class="wrap">
+  <p class="kicker">05 · Frameworks</p>
+  <h2>Laravel, Symfony, WordPress, or your own.</h2>
+  <p class="section-lede"><code>laser scan</code> asks each driver what a project is and writes its vhost: the Laravel, Symfony, WordPress and generic drivers are in <code>libs/</code>.</p>
+  <div class="chips">
+    <span class="chip">Laravel</span><span class="chip">Symfony</span><span class="chip">WordPress</span><span class="chip">generic</span><span class="chip">own nginx config</span>
+  </div>
+  <p class="section-lede">Each project gets one vhost for <code>project.SUFFIX</code>, serving its <code>public/</code> directory. A project that needs something else ships a <code>laserstack-nginx.conf</code> in its root and the generic driver installs it. Nothing is generated into your checkout.</p>
+</div></section>
+
+<section id="compare"><div class="wrap">
+  <p class="kicker">06 · Compare</p>
+  <h2>Side by side with the tools you know.</h2>
+  <p class="section-lede">Two stacks that serve the same project can differ by an order of magnitude in memory, because one amortises its containers over every project you own and the other does not. Checked against each project's own documentation on <strong>2026-11-05</strong>.</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th></th><th>Laser Stack</th><th>Valet</th><th>Herd</th><th>Sail</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>application container</strong></td>
+        <td>one stack for every project (nginx + PHP-FPM in one container)</td>
+        <td>none: nginx on the host</td>
+        <td>none: a native shared stack</td>
+        <td>one per project</td>
+      </tr>
+      <tr>
+        <td><strong>project URL</strong></td>
+        <td><code>projecta.localdev.it</code>, no hosts file; https by default from a trusted wildcard</td>
+        <td><code>projecta.test</code> via dnsmasq; http by default, secure per site</td>
+        <td><code>projecta.test</code>, automatic; http by default, secure per site</td>
+        <td><code>http://localhost</code>, ports, no TLS</td>
+      </tr>
+      <tr>
+        <td><strong>PHP versions</strong></td>
+        <td>per project, 7.4–8.6, workers side by side</td>
+        <td>one at a time; per site with <code>valet isolate</code></td>
+        <td>one global; per site with <code>herd isolate</code></td>
+        <td>one per project</td>
+      </tr>
+      <tr>
+        <td><strong>cost</strong></td>
+        <td>free, BSD-3-Clause, macOS · Linux · WSL2</td>
+        <td>free, MIT, macOS only</td>
+        <td>free core, Pro $99/year, macOS and Windows</td>
+        <td>free, MIT, macOS · Linux · WSL2</td>
+      </tr>
+    </tbody>
+  </table></div>
+  <p class="section-lede" style="margin-top:1.2rem"><a href="compare.html">The full comparison of eight tools, row by row →</a> · <a href="benchmarks.html">the measured numbers →</a></p>
+</div></section>
+
+<section id="faq"><div class="wrap">
+  <p class="kicker">07 · FAQ</p>
+  <h2>Questions before you start.</h2>
+  <div class="faq">
+    <details>
+      <summary>Is Laser Stack free?</summary>
+      <p>Yes. It is open source under the BSD-3-Clause license. There is no account, no paid tier and no telemetry.</p>
+    </details>
+    <details>
+      <summary>Do I need Docker?</summary>
+      <p>Yes: any docker with compose v2 — Docker Desktop, OrbStack, Colima or the engine. The stack installs nothing else on the host: no VM, no system package, no daemon of its own.</p>
+    </details>
+    <details>
+      <summary>Does it run on Windows?</summary>
+      <p>Through WSL2/WSLg, with Docker Desktop and the WSL2 backend. There is no native Windows version.</p>
+    </details>
+    <details>
+      <summary>Can two projects use different PHP versions?</summary>
+      <p>Yes. A project states the version in <code>.laserstack</code>, and the stack starts one php-fpm worker for that version next to the <code>app</code> container. 7.4 to 8.6. The database is still one version per engine.</p>
+    </details>
+    <details>
+      <summary>Do I need a hosts file?</summary>
+      <p>No for the default suffix: every name under <code>localdev.it</code> already resolves to <code>127.0.0.1</code> and <code>::1</code> for anyone. A suffix of your own needs <code>/etc/hosts</code>; a dnsmasq that <code>laser</code> installs and maintains is on the <a href="roadmap.html">roadmap</a>.</p>
+    </details>
+    <details>
+      <summary>How does https work?</summary>
+      <p>With the default suffix, <code>laser up</code> fetches the published wildcard certificate of <code>*.localdev.it</code>, which every browser already trusts, so there is no CA to install and no warning page. With a suffix of your own, <code>laser tls</code> creates a CA and a certificate, and <code>laser trust</code> puts the CA where the platform reads it; <code>laser trust --remove</code> takes it out.</p>
+    </details>
+    <details>
+      <summary>Does it work with Symfony, WordPress or plain PHP?</summary>
+      <p>Yes. The Laravel, Symfony, WordPress and generic drivers find the document root on their own, and any project can ship its own <code>laserstack-nginx.conf</code>.</p>
+    </details>
+    <details>
+      <summary>Is there a GUI?</summary>
+      <p>No desktop application, and none is planned. The CLI is the interface. The stack serves a read-only dashboard for itself on <code>laserstack.&lt;SUFFIX&gt;</code>, with the PHP series, the projects, the services and the certificate, and <code>laser dashboard</code> opens it. <a href="features.html#dashboard">See what it shows</a>.</p>
+    </details>
   </div>
 </div></section>
 
-<section id="quickstart"><div class="wrap">
-  <h2>Quick start</h2>
-  <p class="section-lede">Three commands and a hosts entry. The clone belongs next to your projects, because that directory is what the stack mounts and serves.</p>
-  <div class="steps">
-    <div class="step"><div><h3>Clone it next to your projects</h3>
-      <pre><code>git clone https://github.com/sdbruder/laserstack ~/src/laserstack
-alias laser=~/src/laserstack/laser        <span class="out"># or add it to $PATH</span></code></pre></div></div>
-    <div class="step"><div><h3>Write your .env</h3>
-      <pre><code>cd ~/src/laserstack &amp;&amp; cp env.example .env
-<span class="out"># PHP_VERSION=8.4</span>
-<span class="out"># PROFILES=mysql,redis</span>
-<span class="out"># DB_PASSWORD=…  MYSQL_VERSION=8.4  REDIS_VERSION=8.10</span>
-<span class="out"># SUFFIX=localdev.it   # the default, no setup: projecta.localdev.it</span></code></pre></div></div>
-    <div class="step"><div><h3>Start it and scan</h3>
-      <pre><code>laser up -d
-laser scan          <span class="out"># writes one nginx vhost per project</span>
-<span class="out"># nothing else: http://projecta.localdev.it and http://projectb.localdev.it answer</span>
-<span class="out"># with a suffix of your own (SUFFIX=test): 127.0.0.1 projecta.test projectb.test</span></code></pre></div></div>
-  </div>
-  <p style="margin-top:1.6rem">Day to day: <code>laser artisan migrate</code>, <code>laser npm run dev</code>, <code>laser mysql</code>, <code>laser shell</code>, <code>laser share</code>, <code>laser stop</code>. Anything else goes straight to docker-compose: <code>laser logs app --tail 50</code>.</p>
-</div></section>
-
-<section><div class="wrap">
-  <h2>What it does not do (yet)</h2>
-  <p class="section-lede">The stack is opinionated and honest about the edges. Everything below is on the <a href="roadmap.html">roadmap</a> or documented as a limit.</p>
-  <div class="grid">
-    <div class="card"><h3>One version per database engine</h3><p>You can run mysql and postgres and redis side by side, but each engine runs the version you selected. Several versions of the same engine in parallel is still on the <a href="roadmap.html">roadmap</a>.</p></div>
-    <div class="card"><h3>A suffix of your own needs /etc/hosts</h3><p>The default suffix, <code>localdev.it</code>, resolves every name under it to loopback for anyone and needs nothing. A local dnsmasq that <code>laser</code> installs, configures and maintains on macOS, Linux and WSL2 is planned for a suffix of your own.</p></div>
-    <div class="card"><h3>No GUI, no native Windows</h3><p>The CLI is the interface, and Windows runs through WSL2; macOS and Linux run as they are. A desktop app is not planned.</p></div>
-  </div>
-</div></section>
-
-<section><div class="wrap">
-  <h2>Where to go next</h2>
-  <div class="grid">
-    <div class="card"><h3><a href="features.html">Features in detail →</a></h3><p>What the drivers, the profiles, the versions and the CLI actually do.</p></div>
-    <div class="card"><h3><a href="compare.html">How it compares →</a></h3><p>Valet, Herd, Sail, DDEV, Lando and Laradock, on the axis that decides the bill: one stack for all projects, or one per project.</p></div>
-    <div class="card"><h3><a href="benchmarks.html">Numbers and method →</a></h3><p>Image sizes, idle memory, startup time, and how each figure was produced.</p></div>
-    <div class="card"><h3><a href="docs.html">Documentation →</a></h3><p>The .env reference, the profiles, the versions and the laser commands, with links to the repository docs.</p></div>
-    <div class="card"><h3><a href="examples.html">Examples →</a></h3><p>Copy-paste recipes: many projects, a custom vhost, another database, another database version, artisan and npm.</p></div>
+<section class="cta" id="quickstart"><div class="wrap">
+  <h2>One command. Then two.</h2>
+  <p class="section-lede" style="margin-left:auto;margin-right:auto">The clone belongs next to your projects, because that directory is what the stack mounts and serves.</p>
+  <p class="install-line"><code>curl -fsSL https://localdev.it/laserstack/install | bash</code></p>
+  <pre class="cta-term"><code><span class="out">$</span> cd ~/src/laserstack &amp;&amp; laser up -d
+<span class="out">$</span> laser scan
+<span class="ok"># projecta.localdev.it and projectb.localdev.it answer</span></code></pre>
+  <div class="actions cta-actions">
+    <a class="btn primary" href="docs.html">Read the docs</a>
+    <a class="btn" href="examples.html">Copy-paste examples</a>
+    <a class="btn" href="https://github.com/sdbruder/laserstack">Star on GitHub</a>
   </div>
 </div></section>
 </main>
@@ -161,11 +386,17 @@ laser scan          <span class="out"># writes one nginx vhost per project</span
       <li><a href="https://github.com/sdbruder/laserstack/blob/master/CHANGELOG.md">Changelog</a></li>
       <li><a href="https://github.com/sdbruder/laserstack_app">App images</a></li>
     </ul></div>
+    <div><h4>Site</h4><ul>
+      <li><a href="features.html">Features</a></li>
+      <li><a href="compare.html">Compare</a></li>
+      <li><a href="benchmarks.html">Numbers</a></li>
+      <li><a href="examples.html">Examples</a></li>
+      <li><a href="roadmap.html">Roadmap</a></li>
+    </ul></div>
     <div><h4>Documentation</h4><ul>
       <li><a href="docs.html">Site reference</a></li>
       <li><a href="https://github.com/sdbruder/laserstack/blob/master/README.md">README</a></li>
       <li><a href="https://github.com/sdbruder/laserstack/blob/master/CONTRIBUTING.md">Working on Laser Stack</a></li>
-      <li><a href="roadmap.html">Roadmap</a></li>
     </ul></div>
     <div><h4>Community</h4><ul>
       <li><a href="https://github.com/sdbruder/laserstack/issues">Issues and ideas</a></li>
