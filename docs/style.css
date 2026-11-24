@@ -252,26 +252,26 @@ html::before, html::after, body::before, body::after {
 html::before {
   width: 80vmax; height: 80vmax; left: -28vmax; top: -34vmax; border-radius: 50%;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 15%, transparent), transparent 72%);
-  animation: glow-a 52s ease-in-out infinite alternate;
+  animation: glow-a 16s ease-in-out infinite alternate;
 }
 html::after {
   width: 70vmax; height: 70vmax; right: -26vmax; top: 18vh; border-radius: 50%;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--accent-2) 12%, transparent), transparent 72%);
-  animation: glow-b 66s ease-in-out infinite alternate;
+  animation: glow-b 20s ease-in-out infinite alternate;
 }
 body::after {
   width: 60vmax; height: 60vmax; left: 8vw; bottom: -34vmax; border-radius: 50%;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 8%, transparent), transparent 72%);
-  animation: glow-c 78s ease-in-out infinite alternate;
+  animation: glow-c 24s ease-in-out infinite alternate;
 }
 body::before {
   inset: -40vmax;
   background-image: repeating-linear-gradient(125deg, color-mix(in srgb, var(--fg) 4.5%, transparent) 0 1px, transparent 1px 104px);
-  animation: hatch 150s linear infinite;
+  animation: hatch 24s linear infinite;
 }
-@keyframes glow-a { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(8vw, 7vh, 0) scale(1.16); } }
-@keyframes glow-b { from { transform: translate3d(0, 0, 0) scale(1.08); } to { transform: translate3d(-7vw, -9vh, 0) scale(.96); } }
-@keyframes glow-c { from { transform: translate3d(0, 0, 0) scale(.94); } to { transform: translate3d(6vw, -7vh, 0) scale(1.12); } }
+@keyframes glow-a { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(18vw, 14vh, 0) scale(1.28); } }
+@keyframes glow-b { from { transform: translate3d(0, 0, 0) scale(1.08); } to { transform: translate3d(-16vw, -18vh, 0) scale(.9); } }
+@keyframes glow-c { from { transform: translate3d(0, 0, 0) scale(.94); } to { transform: translate3d(15vw, -16vh, 0) scale(1.2); } }
 @keyframes hatch { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(256px, 179px, 0); } }
 @media (prefers-color-scheme: light) {
   html::before { background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 9%, transparent), transparent 72%); }
