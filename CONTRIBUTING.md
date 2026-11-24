@@ -11,6 +11,7 @@ release. The documentation for *using* the stack is in the
 docker-compose.yml    the app service and one service per database profile
 docker-compose.https.yml  the overlay laser adds when HTTPS=on: port 443 and the certificate
 tools/issue-global-certificate.sh  issues and publishes the certificate of *.localdev.it
+tools/x                            posts on X as @laserstack_sdb, through twitter-cli and a cookie
 .github/workflows/    the scheduled job that renews that certificate
 laser                 the shell script around docker-compose, the user interface
 public/index.php      the dashboard, served by the stack as one more project
