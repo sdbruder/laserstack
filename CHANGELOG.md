@@ -15,9 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   system: `wslview`, `powershell.exe` or `cmd.exe` on WSL, `open` on macOS and
   the BSDs, `xdg-open` on Linux; when none is available it prints the address.
 - `tools/x` posts, replies and reads on X as @laserstackphp through
-  `twitter-cli` and the session cookie of a 1Password item, so a post costs
-  nothing. `tools/x.md` has the account, the cookie capture and the failure
-  modes.
+  `twitter-cli` and the session cookie kept in `~/.laserstack-x`, mode 600, so a
+  post costs nothing. `tools/x.md` has the account, the cookie capture and the
+  failure modes.
 
 ### Changed
 
@@ -32,8 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   old time.
 - The site and the README follow @laserstackphp on X, the account `tools/x` posts
   from. @laserstack_sdb is unreachable: the password is lost and the recovery
-  phone number is gone. The new handle keeps its password, TOTP secret, recovery
-  codes and session cookie in one 1Password item.
+  phone number is gone. The new handle keeps its password, two-factor seed,
+  recovery codes and session cookie in one private file, `~/.laserstack-x`.
 
 ### Fixed
 
