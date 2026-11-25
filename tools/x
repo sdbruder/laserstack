@@ -71,29 +71,21 @@ export TWITTER_AUTH_TOKEN TWITTER_CT0
 [ -n "${TWITTER_AUTH_TOKEN:-}" ] && [ -n "$TWITTER_CT0" ] ||
   die "no usable cookie in $X_OP_REF, in $X_ENV, or in the environment: TWITTER_AUTH_TOKEN and TWITTER_CT0 must both be set. Refusing to run, because twitter-cli would then extract cookies from whichever browser session it finds"
 
-# Prove the cookie before the tool gets it. twitter-cli verifies the cookie and,
-# on failure, re-extracts the cookies of the browser and retries: a stale cookie
-# would post as whichever account the browser holds. This call uses the two
-# values and nothing else, and stops the run when the account is not the one
-# expected, or when the account cannot be established at all.
+# Prove the cookie before the tool gets it. twitter-cli re-extracts the cookies
+# of the browser whenever a cookie fails its verification, and that endpoint now
+# answers 404 for a valid cookie of a new account, so neither its verification
+# nor the browser path can be trusted here. Instead: run the tool with HOME in
+# an empty directory, where no browser store exists, and ask it who it is.
 X_HANDLE="${X_HANDLE:-laserstackphp}"
+X_EMPTY_HOME="${X_EMPTY_HOME:-$HOME/.cache/laserstack/x-home}"
+mkdir -p "$X_EMPTY_HOME"
+# The tool keeps the transaction script it needs to post in ~/.twitter-cli.
+# Share that directory, so posting behaves the same, and leave ~/Library out.
+mkdir -p "$HOME/.twitter-cli"
+ln -sfn "$HOME/.twitter-cli" "$X_EMPTY_HOME/.twitter-cli"
+export HOME="$X_EMPTY_HOME"
 
-target="$TWITTER_BIN"
-while [ -L "$target" ]; do
-  link="$(readlink "$target")"
-  case $link in
-    /*) target="$link" ;;
-    *) target="$(dirname "$target")/$link" ;;
-  esac
-done
-TOOL_PY="${X_PYTHON:-$(dirname "$target")/python}"
-[ -x "$TOOL_PY" ] || die "no python next to $TWITTER_BIN; set X_PYTHON to the interpreter of twitter-cli"
-
-who="$(TWITTER_AUTH_TOKEN="$TWITTER_AUTH_TOKEN" TWITTER_CT0="$TWITTER_CT0" "$TOOL_PY" -c '
-import os
-from twitter_cli.auth import verify_cookies
-print(verify_cookies(os.environ["TWITTER_AUTH_TOKEN"], os.environ["TWITTER_CT0"]).get("screen_name") or "")
-' 2>/dev/null || true)"
+who="$("$TWITTER_BIN" whoami --json 2>/dev/null | sed -n 's/.*"screenName"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1 || true)"
 
 [ "$who" = "$X_HANDLE" ] ||
   die "the cookie authenticates as '${who:-nothing}', not as @$X_HANDLE. Refresh it from DevTools; this run stops here, because twitter-cli would otherwise fall back to the cookies of the browser"

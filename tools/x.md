@@ -122,12 +122,13 @@ Add `--json` or `--yaml` for scripts. `twitter --help` lists every command;
 `~/.laserstack-x`. When none of the three answers, the wrapper stops instead of
 letting `twitter-cli` extract the cookies of whichever browser it finds.
 
-Then, before the command runs, the wrapper calls the verification endpoint of X
-with those two values and nothing else, and stops unless the answer is
-`laserstackphp`. That is not ceremony: `twitter-cli` re-extracts the cookies of
-the browser when its own verification fails, so a stale cookie would otherwise
-post as whichever account the browser holds. The check costs one cheap request
-and closes that path.
+Then, before the command runs, the wrapper asks the tool who it is — with `HOME`
+pointed at an empty directory, where no browser store exists — and stops unless
+the answer is `laserstackphp`. That is not ceremony: `twitter-cli` re-extracts the
+cookies of the browser when its own verification fails, so a stale cookie would
+otherwise post as whichever account the browser holds. The legacy verification
+endpoint also answers 404 for a valid cookie of a new account, so the tool's own
+check cannot be trusted either way.
 
 ## When it breaks
 
@@ -136,6 +137,7 @@ and closes that path.
 | `Cookie expired or invalid (HTTP 401)` | the session ended | repeat **Store the cookie** |
 | `the cookie authenticates as '…', not as @laserstackphp` | the cookie is stale, belongs to another account, or the account could not be read | copy both values again from the browser session of @laserstackphp |
 | `Couldn't get KEY_BYTE indices`, or a transaction-id error | X changed its web app | `uv tool upgrade twitter-cli` |
+| `HTTP 0: Failed to create tweet` | X answered without a tweet: a duplicate of an existing post, or a transient refusal | change a word and retry; check `tools/x user-posts laserstackphp` first |
 | `no usable cookie in op://Personal/...` | vault locked, the field names differ, or no source has a cookie | `op read 'op://Personal/Laser Stack X/ct0'` must print a value |
 | `no account found for filter` from `op` | the CLI lost the desktop app integration | turn the integration on again, or fill `~/.laserstack-x` |
 | a post gone out from the wrong account | never possible here: the cookie names the account | `tools/x whoami` |
