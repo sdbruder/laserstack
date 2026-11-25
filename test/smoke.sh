@@ -89,9 +89,8 @@ smoke_postgres_version="${SMOKE_POSTGRES_VERSION:-}"
 # explicit empty value skips the whole stage.
 cache_profiles="${SMOKE_CACHE_PROFILES-redis memcached}"
 # versions whose image has no client for the cache profiles, so there is
-# nothing to test. 8.6 has no memcached client: Alpine has no package for the
-# memcached extension and the pecl build does not compile against it.
-cache_skip_versions="${SMOKE_CACHE_SKIP_VERSIONS-8.6}"
+# nothing to test. Every image carries the client, so none is skipped.
+cache_skip_versions="${SMOKE_CACHE_SKIP_VERSIONS-}"
 # the cloud emulator profiles to test against the protocol of their provider. An
 # explicit empty value skips the whole stage.
 cloud_profiles="${SMOKE_CLOUD_PROFILES-s3 gcs azure aws}"

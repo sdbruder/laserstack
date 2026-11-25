@@ -26,9 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   candidate. The docs, the README table and the example output say 8.6.0. The
   image is still built from the Alpine testing repository and still does not
   take `latest`, which stays on 8.5.
-- The 8.6 image still has no `memcached` client: Alpine has no `php86` package
-  and pecl's build does not compile against it. The docs keep that gap, and
-  `SMOKE_CACHE_SKIP_VERSIONS` still skips 8.6 in the cache stage.
+- The 8.6 image has the `memcached` client: Alpine published
+  `php86-pecl-memcached` 3.4.0 in the testing repository on 20 November, so the
+  image installs it with the rest of the series. The cache stage of the smoke
+  test no longer skips 8.6, and the README and the docs stop saying that the
+  series carries the server without the client.
 - The nightly build runs at 22:23 UTC, not 00:23 UTC. The features page said the
   old time.
 - The site and the README follow @laserstackphp on X, the account `tools/x` posts
