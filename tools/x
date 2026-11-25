@@ -8,15 +8,19 @@
 # posting costs nothing. The trade is that X can rate-limit or lock an account
 # used from an automated session: see tools/x.md.
 #
-# The cookie lives in ~/.laserstack-x, mode 600, together with the handle, the
-# email and the rest of the account: TWITTER_AUTH_TOKEN and TWITTER_CT0 are the
-# only two lines this wrapper reads. It refuses to run when they are absent:
-# with no cookie in the environment twitter-cli extracts the cookies of whichever
-# browser it finds, and that is the account the post would go out as.
+# The cookie lives in the 1Password item "Laser Stack X", as the two text fields
+# auth_token and ct0, and the same item holds the password, the two-factor seed
+# and the recovery codes. A file at ~/.laserstack-x, mode 600, is the fallback
+# for a machine without 1Password, and the environment wins over both.
+#
+# The wrapper refuses to run when no source answers: with no cookie in the
+# environment twitter-cli extracts the cookies of whichever browser it finds,
+# and that is the account the post would go out as.
 #
 # Requirements:
 #   - twitter-cli: `uv tool install twitter-cli` (or pipx install twitter-cli)
-#   - ~/.laserstack-x with both cookie lines filled
+#   - 1Password CLI on the desktop app, so that
+#     `op read 'op://Personal/Laser Stack X/auth_token'` prints the cookie
 #
 # Usage:
 #   tools/x whoami                          # must print @laserstackphp
@@ -27,18 +31,30 @@
 #   tools/x search "laserstack" -t Latest
 #
 # Environment:
-#   X_ENV         the account file; default ~/.laserstack-x
+#   X_OP_REF      1Password reference of the item; default
+#                 'op://Personal/Laser Stack X'
+#   X_ENV         fallback file with TWITTER_AUTH_TOKEN and TWITTER_CT0,
+#                 default ~/.laserstack-x
 #   TWITTER_AUTH_TOKEN, TWITTER_CT0   explicit values, checked no further
 #   TWITTER_BIN   another twitter-cli installation
 
 set -euo pipefail
 
+X_OP_REF="${X_OP_REF:-op://Personal/Laser Stack X}"
 X_ENV="${X_ENV:-$HOME/.laserstack-x}"
 TWITTER_BIN="${TWITTER_BIN:-$(command -v twitter || printf '%s' "$HOME/.local/bin/twitter")}"
 
 die() { printf 'tools/x: %s\n' "$*" >&2; exit 1; }
 
 [ -x "$TWITTER_BIN" ] || die "twitter-cli not found; run: uv tool install twitter-cli"
+
+# Explicit values win, then the vault, then the file. Each step stops at the
+# first source that answers, so a locked vault never blocks a run that already
+# has the cookie.
+if [ -z "${TWITTER_AUTH_TOKEN:-}" ] && command -v op >/dev/null 2>&1; then
+  TWITTER_AUTH_TOKEN="$(op read "$X_OP_REF/auth_token" 2>/dev/null | tr -d '\r\n' || true)"
+  TWITTER_CT0="$(op read "$X_OP_REF/ct0" 2>/dev/null | tr -d '\r\n' || true)"
+fi
 
 if [ -z "${TWITTER_AUTH_TOKEN:-}" ] && [ -f "$X_ENV" ]; then
   # Read only the two names this needs. Sourcing the file would run it.
@@ -53,6 +69,33 @@ TWITTER_CT0="${TWITTER_CT0:-}"
 export TWITTER_AUTH_TOKEN TWITTER_CT0
 
 [ -n "${TWITTER_AUTH_TOKEN:-}" ] && [ -n "$TWITTER_CT0" ] ||
-  die "no usable cookie in $X_ENV or the environment: TWITTER_AUTH_TOKEN and TWITTER_CT0 must both be set. Refusing to run, because twitter-cli would then extract cookies from whichever browser session it finds"
+  die "no usable cookie in $X_OP_REF, in $X_ENV, or in the environment: TWITTER_AUTH_TOKEN and TWITTER_CT0 must both be set. Refusing to run, because twitter-cli would then extract cookies from whichever browser session it finds"
+
+# Prove the cookie before the tool gets it. twitter-cli verifies the cookie and,
+# on failure, re-extracts the cookies of the browser and retries: a stale cookie
+# would post as whichever account the browser holds. This call uses the two
+# values and nothing else, and stops the run when the account is not the one
+# expected, or when the account cannot be established at all.
+X_HANDLE="${X_HANDLE:-laserstackphp}"
+
+target="$TWITTER_BIN"
+while [ -L "$target" ]; do
+  link="$(readlink "$target")"
+  case $link in
+    /*) target="$link" ;;
+    *) target="$(dirname "$target")/$link" ;;
+  esac
+done
+TOOL_PY="${X_PYTHON:-$(dirname "$target")/python}"
+[ -x "$TOOL_PY" ] || die "no python next to $TWITTER_BIN; set X_PYTHON to the interpreter of twitter-cli"
+
+who="$(TWITTER_AUTH_TOKEN="$TWITTER_AUTH_TOKEN" TWITTER_CT0="$TWITTER_CT0" "$TOOL_PY" -c '
+import os
+from twitter_cli.auth import verify_cookies
+print(verify_cookies(os.environ["TWITTER_AUTH_TOKEN"], os.environ["TWITTER_CT0"]).get("screen_name") or "")
+' 2>/dev/null || true)"
+
+[ "$who" = "$X_HANDLE" ] ||
+  die "the cookie authenticates as '${who:-nothing}', not as @$X_HANDLE. Refresh it from DevTools; this run stops here, because twitter-cli would otherwise fall back to the cookies of the browser"
 
 exec "$TWITTER_BIN" "$@"
