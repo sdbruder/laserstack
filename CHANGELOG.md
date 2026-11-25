@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `laser new` calls the browser opener of the system. It used the bare `open`
   of macOS and failed on Linux and WSL.
+- `laser up` passes its arguments to compose: `laser up -d`, `laser up --build`
+  and `laser up SERVICE` now reach `docker-compose up` instead of being dropped.
+  The command started detached before this change too, so `-d` is only explicit.
 
 ## [0.15.0] 2026-11-19
 

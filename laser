@@ -102,8 +102,10 @@ function up() {
   # --remove-orphans covers a service the compose file no longer has. A service
   # whose profile left PROFILES needs stop_leftover_profiles, see its comment:
   # that is how dropping a database engine, a PHP version or an emulator really
-  # stops it.
-  dc up -d --remove-orphans
+  # stops it. Detached, so the command returns as soon as the containers start.
+  # The arguments still reach compose: services, --build, --force-recreate. A -d
+  # of the caller is repeated, and compose accepts it.
+  dc up -d --remove-orphans "$@"
   stop_leftover_profiles
 
   # An app container from an earlier release runs the nginx command it read when
@@ -171,7 +173,7 @@ function dohelp() {
   echo "  *                  Any other command goes to docker-compose"
   echo ""
   echo "Some useful docker-compose commands (dockerhelp to full list)"
-  echo "  up [-d]            Create and start containers"
+  echo "  up [-d] [SERVICE...]  Create and start containers, detached"
   echo "  stop               Stop containers"
   echo "  logs               View output from containers"
   echo "  ps                 List containers running"
@@ -928,7 +930,7 @@ list)
   list
   ;;
 up)
-  up
+  up "$@"
   ;;
 use)
   use "$@"
