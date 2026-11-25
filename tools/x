@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Post on X as @sdbruder, the account the browser is signed in to.
+# Post on X as @laserstackphp, never as the account of a browser.
 #
 # X has no free API since February 2026: a post costs $0.015, and $0.20 when it
 # carries a link, which is most of what this project posts. twitter-cli instead
@@ -8,48 +8,62 @@
 # posting costs nothing. The trade is that X can rate-limit or lock an account
 # used from an automated session: see tools/x.md.
 #
-# The cookies live in one file, and this wrapper never runs twitter-cli without
-# them. Two reasons: twitter-cli would otherwise extract the cookies of whatever
-# browser it finds, which a shell outside the desktop cannot read at all (macOS
-# TCC), and a named file proves which account the post goes out as.
+# The cookie lives in the 1Password item "Laser Stack X", as the two text fields
+# auth_token and ct0. This wrapper reads it there and refuses to run when it is
+# absent: with no cookie in the environment twitter-cli extracts the cookies of
+# whichever browser it finds, and that is the account the post would go out as.
 #
 # Requirements:
 #   - twitter-cli: `uv tool install twitter-cli` (or pipx install twitter-cli)
-#   - the cookie file, made once from the sdbruder browser session:
-#       $HOME/.config/laserstack/x.env  (mode 600)
-#       TWITTER_AUTH_TOKEN=...
-#       TWITTER_CT0=...
+#   - 1Password CLI with the desktop integration on, so that
+#     `op read 'op://Private/Laser Stack X/auth_token'` prints the cookie
 #
 # Usage:
-#   tools/x whoami                         # must print @sdbruder
-#   tools/x post "Laser Stack 2.0 is out"  # a post
-#   tools/x post "text" -i docs/og.png     # with an image
+#   tools/x whoami                          # must print @laserstackphp
+#   tools/x post "Laser Stack 2.0 is out"   # a post
+#   tools/x post "text" -i docs/og.png      # with an image
 #   tools/x reply <tweet-id> "text"
-#   tools/x feed --max 20                  # read the timeline of that account
+#   tools/x feed --max 20                   # read the timeline of that account
 #   tools/x search "laserstack" -t Latest
 #
-# X_ENV points at another cookie file; TWITTER_BIN at another installation.
+# Environment:
+#   X_OP_REF   1Password reference of the item; default
+#              'op://Private/Laser Stack X'
+#   X_ENV      fallback file with TWITTER_AUTH_TOKEN and TWITTER_CT0, mode 600
+#   TWITTER_AUTH_TOKEN, TWITTER_CT0   explicit values, checked no further
+#   TWITTER_BIN  another twitter-cli installation
 
 set -euo pipefail
 
+X_OP_REF="${X_OP_REF:-op://Private/Laser Stack X}"
 X_ENV="${X_ENV:-$HOME/.config/laserstack/x.env}"
 TWITTER_BIN="${TWITTER_BIN:-$(command -v twitter || printf '%s' "$HOME/.local/bin/twitter")}"
 
 die() { printf 'tools/x: %s\n' "$*" >&2; exit 1; }
 
 [ -x "$TWITTER_BIN" ] || die "twitter-cli not found; run: uv tool install twitter-cli"
-[ -f "$X_ENV" ] || die "no credentials at $X_ENV; create them as tools/x.md describes"
 
-# Read only the two names this needs. Sourcing the file would run it.
-cred() {
-  sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" "$X_ENV" | tail -n 1 | tr -d "\"' \r"
-}
+# Explicit values win; then the vault; then the file. Each step stops at the
+# first source that answers, so a slow or locked vault never blocks a run that
+# already has the cookie.
+if [ -z "${TWITTER_AUTH_TOKEN:-}" ] && command -v op >/dev/null 2>&1; then
+  TWITTER_AUTH_TOKEN="$(op read "$X_OP_REF/auth_token" 2>/dev/null | tr -d '\r\n' || true)"
+  TWITTER_CT0="$(op read "$X_OP_REF/ct0" 2>/dev/null | tr -d '\r\n' || true)"
+fi
 
-TWITTER_AUTH_TOKEN="$(cred TWITTER_AUTH_TOKEN)"
-TWITTER_CT0="$(cred TWITTER_CT0)"
+if [ -z "${TWITTER_AUTH_TOKEN:-}" ] && [ -f "$X_ENV" ]; then
+  # Read only the two names this needs. Sourcing the file would run it.
+  cred() {
+    sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" "$X_ENV" | tail -n 1 | tr -d "\"' \r"
+  }
+  TWITTER_AUTH_TOKEN="$(cred TWITTER_AUTH_TOKEN)"
+  TWITTER_CT0="$(cred TWITTER_CT0)"
+fi
+
+TWITTER_CT0="${TWITTER_CT0:-}"
 export TWITTER_AUTH_TOKEN TWITTER_CT0
 
-[ -n "$TWITTER_AUTH_TOKEN" ] && [ -n "$TWITTER_CT0" ] ||
-  die "$X_ENV lacks TWITTER_AUTH_TOKEN or TWITTER_CT0; refusing to run, because twitter-cli would then extract cookies from whichever browser session it finds"
+[ -n "${TWITTER_AUTH_TOKEN:-}" ] && [ -n "$TWITTER_CT0" ] ||
+  die "no cookie in $X_OP_REF, in $X_ENV, or in the environment; refusing to run, because twitter-cli would then extract cookies from whichever browser session it finds"
 
 exec "$TWITTER_BIN" "$@"

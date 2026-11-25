@@ -14,9 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the container, and it takes the scheme from `HTTPS`. The opener follows the
   system: `wslview`, `powershell.exe` or `cmd.exe` on WSL, `open` on macOS and
   the BSDs, `xdg-open` on Linux; when none is available it prints the address.
-- `tools/x` posts, replies and reads on X as @sdbruder through `twitter-cli` and
-  the session cookie of `~/.config/laserstack/x.env`, so a post costs nothing.
-  `tools/x.md` has the install, the cookie capture and the failure modes.
+- `tools/x` posts, replies and reads on X as @laserstackphp through
+  `twitter-cli` and the session cookie of a 1Password item, so a post costs
+  nothing. `tools/x.md` has the account, the cookie capture and the failure
+  modes.
 
 ### Changed
 
@@ -29,9 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SMOKE_CACHE_SKIP_VERSIONS` still skips 8.6 in the cache stage.
 - The nightly build runs at 22:23 UTC, not 00:23 UTC. The features page said the
   old time.
-- The site and the README follow @sdbruder on X, the account `tools/x` posts
+- The site and the README follow @laserstackphp on X, the account `tools/x` posts
   from. @laserstack_sdb is unreachable: the password is lost and the recovery
-  phone number is gone.
+  phone number is gone. The new handle keeps its password, TOTP secret, recovery
+  codes and session cookie in one 1Password item.
 
 ### Fixed
 
